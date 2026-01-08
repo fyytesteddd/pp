@@ -340,7 +340,7 @@ end
 Window:Divider()
 
 local Info, Premium, Player, Auto, Shop, Teleport, Totem
-local Quest, Event, Trade, Enchant, Discord, Config, Setting, Misc
+local Quest, Event, Trade, Enchant, Discord, Config, Setting, Misc , Animation
 
 local function SetupTab()
     if not Info then Info = Window:Tab({ Title = "Info", Icon = "info" }) end
@@ -354,6 +354,7 @@ local function SetupTab()
     if not Event then Event = Window:Tab({ Title = "Event", Icon = "gift" }) end
     if not Trade then Trade = Window:Tab({ Title = "Trade", Icon = "repeat" }) end
     if not Enchant then Enchant = Window:Tab({ Title = "Enchants", Icon = "star" }) end
+    if not Animation then Animation = Window:Tab({ Title = "Animation", Icon = "gem" }) end
     if not Discord then Discord = Window:Tab({ Title = "Webhook", Icon = "megaphone" }) end
     if not Config then Config = Window:Tab({ Title = "Config", Icon = "folder" }) end
     if not Setting then Setting = Window:Tab({ Title = "Settings", Icon = "settings" }) end
@@ -3512,8 +3513,8 @@ local questData=ClientData:Get({"Quests","Mainline","Diamond Rod Quest"})
 result.Progress.Q1={Done=result.HasElementRod,Text=result.HasElementRod and"Element Rod: ✅"or"Element Rod: ❌"}
 result.Progress.Q2={Progress=0,Done=false,Text="Coral Secret: ❌"}
 result.Progress.Q3={Progress=0,Done=false,Text="Tropical Secret: ❌"}
-result.Progress.Q4={Done=result.InventoryCheck.HasRuby,Text=result.InventoryCheck.HasRuby and"Mutated Ruby: ✅"or"Mutated Ruby: ❌"}
-result.Progress.Q5={Done=result.InventoryCheck.HasLochness,Text=result.InventoryCheck.HasLochness and"Lochness Monster: ✅"or"Lochness Monster: ❌"}
+result.Progress.Q4={Done=result.InventoryCheck.HasLochness,Text=result.InventoryCheck.HasLochness and"Lochness Monster: ✅"or"Lochness Monster: ❌"}
+result.Progress.Q5={Done=result.InventoryCheck.HasRuby,Text=result.InventoryCheck.HasRuby and"Mutated Ruby: ✅"or"Mutated Ruby: ❌"}
 result.Progress.Q6={Progress=0,Done=false,Text="Perfect Throws: 0/1000"}
 result.Progress.AllDone=false
 result.Progress.TotalPercent=0
@@ -3650,14 +3651,14 @@ continue
 end
 
 local targetCF=nil
-if not status.Progress.Q4.Done and not status.InventoryCheck.HasRuby then
-targetCF=RUBY_FARM_CF
-elseif not status.Progress.Q5.Done and not status.InventoryCheck.HasLochness then
-targetCF=LOCHNESS_FARM_CF
-elseif not status.Progress.Q2.Done then
+if not status.Progress.Q2.Done then
 targetCF=CORAL_REEFS_CF
 elseif not status.Progress.Q3.Done then
 targetCF=TROPICAL_GROVE_CF
+elseif not status.Progress.Q4.Done and not status.InventoryCheck.HasLochness then
+targetCF=LOCHNESS_FARM_CF
+elseif not status.Progress.Q5.Done and not status.InventoryCheck.HasRuby then
+targetCF=RUBY_FARM_CF
 elseif not status.Progress.Q6.Done then
 targetCF=TROPICAL_GROVE_CF
 end
@@ -5467,8 +5468,113 @@ end
 end
 }))
 end
+--//
 
---// FULL CONFIG SYSTEM 
+
+local function AnimationTab()
+    if not Animation then return end
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+local Animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid)
+local SkinDatabase = {
+["Eclipse"]="rbxassetid://107940819382815",["HolyTrident"]="rbxassetid://128167068291703",["SoulScythe"]="rbxassetid://82259219343456",
+["OceanicHarpoon"]="rbxassetid://76325124055693",["BinaryEdge"]="rbxassetid://109653945741202",["Vanquisher"]="rbxassetid://93884986836266",
+["KrampusScythe"]="rbxassetid://134934781977605",["BanHammer"]="rbxassetid://96285280763544",["CorruptionEdge"]="rbxassetid://126613975718573",
+["PrincessParasol"]="rbxassetid://99143072029495"
+}
+local CurrentSkin = nil
+local AnimationPool = {}
+local IsEnabled = false
+local POOL_SIZE = 3
+local killedTracks = {}
+local replaceCount = 0
+local currentPoolIndex = 1
+local function LoadAnimationPool(skinId)
+local animId = SkinDatabase[skinId]
+if not animId then return false end
+for _,track in ipairs(AnimationPool)do pcall(function()track:Stop(0)track:Destroy()end)end
+AnimationPool={}
+local anim=Instance.new("Animation")anim.AnimationId=animId anim.Name="CUSTOM_SKIN_ANIM"
+for i=1,POOL_SIZE do
+local track=Animator:LoadAnimation(anim)track.Priority=Enum.AnimationPriority.Action4 track.Looped=false track.Name="SKIN_POOL_"..i
+task.spawn(function()pcall(function()track:Play(0,1,0)task.wait(0.05)track:Stop(0)end)end)
+table.insert(AnimationPool,track)
+end
+currentPoolIndex=1 return true
+end
+local function GetNextTrack()
+for i=1,POOL_SIZE do local track=AnimationPool[i]if track and not track.IsPlaying then return track end end
+currentPoolIndex=currentPoolIndex%POOL_SIZE+1 return AnimationPool[currentPoolIndex]
+end
+local function IsFishCaughtAnimation(track)
+if not track or not track.Animation then return false end
+local trackName=string.lower(track.Name or"")local animName=string.lower(track.Animation.Name or"")
+if string.find(trackName,"fishcaught")or string.find(animName,"fishcaught")or string.find(trackName,"caught")or string.find(animName,"caught")then return true end
+return false
+end
+local function InstantReplace(originalTrack)
+local nextTrack=GetNextTrack()
+if not nextTrack then return end
+replaceCount=replaceCount+1 killedTracks[originalTrack]=tick()
+task.spawn(function()for i=1,10 do pcall(function()if originalTrack.IsPlaying then originalTrack:Stop(0)originalTrack:AdjustSpeed(0)originalTrack.TimePosition=0 end end)task.wait()end end)
+pcall(function()if nextTrack.IsPlaying then nextTrack:Stop(0)end nextTrack:Play(0,1,1)nextTrack:AdjustSpeed(1)end)
+task.delay(1,function()killedTracks[originalTrack]=nil end)
+end
+humanoid.AnimationPlayed:Connect(function(track)if not IsEnabled then return end if IsFishCaughtAnimation(track)then task.spawn(function()InstantReplace(track)end)end end)
+RunService.RenderStepped:Connect(function()
+if not IsEnabled then return end
+local tracks=humanoid:GetPlayingAnimationTracks()
+for _,track in ipairs(tracks)do
+if string.find(string.lower(track.Name or""),"skin_pool")then continue end
+if killedTracks[track]then if track.IsPlaying then pcall(function()track:Stop(0)track:AdjustSpeed(0)end)end continue end
+if track.IsPlaying and IsFishCaughtAnimation(track)then task.spawn(function()InstantReplace(track)end)end
+end
+end)
+RunService.Heartbeat:Connect(function()if not IsEnabled then return end local tracks=humanoid:GetPlayingAnimationTracks()for _,track in ipairs(tracks)do if string.find(string.lower(track.Name or""),"skin_pool")then continue end if killedTracks[track]and track.IsPlaying then pcall(function()track:Stop(0)track:AdjustSpeed(0)end)end end end)
+RunService.Stepped:Connect(function()if not IsEnabled then return end for track,_ in pairs(killedTracks)do if track and track.IsPlaying then pcall(function()track:Stop(0)track:AdjustSpeed(0)end)end end end)
+player.CharacterAdded:Connect(function(newChar)task.wait(1.5)char=newChar humanoid=char:WaitForChild("Humanoid")Animator=humanoid:FindFirstChildOfClass("Animator")or Instance.new("Animator",humanoid)killedTracks={}replaceCount=0 if IsEnabled and CurrentSkin then task.wait(0.5)LoadAnimationPool(CurrentSkin)end end)
+local AnimationSection=Animation:Section({Title="Animation Replacer",TextSize=16})
+local SkinDropdown=Reg("skinDropdown",AnimationSection:Dropdown({
+Title="Select Animation Skin",
+Options={"Eclipse","HolyTrident","SoulScythe","OceanicHarpoon","BinaryEdge","Vanquisher","KrampusScythe","BanHammer","CorruptionEdge","PrincessParasol"},
+Value="Eclipse",
+Callback=function(value)
+CurrentSkin=value
+if IsEnabled then
+if LoadAnimationPool(value)then
+WindUI:Notify({Title="Skin Changed",Content=value.." loaded",Duration=2,Icon="check"})
+end
+end
+end
+}))
+local AnimationToggle=Reg("animationToggle",AnimationSection:Toggle({
+Title="Enable Animation Replacer",
+Desc="Replace fish caught animation with custom skin",
+Value=false,
+Callback=function(state)
+IsEnabled=state
+if state then
+if CurrentSkin then
+if LoadAnimationPool(CurrentSkin)then
+WindUI:Notify({Title="Animation Replacer ON",Content="Skin: "..CurrentSkin,Duration=3,Icon="play"})
+end
+else
+WindUI:Notify({Title="No Skin Selected",Content="Select a skin first",Duration=3,Icon="x"})
+AnimationToggle:Set(false)
+IsEnabled=false
+end
+else
+for _,track in ipairs(AnimationPool)do pcall(function()track:Stop(0)track:Destroy()end)end
+AnimationPool={}
+killedTracks={}
+WindUI:Notify({Title="Animation Replacer OFF",Duration=2,Icon="square"})
+end
+end
+}))
+end
 local function ConfigTab()
 if not Config then return end
 
@@ -5478,6 +5584,7 @@ local AutoLoadConfig=true
 local POS_FILE="fyy_LastPos.json"
 local AutoSavePosState=true
 local IsLoadingPosition=true
+local TweenService=game:GetService("TweenService")
 
 local function CountElements()
 local c=0
@@ -5542,7 +5649,6 @@ lx=hrp.CFrame.LookVector.X,ly=hrp.CFrame.LookVector.Y,lz=hrp.CFrame.LookVector.Z
 writefile(POS_FILE,game:GetService("HttpService"):JSONEncode(data))
 end
 
--- FIXED STABLE TELEPORT VERSION
 local function LoadLastPosition()
 if not isfile(POS_FILE) then task.wait(3) IsLoadingPosition=false return end
 
@@ -5561,17 +5667,39 @@ IsLoadingPosition=true
 
 hrp.Anchored=true
 hum.PlatformStand=true
+hum.WalkSpeed=0
+hum.JumpPower=0
 
 task.wait(0.5)
 
-local pos=Vector3.new(data.x,data.y,data.z)
-local look=Vector3.new(data.lx or 0,data.ly or 0,data.lz or -1)
-hrp.CFrame=CFrame.new(pos,pos+look)
+local targetPos=Vector3.new(data.x,data.y,data.z)
+local targetLook=Vector3.new(data.lx or 0,data.ly or 0,data.lz or -1)
+local targetCFrame=CFrame.new(targetPos,targetPos+targetLook)
 
-task.wait(1.2)
+local startCFrame=hrp.CFrame
+local distance=(targetPos-startCFrame.Position).Magnitude
+local duration=math.min(2,math.max(0.5,distance/50))
+
+local tweenInfo=TweenInfo.new(
+duration,
+Enum.EasingStyle.Quad,
+Enum.EasingDirection.Out,
+0,
+false,
+0
+)
+
+local tween=TweenService:Create(hrp,tweenInfo,{CFrame=targetCFrame})
+tween:Play()
+
+tween.Completed:Wait()
+
+task.wait(0.5)
 
 hrp.Anchored=false
 hum.PlatformStand=false
+hum.WalkSpeed=16
+hum.JumpPower=50
 
 WindUI:Notify({
 Title="Session Restored",
@@ -5767,6 +5895,7 @@ MiscTab()
 task.wait(5)
 ConfigTab()
 TotemTab()
+AnimationTab()
 break
 end
 end
