@@ -826,144 +826,169 @@ end)
 --- ANTI [Fyy Anti-AFK] ON
 local function MainTab()
     if not Auto then return end
-local P=game:GetService("Players")
-local RS=game:GetService("ReplicatedStorage")
-local cam=workspace.CurrentCamera
-local plr=P.LocalPlayer
+local P = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
+local cam = workspace.CurrentCamera
+local plr = P.LocalPlayer
 
-local Net=RS.Packages._Index["sleitnick_net@0.2.0"].net
-local FC=require(RS.Controllers.FishingController)
+local Net = RS.Packages._Index["sleitnick_net@0.2.0"].net
+local FC = require(RS.Controllers.FishingController)
 
-local RE_Done=Net["RE/FishingCompleted"]
-local RF_Start=Net:FindFirstChild("RF/RequestFishingMinigameStarted",true)
- or Net:FindFirstChild("RequestFishingMinigameStarted",true)
- or Net:FindFirstChild("RF/ChargeFishingRod",true)
+local RE_Done = Net["RE/FishingCompleted"]
+local RF_Start = Net:FindFirstChild("RF/RequestFishingMinigameStarted", true)
+    or Net:FindFirstChild("RequestFishingMinigameStarted", true)
+    or Net:FindFirstChild("RF/ChargeFishingRod", true)
 
-local autoFish=false
-local autoShake=false
-local resultMode="Perfect"
+local autoFish = false
+local autoShake = false
+local resultMode = "Perfect"
 
-task.spawn(function()
- while true do
-  if autoFish then
-   if FC:GetCurrentGUID() then
-    local t=tick()
-    while FC:GetCurrentGUID() and autoFish do
-     pcall(function()FC:RequestFishingMinigameClick()end)
-     if tick()-t>=1 then
-      while FC:GetCurrentGUID() and autoFish do
-       pcall(function()RE_Done:FireServer()end)
-       task.wait(0.1)
-      end
-      break
-     end
-     task.wait(0.1)
-    end
-   else
-    local c=Vector2.new(cam.ViewportSize.X/2,cam.ViewportSize.Y/2)
-    pcall(function()FC:RequestChargeFishingRod(c,true)end)
-    task.wait(0.2)
-   end
-  end
-  task.wait(0.05)
- end
-end)
-
-task.spawn(function()
- while true do
-  if autoFish and autoShake then
-   pcall(function()FC:RequestFishingMinigameClick()end)
-  end
-  task.wait(0.1)
- end
-end)
-
--- Perfect Fishing Hook untuk RF_Start
-if RF_Start then
- local old
- old=hookmetamethod(game,"__namecall",function(self,...)
-  local m=getnamecallmethod()
-  if self==RF_Start and (m=="InvokeServer" or m=="FireServer") and autoFish then
-   local a={...}
-   if resultMode=="Perfect" then
-    a[2]=0.99647927980797
-    a[3]=-139.630452165
-   elseif resultMode=="Amazing" then
-    a[2]=0.8
-    a[3]=math.random(-180,180)
-   else
-    a[2]=math.random()
-    a[3]=math.random(-180,180)
-   end
-   return old(self,unpack(a))
-  end
-  return old(self,...)
- end)
+-- Save original function
+if not FC._oldGetPower then
+    FC._oldGetPower = FC._getPower
 end
 
--- Auto Instant Perfect Fish menggunakan hookmetamethod untuk RE_Done
-local reDoneHookApplied = false
-if RE_Done and not reDoneHookApplied then
- reDoneHookApplied = true
- local oldRE
- oldRE=hookmetamethod(game,"__namecall",function(self,...)
-  local m=getnamecallmethod()
-  if self==RE_Done and m=="FireServer" and autoFish then
-   local args={...}
-   local guid=FC:GetCurrentGUID()
-   if guid then
-    local success,data=pcall(function()
-     return RS.Packages._Index["sleitnick_net@0.2.0"]:InvokeServer(RS.Packages._Index["ytrev_replion@2.0.0-rc.3"])
+-- Auto fishing loop
+local fishingLoopActive = false
+local function StartFishingLoop()
+    if fishingLoopActive then return end
+    fishingLoopActive = true
+    
+    task.spawn(function()
+        while fishingLoopActive do
+            if autoFish then
+                if FC:GetCurrentGUID() then
+                    local startTime = tick()
+                    while FC:GetCurrentGUID() and autoFish and fishingLoopActive do
+                        pcall(function()
+                            FC:RequestFishingMinigameClick()
+                        end)
+                        
+                        if tick() - startTime >= 1 then
+                            while FC:GetCurrentGUID() and autoFish and fishingLoopActive do
+                                pcall(function()
+                                    RE_Done:FireServer()
+                                end)
+                                task.wait(0.1)
+                            end
+                            break
+                        end
+                        task.wait(0.1)
+                    end
+                else
+                    local mousePos = Vector2.new(cam.ViewportSize.X / 2, cam.ViewportSize.Y / 2)
+                    pcall(function()
+                        FC:RequestChargeFishingRod(mousePos, true)
+                    end)
+                    task.wait(0.2)
+                end
+            end
+            task.wait(0.05)
+        end
     end)
-    if success and data and data[1] and data[2] and data[2].UUID==guid then
-     args[1]=0.999
-     args[2]=0.999
-    end
-   end
-   return oldRE(self,unpack(args))
-  end
-  return oldRE(self,...)
- end)
 end
 
-local fishResult=Reg("fishResult",Auto:Dropdown({
- Title="Fishing Result",
- Values={"Perfect","Amazing","Random"},
- AllowNone=false,
- Callback=function(v)
-  if v and v~="" then
-   resultMode=v
-   WindUI:Notify({Title="Fishing Result",Content=v,Duration=2,Icon="check"})
-  end
- end
+-- Auto shake loop
+local shakeLoopActive = false
+local function StartShakeLoop()
+    if shakeLoopActive then return end
+    shakeLoopActive = true
+    
+    task.spawn(function()
+        while shakeLoopActive do
+            if autoFish and autoShake then
+                pcall(function()
+                    FC:RequestFishingMinigameClick()
+                end)
+            end
+            task.wait(0.1)
+        end
+    end)
+end
+
+-- Perfect fishing hook
+local rfHookApplied = false
+if RF_Start and not rfHookApplied then
+    rfHookApplied = true
+    local oldRF
+    oldRF = hookmetamethod(game, "__namecall", function(self, ...)
+        local method = getnamecallmethod()
+        if self == RF_Start and (method == "InvokeServer" or method == "FireServer") and autoFish then
+            local args = {...}
+            if resultMode == "Perfect" then
+                args[2] = 0.999  -- Progress perfect
+            elseif resultMode == "Amazing" then
+                args[2] = 0.8    -- Progress amazing
+            else
+                args[2] = math.random()  -- Random
+            end
+            return oldRF(self, unpack(args))
+        end
+        return oldRF(self, ...)
+    end)
+end
+
+local fishResult = Reg("fishResult", Auto:Dropdown({
+    Title = "Fishing Result",
+    Values = {"Perfect", "Amazing", "Random"},
+    AllowNone = false,
+    Callback = function(v)
+        if v and v ~= "" then
+            resultMode = v
+            WindUI:Notify({Title = "Fishing Result", Content = v, Duration = 2, Icon = "check"})
+        end
+    end
 }))
 
-local legitFish=Reg("legitFish",Auto:Toggle({
- Title="Legit Fishing",
- Default=false,
- Callback=function(s)
-  autoFish=s
-  WindUI:Notify({
-   Title=s and "Legit Fishing ON" or "Legit Fishing OFF",
-   Content=s and ("Mode: "..resultMode) or nil,
-   Duration=2,
-   Icon=s and "play" or "x"
-  })
- end
+local legitFish = Reg("legitFish", Auto:Toggle({
+    Title = "Legit Fishing",
+    Default = false,
+    Callback = function(state)
+        autoFish = state
+        
+        if state then
+            StartFishingLoop()
+            WindUI:Notify({
+                Title = "Legit Fishing ON",
+                Content = "Mode: " .. resultMode,
+                Duration = 2,
+                Icon = "play"
+            })
+        else
+            fishingLoopActive = false
+            WindUI:Notify({
+                Title = "Legit Fishing OFF",
+                Duration = 2,
+                Icon = "x"
+            })
+        end
+    end
 }))
 
-local shakeFish=Reg("autoShake",Auto:Toggle({
- Title="Auto Shake",
- Default=false,
- Callback=function(s)
-  autoShake=s
-  WindUI:Notify({
-   Title="Auto Shake",
-   Content=s and "Enabled" or "Disabled",
-   Duration=2,
-   Icon=s and "check" or "x"
-  })
- end
+local shakeFish = Reg("autoShake", Auto:Toggle({
+    Title = "Auto Shake",
+    Default = false,
+    Callback = function(state)
+        autoShake = state
+        
+        if state then
+            StartShakeLoop()
+            WindUI:Notify({
+                Title = "Auto Shake ON",
+                Content = "Enabled",
+                Duration = 2,
+                Icon = "check"
+            })
+        else
+            shakeLoopActive = false
+            WindUI:Notify({
+                Title = "Auto Shake OFF",
+                Content = "Disabled",
+                Duration = 2,
+                Icon = "x"
+            })
+        end
+    end
 }))
 --// 
 Auto:Space()Auto:Divider()
