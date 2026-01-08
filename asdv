@@ -1820,8 +1820,6 @@ task.spawn(function()
   pcall(refreshPlayerList)
  end
 end)
-end
-
 --// TELEPORT TO PLAYER
 
 Teleport:Section({Title="Teleport To Island Locations"})
@@ -2040,7 +2038,6 @@ local TeleportNPCButton=Teleport:Button({Title="Teleport to NPC",Callback=functi
 end
 
 --// ATAS END OF TELEPORT TAB
-
 local function KaitunTab()
 if not Premium then return end
 
