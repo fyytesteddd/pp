@@ -826,7 +826,6 @@ end)
 --- ANTI [Fyy Anti-AFK] ON
 local function MainTab()
     if not Auto then return end
-local Sec=Auto:Section({Title="Main Feature"})
 local P=game:GetService("Players")
 local RS=game:GetService("ReplicatedStorage")
 local cam=workspace.CurrentCamera
@@ -843,6 +842,9 @@ local RF_Start=Net:FindFirstChild("RF/RequestFishingMinigameStarted",true)
 local autoFish=false
 local autoShake=false
 local resultMode="Perfect"
+
+-- Simpan hook function reference di luar
+local oldFireServer = nil
 
 task.spawn(function()
  while true do
@@ -879,9 +881,8 @@ task.spawn(function()
  end
 end)
 
--- Perfect Fishing Hook
-if RF_Start and not FC._perfectHook then
- FC._perfectHook=true
+-- Perfect Fishing Hook untuk RF_Start
+if RF_Start then
  local old
  old=hookmetamethod(game,"__namecall",function(self,...)
   local m=getnamecallmethod()
@@ -903,11 +904,10 @@ if RF_Start and not FC._perfectHook then
  end)
 end
 
--- Auto Instant Perfect Fish
-local oldFireServer
-if RE_Done and not RE_Done._autoFishHook then
- RE_Done._autoFishHook=true
- oldFireServer=hookfunction(RE_Done.FireServer,function(self,...)
+-- Auto Instant Perfect Fish untuk RE_Done
+if RE_Done and not oldFireServer then
+ oldFireServer = RE_Done.FireServer
+ RE_Done.FireServer = function(self,...)
   local args={...}
   if autoFish then
    local guid=FC:GetCurrentGUID()
@@ -922,7 +922,7 @@ if RE_Done and not RE_Done._autoFishHook then
    end
   end
   return oldFireServer(self,unpack(args))
- end)
+ end
 end
 
 local fishResult=Reg("fishResult",Auto:Dropdown({
