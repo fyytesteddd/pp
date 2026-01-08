@@ -1741,85 +1741,60 @@ end
 local function TeleportTab()
     if not Teleport then return end
 Teleport:Section({Title="Teleport To Players"})
-
 local PS=game:GetService("Players")
 local LP=PS.LocalPlayer
 local sel=""
-local lastPlayerCount=0
-
-local function list()
- local t={}
- for _,plr in pairs(PS:GetPlayers())do
-  if plr~=LP then table.insert(t,plr.Name)end
- end
- return t
-end
-
+local function list()local t={}for _,plr in pairs(PS:GetPlayers())do if plr~=LP then table.insert(t,plr.Name)end end return t end
 local DD=Teleport:Dropdown({
- Title="Select Player",
- Values=list(),
- Value="",
- Callback=function(v)sel=v end
+Title="Select Player",
+Values={},
+Value="",
+Callback=function(v)if v and v~=""then sel=v WindUI:Notify({Title="Target Selected",Content=v,Duration=2,Icon="user"})end end
 })
-
-local function refreshPlayerList()
- local currentPlayers=list()
- local currentCount=#currentPlayers
- 
- if currentCount~=lastPlayerCount then
-  DD:SetValues(currentPlayers)
-  lastPlayerCount=currentCount
-  
-  if sel~="" then
-   local playerStillExists=false
-   for _,name in ipairs(currentPlayers)do
-    if name==sel then playerStillExists=true break end
-   end
-   if not playerStillExists then
-    DD:SetValue("")
-    sel=""
-   end
-  end
-  return true
- end
- return false
-end
-
-Teleport:Button({
- Title="Refresh Player List",
- Callback=function()
-  if refreshPlayerList()then
-   Teleport:Notify({Title="Player List Refreshed",Content="Player list updated.",Duration=2})
-  else
-   Teleport:Notify({Title="No Changes",Content="Player list unchanged.",Duration=2})
-  end
- end
-})
-
-Teleport:Button({
- Title="Teleport to Player",
- Callback=function()
-  if sel~="" then
-   local tp=PS:FindFirstChild(sel)
-   local tc=tp and tp.Character and tp.Character:FindFirstChild("HumanoidRootPart")
-   local lc=LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-   if tc and lc then
-    lc.CFrame=tc.CFrame
-    Teleport:Notify({Title="Teleported",Content="Teleported to "..sel,Duration=3})
-   else
-    Teleport:Notify({Title="Failed",Content="Player not found or no character.",Duration=3})
-   end
-  else
-   Teleport:Notify({Title="Failed",Content="Select a player first.",Duration=3})
-  end
- end
-})
-
 task.spawn(function()
- while true do
-  task.wait(1)
-  pcall(refreshPlayerList)
- end
+task.wait(1)
+local l=list()DD:Refresh(l)DD:SetValue("")
+end)
+local function refreshPlayerList()
+local currentPlayers=list()
+DD:Refresh(currentPlayers)
+if sel~="" then
+local playerStillExists=false
+for _,name in ipairs(currentPlayers)do if name==sel then playerStillExists=true break end end
+if not playerStillExists then DD:SetValue("")sel=""end
+end
+return true
+end
+Teleport:Button({
+Title="Refresh Player List",
+Callback=function()
+refreshPlayerList()
+WindUI:Notify({Title="Player List Updated",Content=#list().." players found",Duration=2,Icon="refresh-cw"})
+end
+})
+Teleport:Button({
+Title="Teleport to Player",
+Callback=function()
+if sel~="" then
+local tp=PS:FindFirstChild(sel)
+local tc=tp and tp.Character and tp.Character:FindFirstChild("HumanoidRootPart")
+local lc=LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+if tc and lc then
+lc.CFrame=tc.CFrame
+WindUI:Notify({Title="Teleported",Content="Teleported to "..sel,Duration=3,Icon="map-pin"})
+else
+WindUI:Notify({Title="Failed",Content="Player not found or no character",Duration=3,Icon="x"})
+end
+else
+WindUI:Notify({Title="Failed",Content="Select a player first",Duration=3,Icon="alert-circle"})
+end
+end
+})
+task.spawn(function()
+while true do
+task.wait(2)
+pcall(refreshPlayerList)
+end
 end)
 --// TELEPORT TO PLAYER
 
@@ -5549,15 +5524,11 @@ end
 
 local function LoadAnimationPool(skinId)
 local animSet = SkinDatabase[skinId]
-if not animSet then
-WindUI:Notify({Title="Error",Content="Skin not found: "..skinId,Duration=3,Icon="x"})
-return false
-end
+if not animSet then return false end
 
 ClearAnimationPool()
 
 IsFullSet = type(animSet) == "table"
-print("[Animation] Loading skin:", skinId, "FullSet:", IsFullSet)
 
 if IsFullSet then
 local animationTypes = {}
@@ -5567,14 +5538,10 @@ local anim = Instance.new("Animation")
 anim.AnimationId = animId
 anim.Name = "CUSTOM_"..animType
 table.insert(animationTypes, {Type = animType, Anim = anim})
-print("[Animation] Adding anim type:", animType, "ID:", animId)
 end
 end
 
-if #animationTypes == 0 then
-WindUI:Notify({Title="Warning",Content="No animations selected in Full Set",Duration=3,Icon="alert"})
-return false
-end
+if #animationTypes == 0 then return false end
 
 for i = 1, POOL_SIZE do
 for _, animData in ipairs(animationTypes) do
@@ -5585,7 +5552,6 @@ track.Name = "SKIN_"..animData.Type.."_"..i
 table.insert(AnimationPool, {Track = track, Type = animData.Type})
 end
 end
-print("[Animation] Loaded full set with", #AnimationPool, "tracks")
 else
 local anim = Instance.new("Animation")
 anim.AnimationId = animSet
@@ -5597,7 +5563,6 @@ track.Looped = false
 track.Name = "SKIN_FISHCAUGHT_"..i
 table.insert(AnimationPool, {Track = track, Type = "FishCaught"})
 end
-print("[Animation] Loaded single animation with", POOL_SIZE, "tracks")
 end
 
 return true
@@ -5745,7 +5710,6 @@ replaceCount = 0
 if IsEnabled and CurrentSkin then
 task.wait(1)
 LoadAnimationPool(CurrentSkin)
-WindUI:Notify({Title="Animation Reloaded",Content="Skin reloaded after respawn",Duration=2,Icon="refresh"})
 end
 end)
 
@@ -5753,11 +5717,12 @@ local AnimationSection = Animation:Section({Title = "Animation Replacer", TextSi
 
 local SkinDropdown = Reg("skinDropdown", AnimationSection:Dropdown({
 Title = "Select Animation Skin",
-Options = {"Eclipse Katana", "Ban Hammer", "Binary Edge", "Eclipse", "HolyTrident", "SoulScythe", "OceanicHarpoon", "Vanquisher", "KrampusScythe", "CorruptionEdge", "PrincessParasol"},
-Value = CurrentSkin,
+Values = {"Eclipse Katana", "Ban Hammer", "Binary Edge", "Eclipse", "HolyTrident", "SoulScythe", "OceanicHarpoon", "Vanquisher", "KrampusScythe", "CorruptionEdge", "PrincessParasol"},
+Value = "Eclipse Katana",
 Callback = function(value)
+if value and value ~= "" then
 CurrentSkin = value
-IsFullSet = type(SkinDatabase[value]) == "table"
+IsFullSet = type(SkinDatabase[value]) == "table
 WindUI:Notify({
 Title = "Skin Selected",
 Content = value .. (IsFullSet and " (Full Set)" or " (Single)"),
@@ -5765,20 +5730,7 @@ Duration = 2,
 Icon = "check"
 })
 if IsEnabled then
-if LoadAnimationPool(value) then
-WindUI:Notify({
-Title = "Animation Loaded",
-Content = value .. " ready!",
-Duration = 2,
-Icon = "play"
-})
-else
-WindUI:Notify({
-Title = "Load Failed",
-Content = "Failed to load " .. value,
-Duration = 3,
-Icon = "x"
-})
+LoadAnimationPool(value)
 end
 end
 end
@@ -5850,6 +5802,7 @@ end
 end
 }))
 end
+
 local function ConfigTab()
 if not Config then return end
 
