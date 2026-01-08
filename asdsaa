@@ -5454,27 +5454,23 @@ local humanoid=char:WaitForChild("Humanoid")
 local Animator=humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator",humanoid)
 
 local SkinDatabase={
-["Eclipse Katana"]="rbxassetid://107940819382815",
 ["Ban Hammer"]="rbxassetid://96285280763544",
 ["Binary Edge"]="rbxassetid://109653945741202",
-
-["Eclipse"]="rbxassetid://107940819382815",
+["Blackhole Sword"]="rbxassetid://88993991486322",
+["Princess Parasol"]="rbxassetid://99143072029495",
+["Corruption Edge"]="rbxassetid://126613975718573",
+["Eclipse Katana"]="rbxassetid://107940819382815",
+["Eternal Flower"]="rbxassetid://119567958965696",
 ["Holy Trident"]="rbxassetid://128167068291703",
 ["Soul Scythe"]="rbxassetid://82259219343456",
 ["Oceanic Harpoon"]="rbxassetid://76325124055693",
-["Vanquisher"]="rbxassetid://93884986836266",
-["Krampus Scythe"]="rbxassetid://134934781977605",
-["Corruption Edge"]="rbxassetid://126613975718573",
-["Princess Parasol"]="rbxassetid://99143072029495",
-
-["1x1x1x1 Ban Hammer"]="rbxassetid://96285280763544",
-["Blackhole Sword"]="rbxassetid://88993991486322",
-["Christmas Parasol"]="rbxassetid://99143072029495",
-["Eternal Flower"]="rbxassetid://119567958965696",
 ["Frozen Krampus Scythe"]="rbxassetid://134934781977605",
-["Gingerbread Katana"]="rbxassetid://107940819382815",
 ["The Vanquisher"]="rbxassetid://93884986836266"
 }
+
+local SkinNames={}
+for k in pairs(SkinDatabase) do table.insert(SkinNames,k) end
+table.sort(SkinNames)
 
 local CurrentSkin=nil
 local AnimationPool={}
@@ -5594,14 +5590,15 @@ local AnimationSection=Animation:Section({Title="Skin Animation",TextSize=16})
 
 Reg("skinDropdown",AnimationSection:Dropdown({
 Title="Select Skin",
-Values={
-"Eclipse Katana","Ban Hammer","Binary Edge","Eclipse","Holy Trident","Soul Scythe",
-"Oceanic Harpoon","Vanquisher","Krampus Scythe","Corruption Edge","Princess Parasol",
-"1x1x1x1 Ban Hammer","Blackhole Sword","Christmas Parasol","Eternal Flower",
-"Frozen Krampus Scythe","Gingerbread Katana","The Vanquisher"
-},
+Values=SkinNames,
 Callback=function(v)
 CurrentSkin=v
+WindUI:Notify({
+Title="Skin Selected",
+Content=v,
+Duration=2,
+Icon="check"
+})
 if IsEnabled then LoadAnimationPool(v) end
 end
 }))
@@ -5613,8 +5610,19 @@ Callback=function(s)
 IsEnabled=s
 if s and CurrentSkin then
 LoadAnimationPool(CurrentSkin)
+WindUI:Notify({
+Title="Animation Replacer ON",
+Content=CurrentSkin,
+Duration=2,
+Icon="play"
+})
 elseif not s then
 for _,t in ipairs(AnimationPool) do pcall(function() t:Stop(0) end) end
+WindUI:Notify({
+Title="Animation Replacer OFF",
+Duration=2,
+Icon="square"
+})
 end
 end
 }))
