@@ -2437,10 +2437,10 @@ hasLochness = true
 end
 end
 end
-result.Q4.Done = hasRuby
-result.Q5.Done = hasLochness
-result.Q4.Text = hasRuby and "Mutated Ruby: ✅" or "Mutated Ruby: ❌"
-result.Q5.Text = hasLochness and "Lochness Monster: ✅" or "Lochness Monster: ❌"
+result.Q4.Done = hasLochness  -- Q4 jadi Lochness
+result.Q5.Done = hasRuby      -- Q5 jadi Ruby
+result.Q4.Text = hasLochness and "Lochness Monster: ✅" or "Lochness Monster: ❌"
+result.Q5.Text = hasRuby and "Mutated Ruby: ✅" or "Mutated Ruby: ❌"
 local qData = GetMainlineData("Diamond Rod Quest")
 if qData and qData.Objectives then
 for id, objData in pairs(qData.Objectives) do
@@ -2790,21 +2790,21 @@ task.wait(3)
 end
 else
 local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-if not pDiamond.Q4.Done then
-currentActivityText = "Farming Mutated Ruby..."
-if (hrp.Position - RUBY_FARM_POS).Magnitude > 15 then TeleportToLookAt(RUBY_FARM_POS, RUBY_FARM_LOOK) task.wait(0.5) end
-RunQuestInstantFish(CURRENT_KAITUN_DELAY)
-elseif not pDiamond.Q5.Done then
-currentActivityText = "Farming Lochness Monster..."
-if (hrp.Position - LOCHNESS_FARM_POS).Magnitude > 15 then TeleportToLookAt(LOCHNESS_FARM_POS, LOCHNESS_FARM_LOOK) task.wait(0.5) end
-RunQuestInstantFish(CURRENT_KAITUN_DELAY)
-elseif not pDiamond.Q2.Done then
+if not pDiamond.Q2.Done then
 currentActivityText = "Farming Coral Secret..."
 if (hrp.Position - CORAL_REEFS_POS).Magnitude > 15 then TeleportToLookAt(CORAL_REEFS_POS, CORAL_REEFS_LOOK) task.wait(0.5) end
 RunQuestInstantFish(CURRENT_KAITUN_DELAY)
 elseif not pDiamond.Q3.Done then
 currentActivityText = "Farming Tropical Secret..."
 if (hrp.Position - TROPICAL_GROVE_POS).Magnitude > 15 then TeleportToLookAt(TROPICAL_GROVE_POS, TROPICAL_GROVE_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+elseif not pDiamond.Q4.Done then
+currentActivityText = "Farming Lochness Monster..."
+if (hrp.Position - LOCHNESS_FARM_POS).Magnitude > 15 then TeleportToLookAt(LOCHNESS_FARM_POS, LOCHNESS_FARM_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+elseif not pDiamond.Q5.Done then  
+currentActivityText = "Farming Mutated Ruby..."
+if (hrp.Position - RUBY_FARM_POS).Magnitude > 15 then TeleportToLookAt(RUBY_FARM_POS, RUBY_FARM_LOOK) task.wait(0.5) end
 RunQuestInstantFish(CURRENT_KAITUN_DELAY)
 elseif not pDiamond.Q6.Done then
 currentActivityText = "Farming Perfect Throws..."
