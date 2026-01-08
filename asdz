@@ -5469,8 +5469,6 @@ end
 }))
 end
 --//
-
-
 local function AnimationTab()
     if not Animation then return end
 local Players = game:GetService("Players")
@@ -5480,7 +5478,6 @@ local char = player.Character or player.CharacterAdded:Wait()
 local humanoid = char:WaitForChild("Humanoid")
 local Animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid)
 local SkinDatabase = {
--- Eclipse Katana Full Set
 ["Eclipse Katana"] = {
 ["EquipIdle"] = "rbxassetid://103641983335689",
 ["FishCaught"] = "rbxassetid://107940819382815",
@@ -5490,7 +5487,6 @@ local SkinDatabase = {
 ["RodThrow"] = "rbxassetid://82600073500966",
 ["StartRodCharge"] = "rbxassetid://115229621326605"
 },
--- Ban Hammer Full Set
 ["Ban Hammer"] = {
 ["EquipIdle"] = "rbxassetid://96285280763544",
 ["FishCaught"] = "rbxassetid://96285280763544",
@@ -5500,7 +5496,6 @@ local SkinDatabase = {
 ["RodThrow"] = "rbxassetid://123133988645038",
 ["StartRodCharge"] = "rbxassetid://134431618143422"
 },
--- Binary Edge Full Set
 ["Binary Edge"] = {
 ["EquipIdle"] = "rbxassetid://103714544264522",
 ["FishCaught"] = "rbxassetid://109653945741202",
@@ -5510,7 +5505,6 @@ local SkinDatabase = {
 ["RodThrow"] = "rbxassetid://104527781253009",
 ["StartRodCharge"] = "rbxassetid://72745361965091"
 },
--- Single Animations
 ["Eclipse"] = "rbxassetid://107940819382815",
 ["HolyTrident"] = "rbxassetid://128167068291703",
 ["SoulScythe"] = "rbxassetid://82259219343456",
@@ -5738,22 +5732,6 @@ end
 end)
 
 local AnimationSection = Animation:Section({Title = "Animation Replacer", TextSize = 16})
-local FullSetToggle = Reg("fullSetToggle", AnimationSection:Toggle({
-Title = "Enable Full Animation Set",
-Desc = "Replace all fishing animations",
-Value = false,
-Callback = function(state)
-for animType, _ in pairs(ReplacingAnimations) do
-ReplacingAnimations[animType] = state
-end
-WindUI:Notify({
-Title = state and "Full Set ON" or "Full Set OFF",
-Content = state and "Semua animasi akan direplace" or "Hanya FishCaught yang direplace",
-Duration = 3,
-Icon = "settings"
-})
-end
-}))
 
 local SkinDropdown = Reg("skinDropdown", AnimationSection:Dropdown({
 Title = "Select Animation Skin",
@@ -5774,6 +5752,23 @@ end
 end
 }))
 
+local FullSetToggle = Reg("fullSetToggle", AnimationSection:Toggle({
+Title = "Enable Full Animation Set",
+Desc = "Replace all fishing animations",
+Value = false,
+Callback = function(state)
+for animType, _ in pairs(ReplacingAnimations) do
+ReplacingAnimations[animType] = state
+end
+WindUI:Notify({
+Title = state and "Full Set ON" or "Full Set OFF",
+Content = state and "Semua animasi akan direplace" or "Hanya FishCaught yang direplace",
+Duration = 3,
+Icon = "settings"
+})
+end
+}))
+
 local AnimationToggle = Reg("animationToggle", AnimationSection:Toggle({
 Title = "Enable Animation Replacer",
 Desc = "Replace fishing animations with custom skin",
@@ -5785,7 +5780,7 @@ if CurrentSkin then
 if LoadAnimationPool(CurrentSkin) then
 WindUI:Notify({
 Title = "Animation Replacer ON",
-Content = "Skin: " .. CurrentSkin .. (IsFullSet and " (Full Set)" : ""),
+Content = "Skin: " .. CurrentSkin .. (IsFullSet and " (Full Set)" or ""),
 Duration = 3,
 Icon = "play"
 })
@@ -5818,7 +5813,6 @@ end
 end
 }))
 end
-
 local function ConfigTab()
 if not Config then return end
 
