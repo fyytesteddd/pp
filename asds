@@ -843,9 +843,6 @@ local autoFish=false
 local autoShake=false
 local resultMode="Perfect"
 
--- Simpan hook function reference di luar
-local oldFireServer = nil
-
 task.spawn(function()
  while true do
   if autoFish then
@@ -904,12 +901,15 @@ if RF_Start then
  end)
 end
 
--- Auto Instant Perfect Fish untuk RE_Done
-if RE_Done and not oldFireServer then
- oldFireServer = RE_Done.FireServer
- RE_Done.FireServer = function(self,...)
-  local args={...}
-  if autoFish then
+-- Auto Instant Perfect Fish menggunakan hookmetamethod untuk RE_Done
+local reDoneHookApplied = false
+if RE_Done and not reDoneHookApplied then
+ reDoneHookApplied = true
+ local oldRE
+ oldRE=hookmetamethod(game,"__namecall",function(self,...)
+  local m=getnamecallmethod()
+  if self==RE_Done and m=="FireServer" and autoFish then
+   local args={...}
    local guid=FC:GetCurrentGUID()
    if guid then
     local success,data=pcall(function()
@@ -920,9 +920,10 @@ if RE_Done and not oldFireServer then
      args[2]=0.999
     end
    end
+   return oldRE(self,unpack(args))
   end
-  return oldFireServer(self,unpack(args))
- end
+  return oldRE(self,...)
+ end)
 end
 
 local fishResult=Reg("fishResult",Auto:Dropdown({
