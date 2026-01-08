@@ -826,8 +826,118 @@ end)
 --- ANTI [Fyy Anti-AFK] ON
 local function MainTab()
     if not Auto then return end
-
 local Sec=Auto:Section({Title="Main Feature"})
+
+
+local P=game:GetService("Players")
+local RS=game:GetService("ReplicatedStorage")
+local cam=workspace.CurrentCamera
+local plr=P.LocalPlayer
+
+local Net=RS.Packages._Index["sleitnick_net@0.2.0"].net
+local FC=require(RS.Controllers.FishingController)
+
+local RE_Done=Net["RE/FishingCompleted"]
+local RF_Start=Net:FindFirstChild("RF/RequestFishingMinigameStarted",true)
+ or Net:FindFirstChild("RequestFishingMinigameStarted",true)
+ or Net:FindFirstChild("RF/ChargeFishingRod",true)
+
+local autoFish=false
+local autoShake=false
+local resultMode="Perfect"
+
+task.spawn(function()
+ while true do
+  if autoFish then
+   if FC:GetCurrentGUID() then
+    local t=tick()
+    while FC:GetCurrentGUID() and autoFish do
+     pcall(function()FC:RequestFishingMinigameClick()end)
+     if tick()-t>=1 then
+      while FC:GetCurrentGUID() and autoFish do
+       pcall(function()RE_Done:FireServer()end)
+       task.wait(0.1)
+      end
+      break
+     end
+     task.wait(0.1)
+    end
+   else
+    local c=Vector2.new(cam.ViewportSize.X/2,cam.ViewportSize.Y/2)
+    pcall(function()FC:RequestChargeFishingRod(c,true)end)
+    task.wait(0.2)
+   end
+  end
+  task.wait(0.05)
+ end
+end)
+
+task.spawn(function()
+ while true do
+  if autoFish and autoShake then
+   pcall(function()FC:RequestFishingMinigameClick()end)
+  end
+  task.wait(0.1)
+ end
+end)
+
+if RF_Start and not FC._windHook then
+ FC._windHook=true
+ local old
+ old=hookmetamethod(game,"__namecall",function(self,...)
+  local m=getnamecallmethod()
+  if self==RF_Start and (m=="InvokeServer" or m=="FireServer") and autoFish then
+   local a={...}
+   a[2]=(resultMode=="Perfect" and 0.999)
+    or (resultMode=="Amazing" and 0.8)
+    or math.random()
+   return old(self,unpack(a))
+  end
+  return old(self,...)
+ end)
+end
+
+local fishResult=Reg("fishResult",Auto:Dropdown({
+ Title="Fishing Result",
+ Values={"Perfect","Amazing","Random"},
+ AllowNone=false,
+ Callback=function(v)
+  if v and v~="" then
+   resultMode=v
+   WindUI:Notify({Title="Fishing Result",Content=v,Duration=2,Icon="check"})
+  end
+ end
+}))
+
+local legitFish=Reg("legitFish",Auto:Toggle({
+ Title="Legit Fishing",
+ Default=false,
+ Callback=function(s)
+  autoFish=s
+  WindUI:Notify({
+   Title=s and "Legit Fishing ON" or "Legit Fishing OFF",
+   Content=s and ("Mode: "..resultMode) or nil,
+   Duration=2,
+   Icon=s and "play" or "x"
+  })
+ end
+}))
+
+local shakeFish=Reg("autoShake",Auto:Toggle({
+ Title="Auto Shake",
+ Default=false,
+ Callback=function(s)
+  autoShake=s
+  WindUI:Notify({
+   Title="Auto Shake",
+   Content=s and "Enabled" or "Disabled",
+   Duration=2,
+   Icon=s and "check" or "x"
+  })
+ end
+}))
+
+
 local AFR=false
 local RS=game:GetService("ReplicatedStorage")
 local P=game:GetService("Players").LocalPlayer
