@@ -2191,7 +2191,7 @@ local ShopItems = {
 {Name = "Luck Rod", ID = 79, Price = 325}, {Name = "Carbon Rod", ID = 76, Price = 750}, {Name = "Grass Rod", ID = 85, Price = 1500}, {Name = "Demascus Rod", ID = 77, Price = 3000},
 {Name = "Ice Rod", ID = 78, Price = 5000}, {Name = "Lucky Rod", ID = 4, Price = 15000}, {Name = "Midnight Rod", ID = 80, Price = 50000}, {Name = "Steampunk Rod", ID = 6, Price = 215000},
 {Name = "Chrome Rod", ID = 7, Price = 437000}, {Name = "Flourescent Rod", ID = 255, Price = 715000}, {Name = "Astral Rod", ID = 5, Price = 1000000},
-{Name = "Ares Rod", ID = 126, Price = 3000000}, {Name = "Angler Rod", ID = 168, Price = 8000000}, {Name = "Hazmat Rod", ID = 256, Price = 1380000}, {Name = "Angler Rod", ID = 168, Price = 8000000}, {Name = "Bamboo Rod", ID = 258, Price = 12000000}
+{Name = "Ares Rod", ID = 126, Price = 3000000}, {Name = "Angler Rod", ID = 168, Price = 8000000}, {Name = "Hazmat Rod", ID = 256, Price = 1380000}, {Name = "Bamboo Rod", ID = 258, Price = 12000000}
 },
 ["Bobbers"] = {
 {Name = "Starter Bait", ID = 1, Price = 0}, {Name = "Luck Bait", ID = 2, Price = 1000}, {Name = "Midnight Bait", ID = 3, Price = 3000}, {Name = "Royal Bait", ID = 4, Price = 425000},
@@ -2335,23 +2335,23 @@ if data.Quests and data.Quests.Mainline and data.Quests.Mainline[questName] then
 return nil
 end
 
-local function GetGhostfinProgressSafe()
+local function GetGhostfinProgress()
 local result = {
 Q1 = {Text = "Rare/Epic: 0/300", Done = false},
 Q2 = {Text = "Mythic: 0/3", Done = false},
 Q3 = {Text = "Secret: 0/1", Done = false},
 Q4 = {Text = "Coins: 0/1M", Done = false},
 AllDone = false,
-BoardFound = true
+HasGhostfin = HasItemByID(169, "Fishing Rods")
 }
-local qData = GetMainlineData("Deep Sea Quest")
-if qData and qData.Objectives then
-if (qData.CurrentObj or 0) > 4 then
+if result.HasGhostfin then
 result.AllDone = true
 result.Q1.Done = true; result.Q2.Done = true; result.Q3.Done = true; result.Q4.Done = true
-result.Q1.Text = "Rare/Epic: Done"; result.Q2.Text = "Mythic: Done"; result.Q3.Text = "Secret: Done"; result.Q4.Text = "Coins: Done"
+result.Q1.Text = "Rare/Epic: ✅"; result.Q2.Text = "Mythic: ✅"; result.Q3.Text = "Secret: ✅"; result.Q4.Text = "Coins: ✅"
 return result
 end
+local qData = GetMainlineData("Deep Sea Quest")
+if qData and qData.Objectives then
 for id, objData in pairs(qData.Objectives) do
 local prog = objData.Progress or 0
 local numId = tonumber(id)
@@ -2360,40 +2360,47 @@ elseif numId == 2 then result.Q2.Text = string.format("Mythic: %d/3", prog); res
 elseif numId == 3 then result.Q3.Text = string.format("Secret: %d/1", prog); result.Q3.Done = prog >= 1
 elseif numId == 4 then result.Q4.Text = string.format("Coins: %s/1M", tostring(prog)); result.Q4.Done = prog >= 1000000 end
 end
-else result.BoardFound = false end
+end
+result.AllDone = result.Q1.Done and result.Q2.Done and result.Q3.Done and result.Q4.Done
 return result
 end
 
-local function GetElementProgressSafe()
+local function GetElementProgress()
 local result = {
-Q1 = {Text = "Own Ghostfin Rod", Done = false},
-Q2 = {Text = "Secret (Jungle)", Done = false},
-Q3 = {Text = "Secret (Temple)", Done = false},
+Q1 = {Text = "Ghostfin Rod: ❌", Done = false},
+Q2 = {Text = "Jungle Secret: ❌", Done = false},
+Q3 = {Text = "Temple Secret: ❌", Done = false},
 Q4 = {Text = "Stones: 0/3", Done = false},
 AllDone = false,
-BoardFound = true
+HasElement = HasItemByID(257, "Fishing Rods")
 }
-local qData = GetMainlineData("Element Quest")
-if qData and qData.Objectives then
-if (qData.CurrentObj or 0) > 4 then
+if result.HasElement then
 result.AllDone = true
 result.Q1.Done = true; result.Q2.Done = true; result.Q3.Done = true; result.Q4.Done = true
-result.Q4.Text = "Stones: Done"
+result.Q1.Text = "Ghostfin Rod: ✅"; result.Q4.Text = "Stones: ✅"
 return result
 end
+result.Q1.Done = HasItemByID(169, "Fishing Rods")
+result.Q1.Text = result.Q1.Done and "Ghostfin Rod: ✅" or "Ghostfin Rod: ❌"
+if not result.Q1.Done then
+result.AllDone = false
+return result
+end
+local qData = GetMainlineData("Element Quest")
+if qData and qData.Objectives then
 for id, objData in pairs(qData.Objectives) do
 local prog = objData.Progress or 0
 local numId = tonumber(id)
-if numId == 1 then result.Q1.Done = prog >= 1 end
-if numId == 2 then result.Q2.Done = prog >= 1 end
-if numId == 3 then result.Q3.Done = prog >= 1 end
-if numId == 4 then result.Q4.Text = string.format("Stones: %d/3", prog); result.Q4.Done = prog >= 3 end
+if numId == 2 then result.Q2.Done = prog >= 1; result.Q2.Text = result.Q2.Done and "Jungle Secret: ✅" or "Jungle Secret: ❌"
+elseif numId == 3 then result.Q3.Done = prog >= 1; result.Q3.Text = result.Q3.Done and "Temple Secret: ✅" or "Temple Secret: ❌"
+elseif numId == 4 then result.Q4.Text = string.format("Stones: %d/3", prog); result.Q4.Done = prog >= 3 end
 end
-else result.BoardFound = false end
+end
+result.AllDone = result.Q1.Done and result.Q2.Done and result.Q3.Done and result.Q4.Done
 return result
 end
 
-local function GetDiamondProgressSafe()
+local function GetDiamondProgress()
 local result = {
 Q1 = {Text = "Element Rod: ❌", Done = false},
 Q2 = {Text = "Coral Secret: ❌", Done = false},
@@ -2402,63 +2409,49 @@ Q4 = {Text = "Mutated Ruby: ❌", Done = false},
 Q5 = {Text = "Lochness Monster: ❌", Done = false},
 Q6 = {Text = "Perfect Throws: 0/1000", Done = false},
 AllDone = false,
-BoardFound = true,
-QuestActive = false,
-QuestCompleted = false,
-HasDiamondKey = false,
-HasDiamondRod = HasItemByID(559, "Fishing Rods")
+HasDiamond = HasItemByID(559, "Fishing Rods")
 }
-local completedQuests = ClientData:Get({"CompletedQuests"}) or {}
-for _, questName in ipairs(completedQuests) do
-if questName == "Diamond Rod Quest" then result.QuestCompleted = true end
+if result.HasDiamond then
+result.AllDone = true
+for i=1,6 do result["Q"..i].Done = true end
+result.Q1.Text = "Element Rod: ✅"; result.Q2.Text = "Coral Secret: ✅"; result.Q3.Text = "Tropical Secret: ✅"
+result.Q4.Text = "Mutated Ruby: ✅"; result.Q5.Text = "Lochness Monster: ✅"; result.Q6.Text = "Perfect Throws: ✅"
+return result
 end
-local inventory = ClientData:Get({"Inventory"})
-if inventory then
-if inventory["Fishing Rods"] then
-for _, rod in ipairs(inventory["Fishing Rods"]) do
-if tonumber(rod.Id) == 257 then result.Q1.Done = true result.Q1.Text = "Element Rod: ✅" end
+result.Q1.Done = HasItemByID(257, "Fishing Rods")
+result.Q1.Text = result.Q1.Done and "Element Rod: ✅" or "Element Rod: ❌"
+if not result.Q1.Done then
+result.AllDone = false
+return result
 end
-end
+local inventory = ClientData:Get({"Inventory"}) or {}
+local hasRuby = false
+local hasLochness = false
 if inventory.Items then
 for _, item in ipairs(inventory.Items) do
-local itemData = ItemUtility:GetItemData(item.Id)
-if itemData and itemData.Data then
-if itemData.Data.Name == "Diamond Key" then result.HasDiamondKey = true end
-end
 if tonumber(item.Id) == 243 then
 local metadata = item.Metadata or {}
-if metadata.VariantId == 3 then result.Q4.Done = true result.Q4.Text = "Mutated Ruby: ✅" end
+if metadata.VariantId == 3 then hasRuby = true end
 elseif tonumber(item.Id) == 228 then
-result.Q5.Done = true result.Q5.Text = "Lochness Monster: ✅"
+hasLochness = true
 end
 end
 end
-end
-if not result.QuestCompleted then
+result.Q4.Done = hasRuby
+result.Q5.Done = hasLochness
+result.Q4.Text = hasRuby and "Mutated Ruby: ✅" or "Mutated Ruby: ❌"
+result.Q5.Text = hasLochness and "Lochness Monster: ✅" or "Lochness Monster: ❌"
 local qData = GetMainlineData("Diamond Rod Quest")
-if qData then
-result.QuestActive = true
+if qData and qData.Objectives then
 for id, objData in pairs(qData.Objectives) do
 local prog = objData.Progress or 0
 local numId = tonumber(id)
-if numId == 1 then result.Q1.Done = prog >= 1 or result.Q1.Done result.Q1.Text = result.Q1.Done and "Element Rod: ✅" or "Element Rod: ❌"
-elseif numId == 2 then result.Q2.Text = prog >= 1 and "Coral Secret: ✅" or string.format("Coral Secret: %d/1", prog) result.Q2.Done = prog >= 1
-elseif numId == 3 then result.Q3.Text = prog >= 1 and "Tropical Secret: ✅" or string.format("Tropical Secret: %d/1", prog) result.Q3.Done = prog >= 1
-elseif numId == 4 then result.Q4.Done = prog >= 1 or result.Q4.Done result.Q4.Text = result.Q4.Done and "Mutated Ruby: ✅" or "Mutated Ruby: ❌"
-elseif numId == 5 then result.Q5.Done = prog >= 1 or result.Q5.Done result.Q5.Text = result.Q5.Done and "Lochness Monster: ✅" or "Lochness Monster: ❌"
-elseif numId == 6 then result.Q6.Text = string.format("Perfect Throws: %d/1000", prog) result.Q6.Done = prog >= 1000
+if numId == 2 then result.Q2.Done = prog >= 1; result.Q2.Text = result.Q2.Done and "Coral Secret: ✅" or string.format("Coral Secret: %d/1", prog)
+elseif numId == 3 then result.Q3.Done = prog >= 1; result.Q3.Text = result.Q3.Done and "Tropical Secret: ✅" or string.format("Tropical Secret: %d/1", prog)
+elseif numId == 6 then result.Q6.Text = string.format("Perfect Throws: %d/1000", prog); result.Q6.Done = prog >= 1000 end
 end
 end
-local completedCount = 0
-if result.Q1.Done then completedCount = completedCount + 1 end
-if result.Q2.Done then completedCount = completedCount + 1 end
-if result.Q3.Done then completedCount = completedCount + 1 end
-if result.Q4.Done then completedCount = completedCount + 1 end
-if result.Q5.Done then completedCount = completedCount + 1 end
-if result.Q6.Done then completedCount = completedCount + 1 end
-result.AllDone = (completedCount == 6)
-end
-else result.BoardFound = false end
+result.AllDone = result.Q1.Done and result.Q2.Done and result.Q3.Done and result.Q4.Done and result.Q5.Done and result.Q6.Done
 return result
 end
 
@@ -2631,9 +2624,9 @@ if s and c then coins = r:Get(c["Coins"].Path) or 0 end
 end
 end
 local bRod, bBait, bRodPrice = GetCurrentBestGear()
-local pGhost = GetGhostfinProgressSafe()
-local pElem = GetElementProgressSafe()
-local pDiamond = GetDiamondProgressSafe()
+local pGhost = GetGhostfinProgress()
+local pElem = GetElementProgress()
+local pDiamond = GetDiamondProgress()
 uiData.Labels.Stats1.Text = string.format("Best Rod: %s | Coins: %s | Uncommon: %d | Epic: %d | Mythic: %d", bRod, coins, TierCounts.Uncommon, TierCounts.Epic, TierCounts.Mythic)
 uiData.Labels.Stats2.Text = string.format("Best Bait: %s | Common: %d | Rare: %d | Legendary: %d | Secret: %d", bBait, TierCounts.Common, TierCounts.Rare, TierCounts.Legendary, TierCounts.Secret)
 uiData.Labels.Ghost[1].Text = pGhost.Q1.Text; uiData.Labels.Ghost[1].TextColor3 = pGhost.Q1.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
@@ -2678,23 +2671,23 @@ if hrp and (hrp.Position - ENCHANT_ROOM_POS).Magnitude > 10 then TeleportToLookA
 RunQuestInstantFish(CURRENT_KAITUN_DELAY)
 end
 elseif step == 5 then
-local hasAres = HasItemByID(126, "Fishing Rods")
-if not hasAres and coins >= 3000000 then
-currentActivityText = "Upgrading to ARES ROD..."
+if pGhost.AllDone then
+currentActivityText = "Ghostfin Quest Done! Farming for Ares..."
+if HasItemByID(126, "Fishing Rods") then
+currentActivityText = "Already have Ares Rod! Moving to next step..."
+else
+if coins >= 3000000 then
 ForceResetAndTeleport(nil, nil)
 pcall(function() RF_PurchaseFishingRod:InvokeServer(126) end)
 task.wait(1.5)
 EquipBestGear()
 else
-if not pGhost.BoardFound then
-currentActivityText = "Reading Quest Board..."
-TeleportToLookAt(SECOND_ALTAR_POS, SECOND_ALTAR_LOOK)
-task.wait(2)
-else
-if pGhost.AllDone then
-currentActivityText = "Ghostfin Quest Done! Equipping..."
-task.wait(2)
-EquipBestGear()
+currentActivityText = string.format("Farming Coins for Ares Rod... (%s/3M)", coins)
+local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if (hrp.Position - TREASURE_ROOM_POS).Magnitude > 15 then TeleportToLookAt(TREASURE_ROOM_POS, TREASURE_ROOM_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+end
+end
 else
 if not pGhost.Q1.Done then
 currentActivityText = "Farming 300 Rare/Epic (Treasure Room)"
@@ -2708,18 +2701,17 @@ if (hrp.Position - SISYPHUS_POS).Magnitude > 15 then TeleportToLookAt(SISYPHUS_P
 RunQuestInstantFish(CURRENT_KAITUN_DELAY)
 end
 end
-end
-end
 elseif step == 6 then
-if not pElem.BoardFound then
-currentActivityText = "Reading Element Quest Board..."
+if pElem.AllDone then
+currentActivityText = "Element Quest Done! Farming for Diamond..."
+if HasItemByID(257, "Fishing Rods") then
+currentActivityText = "Already have Element Rod! Moving to Diamond..."
+EquipBestGear()
+else
+currentActivityText = "Element objectives done but no rod? Teleporting to Altar..."
 TeleportToLookAt(SECOND_ALTAR_POS, SECOND_ALTAR_LOOK)
 task.wait(2)
-else
-if pElem.AllDone then
-currentActivityText = "Element Quest Done! Equipping..."
-task.wait(2)
-EquipBestGear()
+end
 else
 local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 if not pElem.Q2.Done then
@@ -2727,7 +2719,7 @@ currentActivityText = "Farming Secret Fish (Jungle)"
 if (hrp.Position - ANCIENT_JUNGLE_POS).Magnitude > 15 then TeleportToLookAt(ANCIENT_JUNGLE_POS, ANCIENT_JUNGLE_LOOK) task.wait(0.5) end
 RunQuestInstantFish(CURRENT_KAITUN_DELAY)
 elseif not pElem.Q3.Done then
-currentActivityText = "Complete Puzzle"
+currentActivityText = "Farming Temple Secret"
 local currentLeverIndex = (math.floor(os.clock() / 5) % #ArtifactOrder) + 1
 local leverName = ArtifactOrder[currentLeverIndex]
 pcall(function() RF_PlaceLeverItem:FireServer(leverName) end)
@@ -2773,37 +2765,29 @@ RunQuestInstantFish(CURRENT_KAITUN_DELAY)
 end
 end
 end
-end
 elseif step == 7 then
-if pDiamond.HasDiamondRod then
-currentActivityText = "KAITUN COMPLETED! ALL DONE."
-task.wait(3)
-if KAITUN_ACTIVE then
-KAITUN_ACTIVE = false
-WindUI:Notify({Title = "Kaitun Selesai", Content = "Diamond Rod Acquired!", Duration = 5, Icon = "check"})
-local toggle = Premium:GetElementByTitle("Start Auto Kaitun (Full AFK)")
-if toggle and toggle.Set then toggle:Set(false) end
+if pDiamond.AllDone then
+currentActivityText = "Diamond Quest Done! Claiming..."
+local inventory = ClientData:Get({"Inventory"}) or {}
+local hasDiamondKey = false
+if inventory.Items then
+for _, item in ipairs(inventory.Items) do
+local itemData = ItemUtility:GetItemData(item.Id)
+if itemData and itemData.Data and itemData.Data.Name == "Diamond Key" then
+hasDiamondKey = true
+break
 end
-else
-if not pDiamond.QuestActive and not pDiamond.QuestCompleted then
-currentActivityText = "Go to Lary to start Diamond Quest"
-TeleportToLookAt(Vector3.new(-3743.745, -135.074, -1007.554), Vector3.new(0.310, 0.000, 0.951))
-task.wait(3)
-elseif pDiamond.QuestCompleted and pDiamond.HasDiamondKey then
+end
+end
+if hasDiamondKey and RF_ClaimItem then
 currentActivityText = "Claiming Diamond Rod..."
-if RF_ClaimItem then
-local success, result = pcall(function() return RF_ClaimItem:InvokeServer("Diamond Rod") end)
-if success then
-WindUI:Notify({Title = "Diamond Rod Claimed", Content = "Successfully claimed Diamond Rod!", Duration = 5, Icon = "check"})
-else
-WindUI:Notify({Title = "Claim Failed", Content = "Failed to claim Diamond Rod", Duration = 5, Icon = "x"})
-end
-end
+pcall(function() RF_ClaimItem:InvokeServer("Diamond Rod") end)
 task.wait(2)
-elseif pDiamond.AllDone then
-currentActivityText = "Return to Lary to claim Diamond Key"
-TeleportToLookAt(Vector3.new(-3743.745, -135.074, -1007.554), Vector3.new(0.310, 0.000, 0.951))
+else
+currentActivityText = "Need Diamond Key from Lary"
+TeleportToLookAt(SISYPHUS_POS, SISYPHUS_LOOK)
 task.wait(3)
+end
 else
 local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 if not pDiamond.Q4.Done then
@@ -2827,9 +2811,8 @@ currentActivityText = "Farming Perfect Throws..."
 if (hrp.Position - TROPICAL_GROVE_POS).Magnitude > 15 then TeleportToLookAt(TROPICAL_GROVE_POS, TROPICAL_GROVE_LOOK) task.wait(0.5) end
 RunQuestInstantFish(CURRENT_KAITUN_DELAY)
 else
-currentActivityText = "Diamond Quest Objectives Done!"
+currentActivityText = "Diamond objectives done, waiting..."
 task.wait(1)
-end
 end
 end
 elseif step == 8 then
@@ -2868,6 +2851,7 @@ end
 }))
 end
 end
+
 --// [END OF KAITUNNNNNNNNNNNNNNNNNN]
 local function TotemTab()
     if not Totem then return end
@@ -3486,7 +3470,8 @@ ElementParagraph:SetDesc("⏹Stopped")
 end
 end
 }))
-local diamond=Quest:Section({Title="Element Quest Beta",TextSize=16})
+Quest:Divider()
+local diamond=Quest:Section({Title="Diamond Quest Beta",TextSize=16})
 local DiamondParagraph=diamond:Paragraph({Title="Diamond Quest Monitor",Content="Initializing...",Icon="gem"})
 local runningDiamond=false
 local diamondThread=nil
@@ -3499,14 +3484,10 @@ local ELEMENT_ROD_ID=257
 local RUBY_ID=243
 local LOCHNESS_ID=228
 local ItemUtility=require(ReplicatedStorage.Shared.ItemUtility)
+
 local function GetDiamondQuestStatus()
-local result={QuestCompleted=false,QuestActive=false,HasElementRod=false,HasDiamondRod=false,HasDiamondKey=false,Progress=nil,InventoryCheck={HasRuby=false,HasLochness=false},CanClaimDiamondRod=false}
-local completedQuests=ClientData:Get({"CompletedQuests"})or{}
-for _,questName in ipairs(completedQuests)do
-if questName=="Diamond Rod Quest"then result.QuestCompleted=true end
-end
-local inventory=ClientData:Get({"Inventory"})
-if inventory then
+local result={HasElementRod=false,HasDiamondRod=false,HasDiamondKey=false,InventoryCheck={HasRuby=false,HasLochness=false},Progress={}}
+local inventory=ClientData:Get({"Inventory"})or{}
 if inventory["Fishing Rods"]then
 for _,rod in ipairs(inventory["Fishing Rods"])do
 if tonumber(rod.Id)==ELEMENT_ROD_ID then result.HasElementRod=true end
@@ -3527,20 +3508,20 @@ result.InventoryCheck.HasLochness=true
 end
 end
 end
-end
-result.CanClaimDiamondRod=result.QuestCompleted and result.HasDiamondKey and not result.HasDiamondRod
-if not result.QuestCompleted then
 local questData=ClientData:Get({"Quests","Mainline","Diamond Rod Quest"})
+result.Progress.Q1={Done=result.HasElementRod,Text=result.HasElementRod and"Element Rod: ✅"or"Element Rod: ❌"}
+result.Progress.Q2={Progress=0,Done=false,Text="Coral Secret: ❌"}
+result.Progress.Q3={Progress=0,Done=false,Text="Tropical Secret: ❌"}
+result.Progress.Q4={Done=result.InventoryCheck.HasRuby,Text=result.InventoryCheck.HasRuby and"Mutated Ruby: ✅"or"Mutated Ruby: ❌"}
+result.Progress.Q5={Done=result.InventoryCheck.HasLochness,Text=result.InventoryCheck.HasLochness and"Lochness Monster: ✅"or"Lochness Monster: ❌"}
+result.Progress.Q6={Progress=0,Done=false,Text="Perfect Throws: 0/1000"}
+result.Progress.AllDone=false
+result.Progress.TotalPercent=0
 if questData then
-result.QuestActive=true
-result.Progress={Q1={Done=result.HasElementRod,Text=result.HasElementRod and"Element Rod: ✅"or"Element Rod: ❌"},Q2={Progress=0,Done=false,Text="Coral Secret: ❌"},Q3={Progress=0,Done=false,Text="Tropical Secret: ❌"},Q4={Done=false,Text="Mutated Ruby: ❌"},Q5={Done=false,Text="Lochness Monster: ❌"},Q6={Progress=0,Done=false,Text="Perfect Throws: 0/1000"},TotalPercent=0,AllDone=false}
 for objId,objData in pairs(questData.Objectives)do
 local numId=tonumber(objId)
 local progress=objData.Progress or 0
-if numId==1 then
-result.Progress.Q1.Done=progress>=1 or result.HasElementRod
-result.Progress.Q1.Text=result.Progress.Q1.Done and"Element Rod: ✅"or"Element Rod: ❌"
-elseif numId==2 then
+if numId==2 then
 result.Progress.Q2.Progress=progress
 result.Progress.Q2.Done=progress>=1
 result.Progress.Q2.Text=result.Progress.Q2.Done and"Coral Secret: ✅"or string.format("Coral Secret: %d/1",progress)
@@ -3548,16 +3529,11 @@ elseif numId==3 then
 result.Progress.Q3.Progress=progress
 result.Progress.Q3.Done=progress>=1
 result.Progress.Q3.Text=result.Progress.Q3.Done and"Tropical Secret: ✅"or string.format("Tropical Secret: %d/1",progress)
-elseif numId==4 then
-result.Progress.Q4.Done=progress>=1 or result.InventoryCheck.HasRuby
-result.Progress.Q4.Text=result.Progress.Q4.Done and"Mutated Ruby: ✅"or"Mutated Ruby: ❌"
-elseif numId==5 then
-result.Progress.Q5.Done=progress>=1 or result.InventoryCheck.HasLochness
-result.Progress.Q5.Text=result.Progress.Q5.Done and"Lochness Monster: ✅"or"Lochness Monster: ❌"
 elseif numId==6 then
 result.Progress.Q6.Progress=progress
 result.Progress.Q6.Done=progress>=1000
 result.Progress.Q6.Text=string.format("Perfect Throws: %d/1000",progress)
+end
 end
 end
 local completedCount=0
@@ -3569,10 +3545,9 @@ if result.Progress.Q5.Done then completedCount=completedCount+1 end
 if result.Progress.Q6.Done then completedCount=completedCount+1 end
 result.Progress.AllDone=(completedCount==6)
 result.Progress.TotalPercent=math.floor((completedCount/6)*100)
-end
-end
 return result
 end
+
 local function GetClaimRemote()
 local packages=game:GetService("ReplicatedStorage"):WaitForChild("Packages")
 local index=packages:WaitForChild("_Index")
@@ -3587,6 +3562,7 @@ end
 end
 return nil
 end
+
 local function ClaimDiamondRod()
 local claimRemote=GetClaimRemote()
 if claimRemote then
@@ -3600,32 +3576,27 @@ end
 end
 return false,"❌ Claim remote not found"
 end
+
 local function RunDiamondQuest()
 if diamondThread then task.cancel(diamondThread)end
 diamondThread=task.spawn(function()
 local lastDisplayUpdate=0
-local claimedRod=false
 while runningDiamond do
 local status=GetDiamondQuestStatus()
 if tick()-lastDisplayUpdate>1 then
 if status.HasDiamondRod then
 DiamondParagraph:SetTitle("DIAMOND ROD OBTAINED")
 DiamondParagraph:SetDesc("Diamond Rod sudah didapat! Quest fully completed.")
-elseif status.CanClaimDiamondRod and not claimedRod then
+elseif status.Progress.AllDone and status.HasDiamondKey then
 DiamondParagraph:SetTitle("CLAIM DIAMOND ROD")
-DiamondParagraph:SetDesc("Quest selesai & punya Diamond Key! Click toggle to claim Diamond Rod...")
-elseif status.QuestCompleted and not status.HasDiamondKey then
+DiamondParagraph:SetDesc("Semua objective selesai & punya Diamond Key! Auto claim...")
+elseif status.Progress.AllDone and not status.HasDiamondKey then
 DiamondParagraph:SetTitle("GET DIAMOND KEY")
-DiamondParagraph:SetDesc("Quest selesai tapi belum dapat Diamond Key. Kembali ke Lary untuk claim reward.")
-elseif not status.QuestActive then
-if not status.HasElementRod then
+DiamondParagraph:SetDesc("Semua objective selesai! Pergi ke Lary untuk dapat Diamond Key.")
+elseif not status.HasElementRod then
 DiamondParagraph:SetTitle("NEED ELEMENT ROD")
-DiamondParagraph:SetDesc("Butuh Element Rod untuk memulai quest.")
+DiamondParagraph:SetDesc("Butuh Element Rod untuk mulai Diamond Quest.")
 else
-DiamondParagraph:SetTitle("READY TO START")
-DiamondParagraph:SetDesc("Sudah punya Element Rod Pergi ke Lary untuk mulai quest")
-end
-elseif status.QuestActive then
 DiamondParagraph:SetTitle(string.format("Diamond Quest [%d%%]",status.Progress.TotalPercent))
 local displayText=""
 displayText=displayText..status.Progress.Q1.Text.."\n"
@@ -3638,46 +3609,46 @@ DiamondParagraph:SetDesc(displayText)
 end
 lastDisplayUpdate=tick()
 end
+
 if status.HasDiamondRod then
 DiamondParagraph:SetTitle("DIAMOND ROD OBTAINED")
 DiamondParagraph:SetDesc("Diamond Rod sudah didapat! Toggle dimatikan otomatis.")
 runningDiamond=false
 if DiamondToggle then DiamondToggle:Set(false)end
 break
-elseif status.CanClaimDiamondRod and not claimedRod then
+end
+
+if status.Progress.AllDone and status.HasDiamondKey then
 DiamondParagraph:SetTitle("CLAIMING DIAMOND ROD...")
 DiamondParagraph:SetDesc("Claiming Diamond Rod via remote...")
 local success,message=ClaimDiamondRod()
 if success then
 DiamondParagraph:SetTitle("DIAMOND ROD CLAIMED")
 DiamondParagraph:SetDesc(message)
-claimedRod=true
 task.wait(2)
+continue
 else
 DiamondParagraph:SetTitle("CLAIM FAILED")
 DiamondParagraph:SetDesc(message)
 task.wait(3)
 end
-continue
-elseif not status.HasElementRod then
+end
+
+if not status.HasElementRod then
 DiamondParagraph:SetTitle("NEED ELEMENT ROD FIRST")
 DiamondParagraph:SetDesc("Selesaikan Element Quest dulu! Toggle dimatikan otomatis.")
 runningDiamond=false
 if DiamondToggle then DiamondToggle:Set(false)end
 break
-elseif not status.QuestActive then
-DiamondParagraph:SetTitle("GO TO LARY")
-DiamondParagraph:SetDesc("Pergi ke Lary the Scientist untuk memulai quest.")
+end
+
+if status.Progress.AllDone and not status.HasDiamondKey then
+DiamondParagraph:SetTitle("GO TO LARY FOR KEY")
+DiamondParagraph:SetDesc("Semua objective selesai! Pergi ke Lary untuk claim Diamond Key.")
 task.wait(3)
 continue
-elseif status.QuestActive and status.Progress.AllDone then
-DiamondParagraph:SetTitle("QUEST OBJECTIVES DONE!")
-DiamondParagraph:SetDesc("Semua objective selesai! Kembali ke Lary untuk claim Diamond Key.")
-runningDiamond=false
-if DiamondToggle then DiamondToggle:Set(false)end
-break
 end
-if status.QuestActive then
+
 local targetCF=nil
 if not status.Progress.Q4.Done and not status.InventoryCheck.HasRuby then
 targetCF=RUBY_FARM_CF
@@ -3690,20 +3661,23 @@ targetCF=TROPICAL_GROVE_CF
 elseif not status.Progress.Q6.Done then
 targetCF=TROPICAL_GROVE_CF
 end
+
 if targetCF and IsFar(targetCF,20)then
 TeleportTo(targetCF)
 task.wait(1.5)
 end
-end
+
 task.wait(2)
 end
+
 if not runningDiamond then DiamondParagraph:SetDesc("⏹️ Stopped")end
 diamondThread=nil
 end)
 end
+
 local DiamondToggle=Reg("autoDiamond",diamond:Toggle({
 Title="Auto Complete Diamond Quest",
-Desc="Farm → Claim → Get Diamond Rod (ID: 559)",
+Desc="Farm → Get Diamond Key → Claim Diamond Rod",
 Value=false,
 Callback=function(s)
 runningDiamond=s
@@ -3713,28 +3687,32 @@ task.wait(0.5)
 local status=GetDiamondQuestStatus()
 if status.HasDiamondRod then
 DiamondParagraph:SetTitle("✅ ALREADY HAVE DIAMOND ROD")
-DiamondParagraph:SetDesc("Sudah punya Diamond Rod (ID: 559). Toggle dimatikan otomatis.")
+DiamondParagraph:SetDesc("Sudah punya Diamond Rod")
 runningDiamond=false
 if DiamondToggle then DiamondToggle:Set(false)end
 return
-elseif status.CanClaimDiamondRod then
+elseif status.Progress.AllDone and status.HasDiamondKey then
 DiamondParagraph:SetTitle("🎉 READY TO CLAIM")
-DiamondParagraph:SetDesc("Quest selesai & punya Diamond Key! Script akan auto claim Diamond Rod.")
+DiamondParagraph:SetDesc("Semua objective selesai & punya Diamond Key! Script akan auto claim.")
 elseif not status.HasElementRod then
 DiamondParagraph:SetTitle("❌ NEED ELEMENT ROD FIRST")
 DiamondParagraph:SetDesc("Butuh Element Rod (ID: 257) dulu! Toggle dimatikan otomatis.")
 runningDiamond=false
 if DiamondToggle then DiamondToggle:Set(false)end
 return
-elseif not status.QuestActive then
-DiamondParagraph:SetTitle("⚠️ READY TO START")
-DiamondParagraph:SetDesc("Sudah punya Element Rod ✅ Pergi ke Lary untuk mulai quest")
-elseif status.QuestActive and status.Progress.AllDone then
-DiamondParagraph:SetTitle("🎉 READY TO CLAIM KEY")
-DiamondParagraph:SetDesc("Semua objective selesai! Kembali ke Lary untuk claim Diamond Key.")
-runningDiamond=false
-if DiamondToggle then DiamondToggle:Set(false)end
-return
+elseif status.Progress.AllDone and not status.HasDiamondKey then
+DiamondParagraph:SetTitle("⚠️ GET DIAMOND KEY")
+DiamondParagraph:SetDesc("Semua objective selesai! Pergi ke Lary untuk claim Diamond Key.")
+else
+DiamondParagraph:SetTitle(string.format("Diamond Quest [%d%%]",status.Progress.TotalPercent))
+local displayText=""
+displayText=displayText..status.Progress.Q1.Text.."\n"
+displayText=displayText..status.Progress.Q2.Text.."\n"
+displayText=displayText..status.Progress.Q3.Text.."\n"
+displayText=displayText..status.Progress.Q4.Text.."\n"
+displayText=displayText..status.Progress.Q5.Text.."\n"
+displayText=displayText..status.Progress.Q6.Text
+DiamondParagraph:SetDesc(displayText)
 end
 DiamondParagraph:SetDesc("🔄 Starting automation...")
 RunDiamondQuest()
