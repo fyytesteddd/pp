@@ -5454,149 +5454,171 @@ local humanoid=char:WaitForChild("Humanoid")
 local Animator=humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator",humanoid)
 
 local SkinDatabase={
-["Eclipse Katana"]={["EquipIdle"]="rbxassetid://103641983335689",["FishCaught"]="rbxassetid://107940819382815",["ReelIntermission"]="rbxassetid://115229621326605",["ReelStart"]="rbxassetid://115229621326605",["ReelingIdle"]="rbxassetid://115229621326605",["RodThrow"]="rbxassetid://82600073500966",["StartRodCharge"]="rbxassetid://115229621326605"},
-["Ban Hammer"]={["EquipIdle"]="rbxassetid://96285280763544",["FishCaught"]="rbxassetid://96285280763544",["ReelIntermission"]="rbxassetid://74643095451174",["ReelStart"]="rbxassetid://74643095451174",["ReelingIdle"]="rbxassetid://74643095451174",["RodThrow"]="rbxassetid://123133988645038",["StartRodCharge"]="rbxassetid://134431618143422"},
-["Binary Edge"]={["EquipIdle"]="rbxassetid://103714544264522",["FishCaught"]="rbxassetid://109653945741202",["ReelIntermission"]="rbxassetid://81700883907369",["ReelStart"]="rbxassetid://81700883907369",["ReelingIdle"]="rbxassetid://81700883907369",["RodThrow"]="rbxassetid://104527781253009",["StartRodCharge"]="rbxassetid://72745361965091"},
+["Eclipse Katana"]="rbxassetid://107940819382815",
+["Ban Hammer"]="rbxassetid://96285280763544",
+["Binary Edge"]="rbxassetid://109653945741202",
+
 ["Eclipse"]="rbxassetid://107940819382815",
-["HolyTrident"]="rbxassetid://128167068291703",
-["SoulScythe"]="rbxassetid://82259219343456",
-["OceanicHarpoon"]="rbxassetid://76325124055693",
+["Holy Trident"]="rbxassetid://128167068291703",
+["Soul Scythe"]="rbxassetid://82259219343456",
+["Oceanic Harpoon"]="rbxassetid://76325124055693",
 ["Vanquisher"]="rbxassetid://93884986836266",
-["KrampusScythe"]="rbxassetid://134934781977605",
-["CorruptionEdge"]="rbxassetid://126613975718573",
-["PrincessParasol"]="rbxassetid://99143072029495"
+["Krampus Scythe"]="rbxassetid://134934781977605",
+["Corruption Edge"]="rbxassetid://126613975718573",
+["Princess Parasol"]="rbxassetid://99143072029495",
+
+["1x1x1x1 Ban Hammer"]="rbxassetid://96285280763544",
+["Blackhole Sword"]="rbxassetid://88993991486322",
+["Christmas Parasol"]="rbxassetid://99143072029495",
+["Eternal Flower"]="rbxassetid://119567958965696",
+["Frozen Krampus Scythe"]="rbxassetid://134934781977605",
+["Gingerbread Katana"]="rbxassetid://107940819382815",
+["The Vanquisher"]="rbxassetid://93884986836266"
 }
 
-local CurrentSkin="Eclipse Katana"
-local IsFullSet=false
+local CurrentSkin=nil
 local AnimationPool={}
 local IsEnabled=false
-local POOL_SIZE=2
+local POOL_SIZE=3
 local killedTracks={}
-local replaceCount=0
-local ReplacingAnimations={["FishCaught"]=true,["ReelIntermission"]=false,["ReelStart"]=false,["ReelingIdle"]=false,["RodThrow"]=false,["StartRodCharge"]=false,["EquipIdle"]=false}
-
-local function ClearAnimationPool()
-for _,p in ipairs(AnimationPool) do pcall(function() if p.Track then p.Track:Stop(0) p.Track:Destroy() end end) end
-AnimationPool={} killedTracks={}
-end
+local currentPoolIndex=1
 
 local function LoadAnimationPool(skinId)
-local animSet=SkinDatabase[skinId] if not animSet then return false end
-ClearAnimationPool()
-IsFullSet=type(animSet)=="table"
-if IsFullSet then
-local animationTypes={}
-for t,id in pairs(animSet) do
-if ReplacingAnimations[t] then
-local a=Instance.new("Animation") a.AnimationId=id a.Name="CUSTOM_"..t
-table.insert(animationTypes,{Type=t,Anim=a})
-end end
-if #animationTypes==0 then return false end
+local animId=SkinDatabase[skinId]
+if not animId then return false end
+for _,t in ipairs(AnimationPool) do pcall(function() t:Stop(0) t:Destroy() end) end
+AnimationPool={}
+local anim=Instance.new("Animation")
+anim.AnimationId=animId
+anim.Name="CUSTOM_SKIN_ANIM"
 for i=1,POOL_SIZE do
-for _,d in ipairs(animationTypes) do
-local tr=Animator:LoadAnimation(d.Anim)
-tr.Priority=Enum.AnimationPriority.Action4 tr.Looped=false tr.Name="SKIN_"..d.Type.."_"..i
-table.insert(AnimationPool,{Track=tr,Type=d.Type})
-end end
-else
-local a=Instance.new("Animation") a.AnimationId=animSet a.Name="CUSTOM_SINGLE"
-for i=1,POOL_SIZE do
-local tr=Animator:LoadAnimation(a)
-tr.Priority=Enum.AnimationPriority.Action4 tr.Looped=false tr.Name="SKIN_FISHCAUGHT_"..i
-table.insert(AnimationPool,{Track=tr,Type="FishCaught"})
+local tr=Animator:LoadAnimation(anim)
+tr.Priority=Enum.AnimationPriority.Action4
+tr.Looped=false
+tr.Name="SKIN_POOL_"..i
+task.spawn(function()
+pcall(function()
+tr:Play(0,1,0)
+task.wait(.05)
+tr:Stop(0)
+end)
+end)
+table.insert(AnimationPool,tr)
 end
-end
+currentPoolIndex=1
 return true
 end
 
-local function GetAnimationType(track)
-if not track or not track.Animation then return"FishCaught" end
-local n=track.Animation.Name or""
-for t in pairs(ReplacingAnimations) do
-if string.find(string.lower(n),string.lower(t)) then return t end end
-return"FishCaught"
+local function GetNextTrack()
+for i=1,POOL_SIZE do
+local t=AnimationPool[i]
+if t and not t.IsPlaying then return t end
+end
+currentPoolIndex=currentPoolIndex%POOL_SIZE+1
+return AnimationPool[currentPoolIndex]
 end
 
-local function GetMatchingTrack(t)
-for _,p in ipairs(AnimationPool) do if p.Type==t and not p.Track.IsPlaying then return p.Track end end
-for _,p in ipairs(AnimationPool) do if p.Type==t then return p.Track end end
-for _,p in ipairs(AnimationPool) do if not p.Track.IsPlaying then return p.Track end end
-return AnimationPool[1] and AnimationPool[1].Track
-end
-
-local function ShouldReplaceAnimation(track)
-if not track or not track.Animation or not IsEnabled or #AnimationPool==0 then return false end
-local n=track.Animation.Name or""
-for t,s in pairs(ReplacingAnimations) do
-if s and string.find(string.lower(n),string.lower(t)) then return true end end
-return false
+local function IsFishCaughtAnimation(track)
+if not track or not track.Animation then return false end
+local n1=string.lower(track.Name or"")
+local n2=string.lower(track.Animation.Name or"")
+return string.find(n1,"fishcaught") or string.find(n2,"fishcaught") or string.find(n1,"caught") or string.find(n2,"caught")
 end
 
 local function InstantReplace(original)
-local t=GetAnimationType(original)
-local next=GetMatchingTrack(t) if not next then return end
-killedTracks[original]=tick()
-task.spawn(function() for i=1,5 do pcall(function() if original.IsPlaying then original:Stop(0) original:AdjustSpeed(0) end end) task.wait(.05) end end)
-task.wait(.1)
-pcall(function() if next.IsPlaying then next:Stop(0) end next:Play(0,1,1) next:AdjustSpeed(1) end)
-task.delay(2,function() killedTracks[original]=nil end)
+local next=GetNextTrack()
+if not next then return end
+killedTracks[original]=true
+task.spawn(function()
+for i=1,10 do
+pcall(function()
+if original.IsPlaying then
+original:Stop(0)
+original:AdjustSpeed(0)
+original.TimePosition=0
+end
+end)
+task.wait()
+end
+end)
+pcall(function()
+if next.IsPlaying then next:Stop(0) end
+next:Play(0,1,1)
+next:AdjustSpeed(1)
+end)
+task.delay(1,function() killedTracks[original]=nil end)
 end
 
 humanoid.AnimationPlayed:Connect(function(track)
-if ShouldReplaceAnimation(track) then task.spawn(function() InstantReplace(track) end) end
+if IsEnabled and IsFishCaughtAnimation(track) then
+task.spawn(function() InstantReplace(track) end)
+end
 end)
 
 RunService.RenderStepped:Connect(function()
 if not IsEnabled then return end
 for _,track in ipairs(humanoid:GetPlayingAnimationTracks()) do
-if string.find(string.lower(track.Name or""),"skin_") then continue end
-if killedTracks[track] then if track.IsPlaying then pcall(function() track:Stop(0) track:AdjustSpeed(0) end) end continue end
-if track.IsPlaying and ShouldReplaceAnimation(track) then task.spawn(function() InstantReplace(track) end) end
+if string.find(string.lower(track.Name or""),"skin_pool") then continue end
+if killedTracks[track] then
+pcall(function() track:Stop(0) track:AdjustSpeed(0) end)
+continue
+end
+if track.IsPlaying and IsFishCaughtAnimation(track) then
+task.spawn(function() InstantReplace(track) end)
+end
+end
+end)
+
+RunService.Heartbeat:Connect(function()
+if not IsEnabled then return end
+for track in pairs(killedTracks) do
+if track and track.IsPlaying then
+pcall(function() track:Stop(0) track:AdjustSpeed(0) end)
+end
 end
 end)
 
 player.CharacterAdded:Connect(function(nc)
-task.wait(2) char=nc humanoid=char:WaitForChild("Humanoid")
+task.wait(1.5)
+char=nc
+humanoid=char:WaitForChild("Humanoid")
 Animator=humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator",humanoid)
-killedTracks={} if IsEnabled and CurrentSkin then task.wait(1) LoadAnimationPool(CurrentSkin) end
+killedTracks={}
+if IsEnabled and CurrentSkin then
+task.wait(.5)
+LoadAnimationPool(CurrentSkin)
+end
 end)
 
-local AnimationSection=Animation:Section({Title="Animation Replacer",TextSize=16})
+local AnimationSection=Animation:Section({Title="Skin Animation",TextSize=16})
 
 Reg("skinDropdown",AnimationSection:Dropdown({
-Title="Select Animation Skin",
-Values={"Eclipse Katana","Ban Hammer","Binary Edge","Eclipse","HolyTrident","SoulScythe","OceanicHarpoon","Vanquisher","KrampusScythe","CorruptionEdge","PrincessParasol"},
-Value="Eclipse Katana",
+Title="Select Skin",
+Values={
+"Eclipse Katana","Ban Hammer","Binary Edge","Eclipse","Holy Trident","Soul Scythe",
+"Oceanic Harpoon","Vanquisher","Krampus Scythe","Corruption Edge","Princess Parasol",
+"1x1x1x1 Ban Hammer","Blackhole Sword","Christmas Parasol","Eternal Flower",
+"Frozen Krampus Scythe","Gingerbread Katana","The Vanquisher"
+},
 Callback=function(v)
-if v and v~="" then
 CurrentSkin=v
-IsFullSet=type(SkinDatabase[v])=="table"
-WindUI:Notify({Title="Skin Selected",Content=v..(IsFullSet and" (Full Set)"or" (Single)"),Duration=2,Icon="check"})
 if IsEnabled then LoadAnimationPool(v) end
-end end
-}))
-
-Reg("fullSetToggle",AnimationSection:Toggle({
-Title="Enable Full Animation Set",Value=false,
-Callback=function(s)
-for k in pairs(ReplacingAnimations) do ReplacingAnimations[k]=s end
-if IsEnabled then LoadAnimationPool(CurrentSkin) end
 end
 }))
 
-Reg("animationToggle",AnimationSection:Toggle({
-Title="Enable Animation Replacer",Value=false,
+Reg("animToggle",AnimationSection:Toggle({
+Title="Enable Animation Replacer",
+Value=false,
 Callback=function(s)
 IsEnabled=s
-if s then
-if not LoadAnimationPool(CurrentSkin) then IsEnabled=false end
-else ClearAnimationPool() end
+if s and CurrentSkin then
+LoadAnimationPool(CurrentSkin)
+elseif not s then
+for _,t in ipairs(AnimationPool) do pcall(function() t:Stop(0) end) end
+end
 end
 }))
 end
-
-
 --//
 local function ConfigTab()
 if not Config then return end
