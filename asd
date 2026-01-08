@@ -4831,7 +4831,18 @@ local function GetStoneUUID(stoneType)
 local targetId=stoneType=="Evolved Enchant Stone"and EVOLVED_ENCHANT_STONE_ID or ENCHANT_STONE_ID
 local r=GetPlayerDataReplion()if not r then return nil end
 local s,i=pcall(function()return r:GetExpect("Inventory")end)
-if s and i.Items then for _,it in ipairs(i.Items)do if tonumber(it.Id)==targetId and it.UUID then return it.UUID end end end
+if s and i.Items then
+ for _,it in ipairs(i.Items)do
+  if tonumber(it.Id)==targetId and it.UUID then
+   local itemData=ItemUtility:GetItemData(it.Id)
+   if itemData and itemData.Data then
+    local typeName=itemData.Data.Type
+    if typeName then return it.UUID,typeName end
+   end
+   return it.UUID,"Enchant Stones"
+  end
+ end
+end
 return nil
 end
 local function CheckIfEnchantReached(uuid)local r=GetPlayerDataReplion()local rods=r:GetExpect("Inventory")["Fishing Rods"]or{}local trg=nil for _,rod in ipairs(rods)do if rod.UUID==uuid then trg=rod break end end if not trg then return true end local eid=trg.Metadata and trg.Metadata.EnchantId if not eid then return false end for _,n in ipairs(selectedEnchantNames)do if ENCHANT_MAPPING[n]==eid then return true end end return false end
@@ -4843,24 +4854,26 @@ UnequipAllEquippedItems()
 task.wait(0.5)
 TeleportToLookAt(ENCHANT_ALTAR_POS,ENCHANT_ALTAR_LOOK)
 task.wait(1.5)
-WindUI:Notify({Title="Enchant Started",Content="Mulai rolling enchant dengan "..stoneType.."...",Duration=2,Icon="zap"})
+WindUI:Notify({Title="Enchant Started",Content="Mulai rolling dengan "..stoneType.."...",Duration=2,Icon="zap"})
 while autoEnchantState do
 if CheckIfEnchantReached(uuid)then WindUI:Notify({Title="Success!",Content="Target Enchant didapatkan.",Duration=5,Icon="check"})break end
-local stone=GetStoneUUID(stoneType)
+local stone,stoneCategory=GetStoneUUID(stoneType)
 if not stone then
-local altStone=stoneType=="Evolved Enchant Stone"and GetStoneUUID("Enchant Stone")or GetStoneUUID("Evolved Enchant Stone")
-if altStone then
-WindUI:Notify({Title="Stone Switch",Content=stoneType.." habis, ganti ke stone lain.",Duration=3,Icon="refresh-cw"})
-stoneType=stoneType=="Evolved Enchant Stone"and"Enchant Stone"or"Evolved Enchant Stone"
-stone=altStone
-else
-WindUI:Notify({Title="Stone Habis!",Content="Beli Enchant Stone dulu.",Duration=5,Icon="stop-circle"})
-break
-end
+ local altStoneType=stoneType=="Evolved Enchant Stone"and"Enchant Stone"or"Evolved Enchant Stone"
+ local altStone,altCategory=GetStoneUUID(altStoneType)
+ if altStone then
+  WindUI:Notify({Title="Stone Switch",Content=stoneType.." habis, ganti ke "..altStoneType,Duration=3})
+  stoneType=altStoneType
+  stone=altStone
+  stoneCategory=altCategory
+ else
+  WindUI:Notify({Title="Stone Habis!",Content="Beli Enchant Stone dulu.",Duration=5})
+  break
+ end
 end
 pcall(function()RE_EquipItem:FireServer(uuid,"Fishing Rods")end)
 task.wait(0.2)
-pcall(function()RE_EquipItem:FireServer(stone,stoneType=="Evolved Enchant Stone"and"Evolved Enchant Stones"or"Enchant Stones")end)
+pcall(function()RE_EquipItem:FireServer(stone,stoneCategory or"Enchant Stones")end)
 task.wait(0.2)
 pcall(function()RE_EquipToolFromHotbar:FireServer(2)end)
 task.wait(0.3)
@@ -4870,7 +4883,7 @@ pcall(function()RE_EquipToolFromHotbar:FireServer(0)end)
 task.wait(0.5)
 end
 autoEnchantState=false
-WindUI:Notify({Title="Auto Enchant Stopped",Duration=3,Icon="x"})
+WindUI:Notify({Title="Auto Enchant Stopped",Duration=3})
 end)
 end
 local MySection=Enchant:Section({Title="Auto Enchant",TextSize=20})
@@ -4879,8 +4892,8 @@ selectedRodUUID=nil
 for _,v in ipairs(ENCHANT_ROD_LIST)do
 if v.Name==n then
 local u=GetUUIDByRodID(v.ID)
-if u then selectedRodUUID=u WindUI:Notify({Title="Rod Selected",Content="UUID: "..u:sub(1,8).."...",Duration=2,Icon="check"})
-else WindUI:Notify({Title="Missing",Content=n.." tidak ditemukan di tas.",Duration=3,Icon="x"})end
+if u then selectedRodUUID=u WindUI:Notify({Title="Rod Selected",Content="UUID: "..u:sub(1,8).."...",Duration=2})
+else WindUI:Notify({Title="Missing",Content=n.." tidak ditemukan di tas.",Duration=3})end
 break
 end
 end
@@ -4892,8 +4905,8 @@ if n then
 for _,v in ipairs(ENCHANT_ROD_LIST)do
 if v.Name==n then
 local u=GetUUIDByRodID(v.ID)
-if u then selectedRodUUID=u WindUI:Notify({Title="Updated",Content="UUID Rod diperbarui.",Duration=2,Icon="check"})
-else selectedRodUUID=nil WindUI:Notify({Title="Error",Content="Rod hilang dari inventory.",Duration=3,Icon="x"})end
+if u then selectedRodUUID=u WindUI:Notify({Title="Updated",Content="UUID Rod diperbarui.",Duration=2})
+else selectedRodUUID=nil WindUI:Notify({Title="Error",Content="Rod hilang dari inventory.",Duration=3})end
 break
 end
 end
@@ -4903,8 +4916,8 @@ Enchant:Dropdown({Title="Target Enchants",Desc="Berhenti jika mendapatkan salah 
 Enchant:Toggle({Title="Enable Auto Enchant",Value=false,Callback=function(s)
 autoEnchantState=s
 if s then
-if not selectedRodUUID then WindUI:Notify({Title="Error",Content="Pilih Rod yang valid dulu.",Duration=3,Icon="alert-triangle"})return false end
-if #selectedEnchantNames==0 then WindUI:Notify({Title="Error",Content="Pilih minimal 1 target enchant.",Duration=3,Icon="alert-triangle"})return false end
+if not selectedRodUUID then WindUI:Notify({Title="Error",Content="Pilih Rod yang valid dulu.",Duration=3})return false end
+if #selectedEnchantNames==0 then WindUI:Notify({Title="Error",Content="Pilih minimal 1 target enchant.",Duration=3})return false end
 RunAutoEnchantLoop(selectedRodUUID,selectedStoneType)
 else
 if autoEnchantThread then task.cancel(autoEnchantThread)autoEnchantThread=nil end
