@@ -4224,6 +4224,7 @@ local autoTradeThread=nil
 local tradeHoldFavorite=false
 local autoAcceptState=false
 local hideFavoriteInDropdown=false
+local groupMutationsInDropdown=false
 local selectedTradeTargetId=nil
 local selectedTradeItemName=nil
 local selectedTradeRarity=nil
@@ -4390,10 +4391,33 @@ Trade:Dropdown({Title="Filter Rarity (Optional)",Values={"Common","Uncommon","Ra
 local mutationDropdown=Trade:Dropdown({Title="Filter Mutation (Optional)",Values={"All Mutations","No Mutation","Shiny","Albino","Sandy","Noob","Moon Fragment","Festive","Disco","1x1x1x1","Bloodmoon","Color Burn","Corrupt","Fairy Dust","Frozen","Galaxy","Gemstone","Ghost","Gold","Holographic","Lightning","Midnight","Radioactive","Stone"},AllowNone=true,SearchBarEnabled=true,Callback=function(m)if m=="All Mutations"or m=="No Mutation"then selectedMutation=""else selectedMutation=m end end})
 Trade:Toggle({Title="Hold Favorite Items",Desc="Jangan trade item yang di-Favorite.",Value=false,Callback=function(s)tradeHoldFavorite=s end})
 Trade:Toggle({Title="Hide Favorited in Dropdown",Desc="Sembunyikan item favorit saat scan.",Value=false,Callback=function(s)hideFavoriteInDropdown=s end})
+Trade:Toggle({Title="Group Mutations",Desc="Gabung semua mutasi dalam satu item.",Value=false,Callback=function(s)groupMutationsInDropdown=s end})
 Trade:Divider()
 local tradeDropdown
 local function ScanBackpackItems()
 local items=GetInventoryForScan()
+if groupMutationsInDropdown then
+local itemTotals={}
+local favTotals={}
+for _,item in ipairs(items)do
+local name=item.Name
+local isFav=item.IsFavorite
+itemTotals[name]=(itemTotals[name]or 0)+1
+if isFav then favTotals[name]=(favTotals[name]or 0)+1 end
+end
+local itemList={}
+for itemName,total in pairs(itemTotals)do
+local favCount=favTotals[itemName]or 0
+local displayName=itemName.." (x"..total
+if favCount>0 then
+displayName=displayName.." ⭐"
+end
+displayName=displayName..")"
+table.insert(itemList,displayName)
+end
+table.sort(itemList)
+return itemList
+else
 local itemDetails={}
 for _,item in ipairs(items)do
 local name=item.Name
@@ -4422,6 +4446,7 @@ end
 end
 table.sort(itemList)
 return itemList
+end
 end
 Trade:Button({Title="Scan Backpack",Icon="package",Callback=function()
 local scanned=ScanBackpackItems()
