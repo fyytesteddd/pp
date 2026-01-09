@@ -4351,6 +4351,9 @@ Trade:Toggle({Title="Auto Accept Trade",Desc="Otomatis menerima semua trade masu
 Trade:Divider()
 local PlayerDropdown=Trade:Dropdown({Title="Select Target Player",Values={},Multi=false,AllowNone=false,Callback=function(n)local p=Players:FindFirstChild(n)if p then selectedTradeTargetId=p.UserId WindUI:Notify({Title="Target Set",Content=p.Name,Duration=2,Icon="user"})else selectedTradeTargetId=nil end end})
 Trade:Button({Title="Refresh Players",Icon="refresh-ccw",Callback=function()local l={}for _,p in ipairs(Players:GetPlayers())do if p~=LocalPlayer then table.insert(l,p.Name)end end pcall(function()PlayerDropdown:Refresh(l)end)pcall(function()PlayerDropdown:Set(false)end)WindUI:Notify({Title="List Updated",Content=#l.." players found.",Duration=2})end})
+Trade:Dropdown({Title="Filter Rarity (Optional)",Values={"Common","Uncommon","Rare","Epic","Legendary","Mythic","SECRET","Trophy","Collectible","DEV"},AllowNone=true,Callback=function(r)selectedTradeRarity=r end})
+Trade:Toggle({Title="Hold Favorite Items",Desc="Jangan trade item yang di-Favorite.",Value=false,Callback=function(s)tradeHoldFavorite=s end})
+Trade:Divider()
 local tradeDropdown
 local function ScanBackpackItems()
 local items=GetItemsToTrade()
@@ -4382,9 +4385,7 @@ local itemNameOnly=n:match("^(.+) %(x%d+%)$")or n
 selectedTradeItemName=itemNameOnly
 end
 end})
-Trade:Slider({Title="Quantity to Trade",Step=1,Value={Min=1,Max=100,Default=1},Callback=function(v)tradeQuantity=tonumber(v)end})
-Trade:Dropdown({Title="Filter Rarity (Optional)",Values={"Common","Uncommon","Rare","Epic","Legendary","Mythic","SECRET","Trophy","Collectible","DEV"},AllowNone=true,Callback=function(r)selectedTradeRarity=r end})
-Trade:Toggle({Title="Hold Favorite Items",Desc="Jangan trade item yang di-Favorite.",Value=false,Callback=function(s)tradeHoldFavorite=s end})
+Trade:Input({Title="Quantity to Trade",Placeholder="1",Callback=function(v)tradeQuantity=tonumber(v)or 1 end})
 Trade:Input({Title="Stop at Coin Value",Placeholder="0 (Unlimited)",Callback=function(v)tradeStopAtCoins=tonumber(v)or 0 isTradeByCoinActive=tradeStopAtCoins>0 end})
 Trade:Slider({Title="Trade Delay",Step=0.1,Value={Min=0.5,Max=5,Default=1},Callback=function(v)tradeDelay=tonumber(v)end})
 Trade:Toggle({Title="Enable Auto Trade",Value=false,Callback=function(s)
