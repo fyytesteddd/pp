@@ -1789,7 +1789,6 @@ task.spawn(function()
 task.wait(1)
 refreshPlayerList()
 end)
-end
 --// TELEPORT TO PLAYER
 
 Teleport:Section({Title="Teleport To Island Locations"})
