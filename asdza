@@ -4398,21 +4398,13 @@ local function ScanBackpackItems()
 local items=GetInventoryForScan()
 if groupMutationsInDropdown then
 local itemTotals={}
-local favTotals={}
 for _,item in ipairs(items)do
 local name=item.Name
-local isFav=item.IsFavorite
 itemTotals[name]=(itemTotals[name]or 0)+1
-if isFav then favTotals[name]=(favTotals[name]or 0)+1 end
 end
 local itemList={}
 for itemName,total in pairs(itemTotals)do
-local favCount=favTotals[itemName]or 0
-local displayName=itemName.." (x"..total
-if favCount>0 then
-displayName=displayName.." ⭐"
-end
-displayName=displayName..")"
+local displayName=itemName.." (x"..total..")"
 table.insert(itemList,displayName)
 end
 table.sort(itemList)
@@ -4437,8 +4429,10 @@ displayName=displayName.." ("..mutName.." x"..data.total
 else
 displayName=displayName.." (x"..data.total
 end
-if data.fav>0 then
+if data.fav==data.total then
 displayName=displayName.." ⭐"
+elseif data.fav>0 then
+displayName=displayName.." | "..data.fav.."⭐"
 end
 displayName=displayName..")"
 table.insert(itemList,displayName)
