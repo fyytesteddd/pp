@@ -1010,14 +1010,9 @@ local function disablePhysics()
 local char=game:GetService("Players").LocalPlayer.Character
 if char then
 for _,v in ipairs(char:GetDescendants())do
-if v:IsA("BasePart")and v.Name~="HumanoidRootPart"then
+if v:IsA("BasePart")then
 v.CanCollide=false
-v.Massless=true
 end
-end
-if char:FindFirstChild("Humanoid")then
-char.Humanoid.PlatformStand=true
-char.Humanoid.AutoRotate=false
 end
 end
 end
@@ -1026,14 +1021,9 @@ local function restorePhysics()
 local char=game:GetService("Players").LocalPlayer.Character
 if char then
 for _,v in ipairs(char:GetDescendants())do
-if v:IsA("BasePart")and v.Name~="HumanoidRootPart"then
+if v:IsA("BasePart")then
 v.CanCollide=true
-v.Massless=false
 end
-end
-if char:FindFirstChild("Humanoid")then
-char.Humanoid.PlatformStand=false
-char.Humanoid.AutoRotate=true
 end
 end
 end
@@ -1067,7 +1057,7 @@ Auto:Section({Title="Blatant V2"})
 
 local blatantV2CompleteDelayInput=Reg("blatantV2_completeDelay",Auto:Input({Title="Complete Delay",Placeholder=tostring(FD),Value=tostring(FD),Callback=function(v)local n=tonumber(v)if n and n>=0 then FD=n end end}))
 local blatantV2CancelDelayInput=Reg("blatantV2_cancelDelay",Auto:Input({Title="Cancel Delay",Placeholder=tostring(KD),Value=tostring(KD),Callback=function(v)local n=tonumber(v)if n and n>=0 then KD=n end end}))
-local blatantV2Toggle=Reg("blatantV2_toggle",Auto:Toggle({Title="Enable Blatant V2",Desc="Ultra fast perfect-cast fishing",Default=false,Callback=function(s)active=s;if s then casts=0;start=tick();safe(function()RFU:InvokeServer(true)end);disablePhysics();thread=task.spawn(loop);else if thread then task.cancel(thread)thread=nil end;safe(function()RFU:InvokeServer(true)end);task.wait(.2);safe(function()RFK:InvokeServer()end);restorePhysics();end end}))
+local blatantV2Toggle=Reg("blatantV2_toggle",Auto:Toggle({Title="Enable Blatant V2",Desc="Ultra fast perfect-cast fishing",Default=false,Callback=function(s)active=s;if s then casts=0;start=tick();safe(function()RFU:InvokeServer(true)end);disablePhysics();thread=task.spawn(loop);else if thread then task.cancel(thread)thread=nil end;safe(function()RFU:InvokeServer(false)end);task.wait(.2);safe(function()RFK:InvokeServer()end);restorePhysics();end end}))
 
 local Net=RS:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
 local Equip=Net:WaitForChild("RE/EquipToolFromHotbar")
