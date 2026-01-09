@@ -1007,13 +1007,18 @@ local KD=.3
 
 local function safe(f)task.spawn(function()pcall(f)end)end
 
--- Suppress Game Visuals
+-- Visual Stealth System
 local function SuppressGameVisuals(suppress)
     -- A. Block Auto Fishing Notifications
-    local Succ,TextController=pcall(function()return require(RS.Controllers.TextNotificationController)end)
+    local Succ,TextController=pcall(function()
+        return require(RS.Controllers.TextNotificationController)
+    end)
+    
     if Succ and TextController then
         if suppress then
-            if not TextController._OldDeliver then TextController._OldDeliver=TextController.DeliverNotification end
+            if not TextController._OldDeliver then 
+                TextController._OldDeliver=TextController.DeliverNotification 
+            end
             TextController.DeliverNotification=function(self,data)
                 if data and data.Text and(string.find(tostring(data.Text),"Auto Fishing")or string.find(tostring(data.Text),"Reach Level"))then
                     return 
@@ -1025,17 +1030,19 @@ local function SuppressGameVisuals(suppress)
             TextController._OldDeliver=nil
         end
     end
-    
-    -- B. Force Button to Red (Inactive)
+
+    -- B. Force Button to Red (Inactive) Every Frame
     if suppress then
         task.spawn(function()
             local RunService=game:GetService("RunService")
             local CollectionService=game:GetService("CollectionService")
             local PlayerGui=game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+            
             local InactiveColor=ColorSequence.new({
                 ColorSequenceKeypoint.new(0,Color3.fromHex("ff5d60")),
                 ColorSequenceKeypoint.new(1,Color3.fromHex("ff2256"))
             })
+
             while active do
                 local targets={}
                 for _,btn in ipairs(CollectionService:GetTagged("AutoFishingButton"))do
@@ -1068,6 +1075,20 @@ local function PerfectAutoFishingState(state)
     end
 end
 
+-- Check Fishing Remotes
+local function checkFishingRemotes(silent)
+    local remotes={RFU,RFC,RFS,REF,RFK}
+    for _,remote in ipairs(remotes)do
+        if not remote then
+            if not silent then
+                WindUI:Notify({Title="Remote Error!",Content="Fishing remote not found!",Duration=5,Icon="x"})
+            end
+            return false
+        end
+    end
+    return true
+end
+
 local function loop()
  while active do
   local t=tick()
@@ -1097,7 +1118,51 @@ Auto:Section({Title="Blatant V2"})
 
 local blatantV2CompleteDelayInput=Reg("blatantV2_completeDelay",Auto:Input({Title="Complete Delay",Placeholder=tostring(FD),Value=tostring(FD),Callback=function(v)local n=tonumber(v)if n and n>=0 then FD=n end end}))
 local blatantV2CancelDelayInput=Reg("blatantV2_cancelDelay",Auto:Input({Title="Cancel Delay",Placeholder=tostring(KD),Value=tostring(KD),Callback=function(v)local n=tonumber(v)if n and n>=0 then KD=n end end}))
-local blatantV2Toggle=Reg("blatantV2_toggle",Auto:Toggle({Title="Enable Blatant V2",Desc="Ultra fast perfect-cast fishing",Default=false,Callback=function(s)active=s;if s then casts=0;start=tick();PerfectAutoFishingState(true);SuppressGameVisuals(true);thread=task.spawn(loop);else if thread then task.cancel(thread)thread=nil end;PerfectAutoFishingState(false);SuppressGameVisuals(false);task.wait(.2);safe(function()RFK:InvokeServer()end);end end}))
+
+local blatantV2Toggle=Reg("blatantV2_toggle",Auto:Toggle({
+Title="Enable Blatant V2",
+Desc="Ultra fast perfect-cast fishing",
+Default=false,
+Callback=function(state)
+    if not checkFishingRemotes()then return end
+    
+    active=state
+    
+    if state then
+        casts=0
+        start=tick()
+        
+        -- 1. Server State: ON (Perfection)
+        PerfectAutoFishingState(true)
+        
+        -- 2. Visual Stealth
+        SuppressGameVisuals(true)
+        
+        -- 3. Start fishing loop
+        thread=task.spawn(loop)
+        
+        WindUI:Notify({Title="Blatant V2 ON",Duration=3,Icon="zap"})
+    else
+        -- 4. Stop fishing loop
+        if thread then 
+            task.cancel(thread)
+            thread=nil 
+        end
+        
+        -- 5. Server State: OFF
+        PerfectAutoFishingState(false)
+        
+        -- 6. Restore visuals
+        SuppressGameVisuals(false)
+        
+        -- 7. Final cancel
+        task.wait(.2)
+        safe(function()RFK:InvokeServer()end)
+        
+        WindUI:Notify({Title="Stopped",Duration=2})
+    end
+end
+}))
 
 local Net=RS:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
 local Equip=Net:WaitForChild("RE/EquipToolFromHotbar")
