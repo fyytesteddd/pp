@@ -4223,6 +4223,7 @@ local autoTradeState=false
 local autoTradeThread=nil
 local tradeHoldFavorite=false
 local autoAcceptState=false
+local hideFavoriteInDropdown=false
 local selectedTradeTargetId=nil
 local selectedTradeItemName=nil
 local selectedTradeRarity=nil
@@ -4255,7 +4256,7 @@ if ItemUtility then local d=ItemUtility:GetItemData(item.Id)if d and d.Data and 
 return name,rarity
 end
 local function GetMutationName(item)
-if not item.Metadata or not item.Metadata.VariantId then return nil end
+if not item.Metadata or not item.Metadata.VariantId then return "No Mutation" end
 local mutations={
 Shiny="Shiny",
 Albino="Albino",
@@ -4280,7 +4281,7 @@ Midnight="Midnight",
 Radioactive="Radioactive",
 Stone="Stone"
 }
-return mutations[item.Metadata.VariantId]
+return mutations[item.Metadata.VariantId] or item.Metadata.VariantId
 end
 local function GetPlayerDataReplion()
 local s,r=pcall(function()return ReplionClient:WaitReplion("Data")end)
@@ -4302,6 +4303,24 @@ local pn=not selectedTradeItemName or name==selectedTradeItemName
 local mutation=GetMutationName(item)
 local pm=not selectedMutation or selectedMutation==""or mutation==selectedMutation
 if pr and pn and pm then table.insert(out,{UUID=item.UUID,Name=name,Id=item.Id,Metadata=item.Metadata or{},IsFavorite=fav,Mutation=mutation})end
+end
+return out
+end
+local function GetInventoryForScan()
+local r=GetPlayerDataReplion()if not r then return{}end
+local s,i=pcall(function()return r:GetExpect("Inventory")end)
+if not s or not i or not i.Items then return{}end
+local out={}
+for _,item in ipairs(i.Items)do
+local fav=item.IsFavorite or item.Favorited
+if hideFavoriteInDropdown and fav then continue end
+if typeof(item.UUID)~="string"or#item.UUID<10 then continue end
+local name,rar=GetFishNameAndRarity(item)
+local ir=(rar and rar:upper()~="COMMON")and rar or"Default"
+local pr=not selectedTradeRarity or ir:upper()==selectedTradeRarity:upper()
+local mutation=GetMutationName(item)
+local pm=not selectedMutation or selectedMutation==""or mutation==selectedMutation
+if pr and pm then table.insert(out,{UUID=item.UUID,Name=name,Id=item.Id,Metadata=item.Metadata or{},IsFavorite=fav,Mutation=mutation})end
 end
 return out
 end
@@ -4370,14 +4389,15 @@ Trade:Button({Title="Refresh Players",Icon="refresh-ccw",Callback=function()loca
 Trade:Dropdown({Title="Filter Rarity (Optional)",Values={"Common","Uncommon","Rare","Epic","Legendary","Mythic","SECRET","Trophy","Collectible","DEV"},AllowNone=true,Callback=function(r)selectedTradeRarity=r end})
 local mutationDropdown=Trade:Dropdown({Title="Filter Mutation (Optional)",Values={"All Mutations","No Mutation","Shiny","Albino","Sandy","Noob","Moon Fragment","Festive","Disco","1x1x1x1","Bloodmoon","Color Burn","Corrupt","Fairy Dust","Frozen","Galaxy","Gemstone","Ghost","Gold","Holographic","Lightning","Midnight","Radioactive","Stone"},AllowNone=true,SearchBarEnabled=true,Callback=function(m)if m=="All Mutations"or m=="No Mutation"then selectedMutation=""else selectedMutation=m end end})
 Trade:Toggle({Title="Hold Favorite Items",Desc="Jangan trade item yang di-Favorite.",Value=false,Callback=function(s)tradeHoldFavorite=s end})
+Trade:Toggle({Title="Hide Favorited in Dropdown",Desc="Sembunyikan item favorit saat scan.",Value=false,Callback=function(s)hideFavoriteInDropdown=s end})
 Trade:Divider()
 local tradeDropdown
 local function ScanBackpackItems()
-local items=GetItemsToTrade()
+local items=GetInventoryForScan()
 local itemDetails={}
 for _,item in ipairs(items)do
 local name=item.Name
-local mutation=item.Mutation or"No Mutation"
+local mutation=item.Mutation
 local isFav=item.IsFavorite
 if not itemDetails[name]then itemDetails[name]={}end
 if not itemDetails[name][mutation]then itemDetails[name][mutation]={total=0,fav=0}end
@@ -4387,11 +4407,11 @@ end
 local itemList={}
 for itemName,mutations in pairs(itemDetails)do
 for mutName,data in pairs(mutations)do
-local displayName=itemName.." ("
+local displayName=itemName
 if mutName~="No Mutation"then
-displayName=displayName..mutName.." x"..data.total
+displayName=displayName.." ("..mutName.." x"..data.total
 else
-displayName=displayName.."x"..data.total
+displayName=displayName.." (x"..data.total
 end
 if data.fav>0 then
 displayName=displayName.." ⭐"
