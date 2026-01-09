@@ -4231,6 +4231,8 @@ local tradeAmount=0
 local tradeStopAtCoins=0
 local isTradeByCoinActive=false
 local tradeQuantity=1
+local selectedMutation=""
+local allMutations={"Shiny","Albino","Sandy","Noob","Moon Fragment","Festive","Disco","1x1x1x1","Bloodmoon","Color Burn","Corrupt","Fairy Dust","Frozen","Galaxy","Gemstone","Ghost","Gold","Holographic","Lightning","Midnight","Radioactive","Stone"}
 local GlobalItemCache={}
 task.spawn(function()local items=RepStorage:WaitForChild("Items"):GetChildren()for _,v in ipairs(items)do if v.Name:sub(1,3)~="!!!"then table.insert(GlobalItemCache,v.Name)end end table.sort(GlobalItemCache)end)
 task.spawn(function()
@@ -4252,6 +4254,34 @@ local rarity=item.Metadata and item.Metadata.Rarity or"COMMON"
 if ItemUtility then local d=ItemUtility:GetItemData(item.Id)if d and d.Data and d.Data.Name then name=d.Data.Name end end
 return name,rarity
 end
+local function GetMutationName(item)
+if not item.Metadata or not item.Metadata.VariantId then return nil end
+local mutations={
+Shiny="Shiny",
+Albino="Albino",
+Sandy="Sandy",
+Noob="Noob",
+["Moon Fragment"]="Moon Fragment",
+Festive="Festive",
+Disco="Disco",
+["1x1x1x1"]="1x1x1x1",
+Bloodmoon="Bloodmoon",
+["Color Burn"]="Color Burn",
+Corrupt="Corrupt",
+["Fairy Dust"]="Fairy Dust",
+Frozen="Frozen",
+Galaxy="Galaxy",
+Gemstone="Gemstone",
+Ghost="Ghost",
+Gold="Gold",
+Holographic="Holographic",
+Lightning="Lightning",
+Midnight="Midnight",
+Radioactive="Radioactive",
+Stone="Stone"
+}
+return mutations[item.Metadata.VariantId]
+end
 local function GetPlayerDataReplion()
 local s,r=pcall(function()return ReplionClient:WaitReplion("Data")end)
 return s and r or nil
@@ -4269,40 +4299,11 @@ local name,rar=GetFishNameAndRarity(item)
 local ir=(rar and rar:upper()~="COMMON")and rar or"Default"
 local pr=not selectedTradeRarity or ir:upper()==selectedTradeRarity:upper()
 local pn=not selectedTradeItemName or name==selectedTradeItemName
-if pr and pn then table.insert(out,{UUID=item.UUID,Name=name,Id=item.Id,Metadata=item.Metadata or{},IsFavorite=fav})end
+local mutation=GetMutationName(item)
+local pm=not selectedMutation or selectedMutation==""or mutation==selectedMutation
+if pr and pn and pm then table.insert(out,{UUID=item.UUID,Name=name,Id=item.Id,Metadata=item.Metadata or{},IsFavorite=fav,Mutation=mutation})end
 end
 return out
-end
-local function CountItemByName(itemName)
-local r=GetPlayerDataReplion()if not r then return 0 end
-local s,i=pcall(function()return r:GetExpect("Inventory")end)
-if not s or not i or not i.Items then return 0 end
-local count=0
-for _,item in ipairs(i.Items)do
-local fav=item.IsFavorite or item.Favorited
-if tradeHoldFavorite and fav then continue end
-if typeof(item.UUID)~="string"or#item.UUID<10 then continue end
-local name,rar=GetFishNameAndRarity(item)
-local ir=(rar and rar:upper()~="COMMON")and rar or"Default"
-local pr=not selectedTradeRarity or ir:upper()==selectedTradeRarity:upper()
-if name==itemName and pr then count+=1 end
-end
-return count
-end
-local function CountFavoriteByName(itemName)
-local r=GetPlayerDataReplion()if not r then return 0 end
-local s,i=pcall(function()return r:GetExpect("Inventory")end)
-if not s or not i or not i.Items then return 0 end
-local favCount=0
-for _,item in ipairs(i.Items)do
-local fav=item.IsFavorite or item.Favorited
-if typeof(item.UUID)~="string"or#item.UUID<10 then continue end
-local name,rar=GetFishNameAndRarity(item)
-local ir=(rar and rar:upper()~="COMMON")and rar or"Default"
-local pr=not selectedTradeRarity or ir:upper()==selectedTradeRarity:upper()
-if name==itemName and pr and fav then favCount+=1 end
-end
-return favCount
 end
 local function IsItemStillInInventory(u)
 local r=GetPlayerDataReplion()
@@ -4367,28 +4368,37 @@ Trade:Divider()
 local PlayerDropdown=Trade:Dropdown({Title="Select Target Player",Values={},Multi=false,AllowNone=false,Callback=function(n)local p=Players:FindFirstChild(n)if p then selectedTradeTargetId=p.UserId WindUI:Notify({Title="Target Set",Content=p.Name,Duration=2,Icon="user"})else selectedTradeTargetId=nil end end})
 Trade:Button({Title="Refresh Players",Icon="refresh-ccw",Callback=function()local l={}for _,p in ipairs(Players:GetPlayers())do if p~=LocalPlayer then table.insert(l,p.Name)end end pcall(function()PlayerDropdown:Refresh(l)end)pcall(function()PlayerDropdown:Set(false)end)WindUI:Notify({Title="List Updated",Content=#l.." players found.",Duration=2})end})
 Trade:Dropdown({Title="Filter Rarity (Optional)",Values={"Common","Uncommon","Rare","Epic","Legendary","Mythic","SECRET","Trophy","Collectible","DEV"},AllowNone=true,Callback=function(r)selectedTradeRarity=r end})
+local mutationDropdown=Trade:Dropdown({Title="Filter Mutation (Optional)",Values={"All Mutations","No Mutation","Shiny","Albino","Sandy","Noob","Moon Fragment","Festive","Disco","1x1x1x1","Bloodmoon","Color Burn","Corrupt","Fairy Dust","Frozen","Galaxy","Gemstone","Ghost","Gold","Holographic","Lightning","Midnight","Radioactive","Stone"},AllowNone=true,SearchBarEnabled=true,Callback=function(m)if m=="All Mutations"or m=="No Mutation"then selectedMutation=""else selectedMutation=m end end})
 Trade:Toggle({Title="Hold Favorite Items",Desc="Jangan trade item yang di-Favorite.",Value=false,Callback=function(s)tradeHoldFavorite=s end})
 Trade:Divider()
 local tradeDropdown
 local function ScanBackpackItems()
 local items=GetItemsToTrade()
-local itemCounts={}
-local favoriteCounts={}
+local itemDetails={}
 for _,item in ipairs(items)do
 local name=item.Name
-itemCounts[name]=(itemCounts[name]or 0)+1
-if item.IsFavorite then
-favoriteCounts[name]=(favoriteCounts[name]or 0)+1
-end
+local mutation=item.Mutation or"No Mutation"
+local isFav=item.IsFavorite
+if not itemDetails[name]then itemDetails[name]={}end
+if not itemDetails[name][mutation]then itemDetails[name][mutation]={total=0,fav=0}end
+itemDetails[name][mutation].total=itemDetails[name][mutation].total+1
+if isFav then itemDetails[name][mutation].fav=itemDetails[name][mutation].fav+1 end
 end
 local itemList={}
-for itemName,count in pairs(itemCounts)do
-local favCount=favoriteCounts[itemName]or 0
-local displayName=itemName.." (x"..count..")"
-if favCount>0 then
+for itemName,mutations in pairs(itemDetails)do
+for mutName,data in pairs(mutations)do
+local displayName=itemName.." ("
+if mutName~="No Mutation"then
+displayName=displayName..mutName.." x"..data.total
+else
+displayName=displayName.."x"..data.total
+end
+if data.fav>0 then
 displayName=displayName.." ⭐"
 end
+displayName=displayName..")"
 table.insert(itemList,displayName)
+end
 end
 table.sort(itemList)
 return itemList
@@ -4397,17 +4407,19 @@ Trade:Button({Title="Scan Backpack",Icon="package",Callback=function()
 local scanned=ScanBackpackItems()
 if #scanned>0 then
 tradeDropdown:Refresh(scanned)
-WindUI:Notify({Title="Scan Complete",Content=#scanned.." jenis item ditemukan",Duration=2})
+WindUI:Notify({Title="Scan Complete",Content=#scanned.." item variations found",Duration=2})
 else
 tradeDropdown:Refresh({"No items found"})
-WindUI:Notify({Title="Empty",Content="Backpack kosong atau semua favorit",Duration=2})
+WindUI:Notify({Title="Empty",Content="No items matching filters",Duration=2})
 end
 end})
-tradeDropdown=Trade:Dropdown({Title="Select Item from Backpack",Values={"Click Scan Backpack first"},Multi=false,AllowNone=true,Callback=function(n)
+tradeDropdown=Trade:Dropdown({Title="Select Item from Backpack",Values={"Click Scan Backpack first"},Multi=false,AllowNone=true,SearchBarEnabled=true,Callback=function(n)
 if n and n~=""then
-local itemNameOnly=n:match("^(.+) %(x%d+%)")or n
-itemNameOnly=itemNameOnly:gsub(" ⭐$","")
+local itemNameOnly=n:match("^(.+) %(")
+if itemNameOnly then
+itemNameOnly=itemNameOnly:gsub(" %s+$","")
 selectedTradeItemName=itemNameOnly
+end
 end
 end})
 Trade:Input({Title="Quantity to Trade",Placeholder="1",Callback=function(v)tradeQuantity=tonumber(v)or 1 end})
