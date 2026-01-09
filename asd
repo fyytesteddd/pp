@@ -1127,6 +1127,92 @@ local blatantV3CompleteDelayInput=Reg("blatantV3_completeDelay",Auto:Input({Titl
 local blatantV3CancelDelayInput=Reg("blatantV3_cancelDelay",Auto:Input({Title="Cancel Delay",Placeholder="0.001",Value="0.001",Callback=function(v)local n=tonumber(v)if n and n>=0 then settings.CancelDelay=n end end}))
 local blatantV3Toggle=Reg("blatantV3_toggle",Auto:Toggle({Title="Enable Blatant V3",Desc="Ultra fast fishing spam",Default=false,Callback=function(s)active=s;if s then stats.castCount=0;stats.startTime=tick();thread=task.spawn(ultraSpamLoop);else if thread then task.cancel(thread)thread=nil end;safeFire(function()RF_UpdateAutoFishingState:InvokeServer(true)end);task.wait(.1);safeFire(function()RF_CancelFishingInputs:InvokeServer()end);end end}))
 
+--// Blatant v3 - v4
+
+local RS=game:GetService("ReplicatedStorage")
+local Players=game:GetService("Players")
+local LocalPlayer=Players.LocalPlayer
+
+local netFolder=RS
+:WaitForChild("Packages")
+:WaitForChild("_Index")
+:WaitForChild("sleitnick_net@0.2.0")
+:WaitForChild("net")
+
+local RF_ChargeFishingRod=netFolder:WaitForChild("RF/ChargeFishingRod")
+local RF_RequestMinigame=netFolder:WaitForChild("RF/RequestFishingMinigameStarted")
+local RF_CancelFishingInputs=netFolder:WaitForChild("RF/CancelFishingInputs")
+local RF_UpdateAutoFishingState=netFolder:WaitForChild("RF/UpdateAutoFishingState")
+local RE_FishingCompleted=netFolder:WaitForChild("RE/FishingCompleted")
+local RE_MinigameChanged=netFolder:WaitForChild("RE/FishingMinigameChanged")
+local RE_FishingStopped=netFolder:WaitForChild("RE/FishingStopped")
+
+local active=false
+local thread=nil
+local stats={castCount=0,startTime=0}
+local settings={CompleteDelay=0.73,CancelDelay=0.3,ReCastDelay=0.001}
+local FishingState={lastCompleteTime=0,completeCooldown=0.4,isInCycle=false}
+local lastEventTime=0
+
+local function safeFire(func)
+task.spawn(function()
+local s,err=pcall(func)
+if not s then warn("⚠️ Ultra Blatant Network error:",err)end
+end)
+end
+
+local function protectedComplete()
+local now=tick()
+if now-FishingState.lastCompleteTime<FishingState.completeCooldown then return false end
+FishingState.lastCompleteTime=now
+safeFire(function()RE_FishingCompleted:FireServer()end)
+return true
+end
+
+local function performCast()
+local now=tick()
+stats.castCount=stats.castCount+1
+safeFire(function()RF_ChargeFishingRod:InvokeServer({[1]=now})end)
+safeFire(function()RF_RequestMinigame:InvokeServer(1,0,now)end)
+end
+
+local function fishingLoop()
+while active do
+FishingState.isInCycle=true
+performCast()
+task.wait(settings.CompleteDelay)
+if active then protectedComplete()end
+task.wait(settings.CancelDelay)
+if active then safeFire(function()RF_CancelFishingInputs:InvokeServer()end)end
+FishingState.isInCycle=false
+task.wait(settings.ReCastDelay)
+end
+FishingState.isInCycle=false
+end
+
+RE_MinigameChanged.OnClientEvent:Connect(function(state)
+if not active then return end
+local now=tick()
+if now-lastEventTime<0.2 then return end
+lastEventTime=now
+if now-FishingState.lastCompleteTime<0.3 then return end
+task.spawn(function()
+task.wait(settings.CompleteDelay)
+if protectedComplete()then
+task.wait(settings.CancelDelay)
+safeFire(function()RF_CancelFishingInputs:InvokeServer()end)
+end
+end)
+end)
+
+Auto:Section({Title="Blatant V4"})
+
+local blatantV4CompleteDelayInput=Reg("blatantV4_completeDelay",Auto:Input({Title="Complete Delay",Placeholder="0.73",Value="0.73",Callback=function(v)local n=tonumber(v)if n and n>=0 then settings.CompleteDelay=n end end}))
+local blatantV4CancelDelayInput=Reg("blatantV4_cancelDelay",Auto:Input({Title="Cancel Delay",Placeholder="0.3",Value="0.3",Callback=function(v)local n=tonumber(v)if n and n>=0 then settings.CancelDelay=n end end}))
+local blatantV4ReCastDelayInput=Reg("blatantV4_recastDelay",Auto:Input({Title="Re-Cast Delay",Placeholder="0.001",Value="0.001",Callback=function(v)local n=tonumber(v)if n and n>=0 then settings.ReCastDelay=n end end}))
+local blatantV4Toggle=Reg("blatantV4_toggle",Auto:Toggle({Title="Enable Blatant V4",Desc="Advanced fishing cycle",Default=false,Callback=function(s)active=s;if s then stats.castCount=0;stats.startTime=tick();FishingState={lastCompleteTime=0,completeCooldown=0.4,isInCycle=false};lastEventTime=0;thread=task.spawn(fishingLoop);else if thread then task.cancel(thread)thread=nil end;safeFire(function()RF_UpdateAutoFishingState:InvokeServer(true)end);task.wait(.1);safeFire(function()RF_CancelFishingInputs:InvokeServer()end);FishingState.isInCycle=false;end end}))
+
+
 Auto:Section({Title="Teleport Feature"})
 
 local P=game:GetService("Players").LocalPlayer
