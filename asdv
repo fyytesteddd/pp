@@ -4354,12 +4354,14 @@ Trade:Button({Title="Refresh Players",Icon="refresh-ccw",Callback=function()loca
 local tradeDropdown
 local function ScanBackpackItems()
 local items=GetItemsToTrade()
-local itemList={}
+local itemCounts={}
 for _,item in ipairs(items)do
-if not table.find(itemList,item.Name)then
-local count=CountItemByName(item.Name)
-table.insert(itemList,item.Name.." (x"..count..")")
+local name=item.Name
+itemCounts[name]=(itemCounts[name]or 0)+1
 end
+local itemList={}
+for itemName,count in pairs(itemCounts)do
+table.insert(itemList,itemName.." (x"..count..")")
 end
 table.sort(itemList)
 return itemList
