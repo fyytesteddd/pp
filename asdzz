@@ -4269,7 +4269,7 @@ local name,rar=GetFishNameAndRarity(item)
 local ir=(rar and rar:upper()~="COMMON")and rar or"Default"
 local pr=not selectedTradeRarity or ir:upper()==selectedTradeRarity:upper()
 local pn=not selectedTradeItemName or name==selectedTradeItemName
-if pr and pn then table.insert(out,{UUID=item.UUID,Name=name,Id=item.Id,Metadata=item.Metadata or{}})end
+if pr and pn then table.insert(out,{UUID=item.UUID,Name=name,Id=item.Id,Metadata=item.Metadata or{},IsFavorite=fav})end
 end
 return out
 end
@@ -4288,6 +4288,21 @@ local pr=not selectedTradeRarity or ir:upper()==selectedTradeRarity:upper()
 if name==itemName and pr then count+=1 end
 end
 return count
+end
+local function CountFavoriteByName(itemName)
+local r=GetPlayerDataReplion()if not r then return 0 end
+local s,i=pcall(function()return r:GetExpect("Inventory")end)
+if not s or not i or not i.Items then return 0 end
+local favCount=0
+for _,item in ipairs(i.Items)do
+local fav=item.IsFavorite or item.Favorited
+if typeof(item.UUID)~="string"or#item.UUID<10 then continue end
+local name,rar=GetFishNameAndRarity(item)
+local ir=(rar and rar:upper()~="COMMON")and rar or"Default"
+local pr=not selectedTradeRarity or ir:upper()==selectedTradeRarity:upper()
+if name==itemName and pr and fav then favCount+=1 end
+end
+return favCount
 end
 local function IsItemStillInInventory(u)
 local r=GetPlayerDataReplion()
@@ -4358,13 +4373,22 @@ local tradeDropdown
 local function ScanBackpackItems()
 local items=GetItemsToTrade()
 local itemCounts={}
+local favoriteCounts={}
 for _,item in ipairs(items)do
 local name=item.Name
 itemCounts[name]=(itemCounts[name]or 0)+1
+if item.IsFavorite then
+favoriteCounts[name]=(favoriteCounts[name]or 0)+1
+end
 end
 local itemList={}
 for itemName,count in pairs(itemCounts)do
-table.insert(itemList,itemName.." (x"..count..")")
+local favCount=favoriteCounts[itemName]or 0
+local displayName=itemName.." (x"..count..")"
+if favCount>0 then
+displayName=displayName.." ⭐"
+end
+table.insert(itemList,displayName)
 end
 table.sort(itemList)
 return itemList
@@ -4381,7 +4405,8 @@ end
 end})
 tradeDropdown=Trade:Dropdown({Title="Select Item from Backpack",Values={"Click Scan Backpack first"},Multi=false,AllowNone=true,Callback=function(n)
 if n and n~=""then
-local itemNameOnly=n:match("^(.+) %(x%d+%)$")or n
+local itemNameOnly=n:match("^(.+) %(x%d+%)")or n
+itemNameOnly=itemNameOnly:gsub(" ⭐$","")
 selectedTradeItemName=itemNameOnly
 end
 end})
