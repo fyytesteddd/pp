@@ -1,0 +1,4236 @@
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fyywannafly-sudo/FyyCommunity/refs/heads/main/lib_fyy"))()
+
+WindUI:AddTheme({
+    Name = "Fyy Community",
+    Accent = WindUI:Gradient({
+        ["0"]   = { Color = Color3.fromHex("#1f1f23"), Transparency = 0 },
+        ["100"] = { Color = Color3.fromHex("#18181b"), Transparency = 0 },
+    }),
+    Dialog = Color3.fromHex("#161616"),
+    Outline = Color3.fromHex("#FFFFFF"),
+    Text = Color3.fromHex("#FFFFFF"),
+    Placeholder = Color3.fromHex("#7a7a7a"),
+    Background = Color3.fromHex("#101010"),
+    Button = Color3.fromHex("#52525b"),
+    Icon = Color3.fromHex("#a1a1aa")
+})
+
+local Window = WindUI:CreateWindow({
+    Title = "Fyy Community",
+    Icon = "rbxassetid://106899268176689",
+    Author = "Fyy X Fish IT",
+    Folder = "FyyConfig",
+    Size = UDim2.fromOffset(530, 300),
+    MinSize = Vector2.new(320, 300),
+    MaxSize = Vector2.new(850, 560),
+    Transparent = true,
+    Theme = "Dark",
+    Resizable = false,
+    SideBarWidth = 150,
+    HideSearchBar = true,
+    ScrollBarEnabled = false,
+})
+
+Window:SetToggleKey(Enum.KeyCode.G)
+
+Window:EditOpenButton({
+    Title = "Fyy Community",
+    Icon = "rbxassetid://106899268176689",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new(
+        Color3.fromHex("AA00FF")
+    ),
+    OnlyMobile = true,
+    Enabled = true,
+    Draggable = true,
+})
+
+Window:SetIconSize(35) 
+Window:Tag({
+    Title = "1.0.8",
+    Color = Color3.fromHex("#30ff6a"),
+    Radius = 13, 
+})
+
+local UIS=game:GetService("UserInputService")
+local PG=game.Players.LocalPlayer:WaitForChild("PlayerGui")
+local uisConn=nil 
+local dragging=false 
+local dragInput,dragStart,startPos
+
+local function C()
+    local o=PG:FindFirstChild("CustomFloatingIcon_FyyHub")
+    if o then o:Destroy()end 
+    local g=Instance.new("ScreenGui")
+    g.Name="CustomFloatingIcon_FyyHub"
+    g.DisplayOrder=999 
+    g.ResetOnSpawn=false 
+    local f=Instance.new("Frame")
+    f.Size=UDim2.fromOffset(45,45)
+    f.Position=UDim2.new(0,50,0.4,0)
+    f.AnchorPoint=Vector2.new(.5,.5)
+    f.BackgroundColor3=Color3.fromRGB(20,20,20)
+    f.BorderSizePixel=0 
+    f.Parent=g 
+    local s=Instance.new("UIStroke")
+    s.Color=Color3.fromRGB(138,43,226)
+    s.Thickness=2 
+    s.Parent=f 
+    Instance.new("UICorner",f).CornerRadius=UDim.new(0,12)
+    local i=Instance.new("ImageLabel")
+    i.Image="rbxassetid://106899268176689"
+    i.BackgroundTransparency=1 
+    i.Size=UDim2.new(1,-4,1,-4)
+    i.Position=UDim2.fromScale(.5,.5)
+    i.AnchorPoint=Vector2.new(.5,.5)
+    i.Parent=f 
+    Instance.new("UICorner",i).CornerRadius=UDim.new(0,10)
+    g.Parent=PG 
+    return g,f 
+end
+
+local function S(g,f)
+    if uisConn then 
+        uisConn:Disconnect()
+        uisConn=nil 
+    end 
+    local function u(i)
+        local d=i.Position-dragStart 
+        f.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+d.X,startPos.Y.Scale,startPos.Y.Offset+d.Y)
+    end
+    
+    f.InputBegan:Connect(function(i)
+        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then 
+            dragging=true 
+            dragStart=i.Position 
+            startPos=f.Position 
+            local m=false 
+            local c1,c2 
+            c1=i.Changed:Connect(function()
+                if i.UserInputState==Enum.UserInputState.End then 
+                    dragging=false 
+                    c1:Disconnect()
+                    if not m and Window and Window.Toggle then 
+                        Window:Toggle()
+                    end 
+                end 
+            end)
+            c2=i.Changed:Connect(function()
+                if dragging and(i.Position-dragStart).Magnitude>5 then 
+                    m=true 
+                    c2:Disconnect()
+                end 
+            end)
+        end 
+    end)
+    
+    f.InputChanged:Connect(function(i)
+        if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then 
+            dragInput=i 
+        end 
+    end)
+    
+    uisConn=UIS.InputChanged:Connect(function(i)
+        if i==dragInput and dragging then 
+            u(i)
+        end 
+    end)
+    
+    if Window then 
+        Window:OnOpen(function()
+            g.Enabled=false 
+        end)
+        Window:OnClose(function()
+            g.Enabled=true 
+        end)
+    end 
+end
+
+local function I()
+    if not game.Players.LocalPlayer.Character then 
+        game.Players.LocalPlayer.CharacterAdded:Wait()
+    end 
+    local g,f=C()
+    if g and f then 
+        S(g,f)
+    end 
+end
+
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(1)
+    I()
+end)
+I()
+
+--// 
+
+
+local Info, Premium, Player, Auto, Shop, Teleport, Totem
+local Quest, Event, Trade, Enchant, Discord, Config, Setting, Misc , Animation
+
+local function SetupTab()
+    if not Info then Info = Window:Tab({ Title = "Info", Icon = "info" }) end
+    if not Player then Player = Window:Tab({ Title = "Player", Icon = "user" }) end
+    if not Auto then Auto = Window:Tab({ Title = "Main", Icon = "play" }) end
+    if not Shop then Shop = Window:Tab({ Title = "Shop", Icon = "shopping-cart" }) end
+    if not Teleport then Teleport = Window:Tab({ Title = "Teleport", Icon = "map-pin" }) end
+    if not Totem then Totem = Window:Tab({ Title = "Totem", Icon = "hexagon" }) end
+    if not Quest then Quest = Window:Tab({ Title = "Quest", Icon = "loader" }) end
+    if not Enchant then Enchant = Window:Tab({ Title = "Enchants", Icon = "star" }) end
+    if not Animation then Animation = Window:Tab({ Title = "Animation", Icon = "gem" }) end
+    if not Discord then Discord = Window:Tab({ Title = "Webhook", Icon = "megaphone" }) end
+    if not Config then Config = Window:Tab({ Title = "Config", Icon = "folder" }) end
+    if not Setting then Setting = Window:Tab({ Title = "Settings", Icon = "settings" }) end
+    if not Misc then Misc = Window:Tab({ Title = "Misc", Icon = "globe" }) end
+end
+
+--// 
+
+local Fyy=Window.ConfigManager:CreateConfig("FyyCommunityConfig")
+local ElementRegistry={}
+local function Reg(id,element)
+Fyy:Register(id,element)
+ElementRegistry[id]=element
+return element
+end
+local HttpService=game:GetService("HttpService")
+local BaseFolder="WindUI/"..(Window.Folder or"FyyCommunity").."/config/"
+local function SmartLoadConfig(configName)
+local path=BaseFolder..configName..".json"
+if not isfile(path)then
+WindUI:Notify({Title="Gagal Load",Content="File tidak ditemukan: "..configName,Duration=3,Icon="x"})
+return end
+local content=readfile(path)
+local success,decodedData=pcall(function()return HttpService:JSONDecode(content)end)
+if not success or not decodedData then
+WindUI:Notify({Title="Gagal Load",Content="File JSON rusak/kosong.",Duration=3,Icon="alert-triangle"})
+return end
+local realData=decodedData
+if decodedData["__elements"]then realData=decodedData["__elements"]end
+local changeCount=0
+local foundCount=0
+for _ in pairs(ElementRegistry)do foundCount=foundCount+1 end
+for id,itemData in pairs(realData)do
+local element=ElementRegistry[id]
+if element then
+local finalValue=itemData
+if type(itemData)=="table"and itemData.value~=nil then finalValue=itemData.value end
+local currentVal=element.Value
+local isDifferent=false
+if type(finalValue)=="table"then isDifferent=true
+elseif currentVal~=finalValue then isDifferent=true end
+if isDifferent then
+pcall(function()element:Set(finalValue)end)
+changeCount=changeCount+1
+if changeCount%10==0 then task.wait()end
+end
+end
+end
+WindUI:Notify({Title="Config Loaded",Content=string.format("Updated: %d settings",changeCount),Duration=3,Icon="check"})
+end
+--// TAB
+
+local UIS=game:GetService("UserInputService")
+local IJC=nil
+local LP=game.Players.LocalPlayer
+local RS=game:GetService("ReplicatedStorage")
+local ItemUtility=require(RS:WaitForChild("Shared"):WaitForChild("ItemUtility",10))
+local TierUtility=require(RS:WaitForChild("Shared"):WaitForChild("TierUtility",10))
+local DEFAULT_SPEED=18
+local DEFAULT_JUMP=50
+
+local function GetHumanoid()
+ local C=LP.Character or LP.CharacterAdded:Wait()
+ return C:FindFirstChildOfClass("Humanoid")
+end
+
+local IH=GetHumanoid()
+local currentSpeed=DEFAULT_SPEED
+local currentJump=DEFAULT_JUMP
+if IH then
+ currentSpeed=IH.WalkSpeed
+ currentJump=IH.JumpPower
+end
+
+local RPath={"Packages","_Index","sleitnick_net@0.2.0","net"}
+local PlayerDataReplion=nil
+
+local function GetRemote(p,n,t)
+ local i=RS
+ for _,c in ipairs(p) do
+  i=i:WaitForChild(c,t or .5)
+  if not i then return nil end
+ end
+ return i:FindFirstChild(n)
+end
+
+local function GetHRP()
+ local C=LP.Character or LP.CharacterAdded:Wait() 
+ return C:WaitForChild("HumanoidRootPart",5)
+end
+
+pcall(function()
+ for _,v in pairs(getconnections(LP.Idled)) do
+  if v.Disable then v:Disable() print("[Fyy Anti-AFK] ON") end
+ end
+end)
+
+local function TeleportToLookAt(p,l)
+ local hrp=GetHRP()
+ if hrp and typeof(p)=="Vector3" and typeof(l)=="Vector3" then
+  hrp.CFrame=CFrame.new(p,p+l)*CFrame.new(0,.5,0)
+ else
+  WindUI:Notify({Title="Teleport Gagal",Content="Data posisi tidak valid.",Duration=3,Icon="x"})
+ end
+end
+
+local function GetPlayerDataReplion()
+ if PlayerDataReplion then return PlayerDataReplion end
+ local R=RS:WaitForChild("Packages"):WaitForChild("Replion",10)
+ if not R then return nil end
+ PlayerDataReplion=require(R).Client:WaitReplion("Data",5)
+ return PlayerDataReplion
+end
+
+local RF_SellAllItems=GetRemote(RPath,"RF/SellAllItems",5)
+
+local function GetFishNameAndRarity(i)
+ local name=i.Identifier or "Unknown"
+ local rarity=i.Metadata and i.Metadata.Rarity or "COMMON"
+ local id=i.Id
+ local d=nil
+ if ItemUtility and id then
+  pcall(function()
+   d=ItemUtility:GetItemData(id)
+   if not d then
+    local n=tonumber(i.Id) or tonumber(i.Identifier)
+    if n then d=ItemUtility:GetItemData(n) end
+   end
+  end)
+ end
+ if d and d.Data and d.Data.Name then name=d.Data.Name end
+ if i.Metadata and i.Metadata.Rarity then
+  rarity=i.Metadata.Rarity
+ elseif d and d.Probability and d.Probability.Chance and TierUtility then
+  local t=nil
+  pcall(function() t=TierUtility:GetTierFromRarity(d.Probability.Chance) end)
+  if t and t.Name then rarity=t.Name end
+ end
+ return name,rarity
+end
+
+local function GetItemMutationString(i)
+ if i.Metadata and i.Metadata.Shiny==true then return "Shiny" end
+ return i.Metadata and i.Metadata.VariantId or ""
+end
+
+--// HELPER??
+local function InfoTab()
+    if not Info then return end
+local InfoSection=Info:Section({Title="Have Problem / Need Help? Join Server Now",Box=true,TextTransparency=.05,TextXAlignment="Center",TextSize=17,Opened=true})
+Info:Select()
+local InviteCode="77nEeYeFRp"
+local DiscordAPI="https://discord.com/api/v10/invites/"..InviteCode.."?with_counts=true&with_expiration=true"
+local Response,ErrorMessage=nil,nil
+
+xpcall(function()
+ Response=game:GetService("HttpService"):JSONDecode(WindUI.Creator.Request({Url=DiscordAPI,Method="GET",Headers={["Accept"]="application/json"}}).Body)
+end,function(e)
+ warn("err fetching discord info: "..tostring(e))
+ ErrorMessage=tostring(e)
+ Response=nil
+end)
+
+if Response and Response.guild then
+ local PC={
+  Title=Response.guild.name,
+  Desc=' <font color="#52525b">•</font> Member Count: '..tostring(Response.approximate_member_count)..'\n <font color="#16a34a">•</font> Online Count: '..tostring(Response.approximate_presence_count),
+  Image="https://cdn.discordapp.com/icons/"..Response.guild.id.."/"..Response.guild.icon..".png?size=256",
+  ImageSize=42,
+  Buttons={{
+    Icon="link",
+    Title="Copy Discord Invite",
+    Callback=function()pcall(function()setclipboard("https://discord.gg/"..InviteCode)end)end
+   },{
+    Icon="refresh-cw",
+    Title="Update Info",
+    Callback=function()
+     xpcall(function()
+      local U=game:GetService("HttpService"):JSONDecode(WindUI.Creator.Request({Url=DiscordAPI,Method="GET"}).Body)
+      if U and U.guild then
+       DiscordInfo:SetDesc(' <font color="#52525b">•</font> Member Count: '..tostring(U.approximate_member_count)..'\n <font color="#16a34a">•</font> Online Count: '..tostring(U.approximate_presence_count))
+      end
+     end,function(e)warn("err updating discord info: "..tostring(e))end)
+    end
+   }}
+ }
+ if Response.guild.banner then
+  PC.Thumbnail="https://cdn.discordapp.com/banners/"..Response.guild.id.."/"..Response.guild.banner..".png?size=256"
+  PC.ThumbnailSize=80
+ end
+ local DiscordInfo=Info:Paragraph(PC)
+else
+ Info:Paragraph({Title="Error when receiving information about the Discord server",Desc=ErrorMessage or "Unknown error occurred",Image="triangle-alert",ImageSize=26,Color="Red"})
+end
+end
+--// END OF INFO TAB
+local function PlayerTab()
+    if not Player then return end
+local PS=Player:Section({Title="Player Feature"})
+local WS=Reg("walkSpeed",Player:Input({Title="Set WalkSpeed",Placeholder="Enter number (e.g. 50)",Callback=function(v)WS.Value=tonumber(v)or 16 end}))
+local WST=Reg("walkSpeedToggle",Player:Toggle({Title="WalkSpeed",Default=false,Callback=function(s)
+ local p=game.Players.LocalPlayer
+ local c=p.Character or p.CharacterAdded:Wait()
+ local h=c:WaitForChild("Humanoid")
+ h.WalkSpeed=s and(WS.Value or 16)or 16
+end}))
+Player:Divider()
+
+local IJC
+local infJumpToggle = Reg("infJump", Player:Toggle({Title="Infinite Jump",Default=false,Callback=function(s)
+ local UIS=game:GetService("UserInputService")
+ if s then
+  IJC=UIS.JumpRequest:Connect(function()
+   local c=game.Players.LocalPlayer.Character
+   if c and c:FindFirstChild("Humanoid")then
+    c.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+   end
+  end)
+ elseif IJC then IJC:Disconnect()IJC=nil end
+end}))
+
+local NCC
+local NCLIP Reg("noClip",Player:Toggle({Title="NoClip",Default=false,Callback=function(s)
+ local p=game.Players.LocalPlayer
+ if s then
+  NCC=game:GetService("RunService").Stepped:Connect(function()
+   local c=p.Character
+   if c then
+    for _,pt in ipairs(c:GetChildren())do
+     if pt:IsA("BasePart")then pt.CanCollide=false end
+    end
+   end
+  end)
+ elseif NCC then
+  NCC:Disconnect()NCC=nil
+  local c=p.Character
+  if c then
+   for _,pt in ipairs(c:GetChildren())do
+    if pt:IsA("BasePart")then pt.CanCollide=true end
+   end
+  end
+ end
+end}))
+
+local wow=false
+local wp
+local wallWalkToggle = Reg("wallWalk", Player:Toggle({Title="Walk On Water",Default=false,Callback=function(s)
+ wow=s
+ local p=game.Players.LocalPlayer
+ local c=p.Character
+ if s and c then
+  local hrp=c:FindFirstChild("HumanoidRootPart")
+  if hrp then
+   if wp then wp:Destroy()end
+   wp=Instance.new("Part")
+   wp.Anchored=true
+   wp.CanCollide=true
+   wp.Size=Vector3.new(20,1,20)
+   wp.Transparency=1
+   wp.Position=Vector3.new(hrp.Position.X,0,hrp.Position.Z)
+   wp.Parent=workspace
+  end
+ elseif wp then wp:Destroy()wp=nil end
+end}))
+
+game:GetService("RunService").Heartbeat:Connect(function()
+ if wow and wp then
+  local c=game.Players.LocalPlayer.Character
+  if c and c:FindFirstChild("HumanoidRootPart")then
+   local p=c.HumanoidRootPart.Position
+   wp.Position=Vector3.new(p.X,0,p.Z)
+  end
+ end
+end)
+
+local RS=game:GetService("ReplicatedStorage")
+local RF_E=RS.Packages._Index["sleitnick_net@0.2.0"].net["RF/EquipOxygenTank"]
+local RF_U=RS.Packages._Index["sleitnick_net@0.2.0"].net["RF/UnequipOxygenTank"]
+local ox=false
+local infOxygenToggle = Reg("infOxygen", Player:Toggle({Title="Equip Oxygen Tank",Default=false,Callback=function(s)
+ ox=s
+ if ox then RF_E:InvokeServer(105)else RF_U:InvokeServer()end
+end}))
+
+local RF_R=RS.Packages._Index["sleitnick_net@0.2.0"].net["RF/UpdateFishingRadar"]
+local espRadarToggle = Reg("espRadar", Player:Toggle({Title="Bypass Fishing Radar",Default=false,Callback=function(s)
+RF_R:InvokeServer(s and true or false)
+end}))
+
+local pl=game:GetService("Players").LocalPlayer
+local saveCF=nil
+pl.CharacterAdded:Connect(function(c)
+ if not saveCF then return end
+ local hrp=c:WaitForChild("HumanoidRootPart",5)
+ if hrp then task.wait(.3)hrp.CFrame=saveCF end
+end)
+
+Player:Button({Title="Respawn at Current Position",Callback=function()
+ local c=pl.Character if not c then return end
+ local hrp=c:FindFirstChild("HumanoidRootPart")
+ local h=c:FindFirstChild("Humanoid")
+ if hrp and h then saveCF=hrp.CFrame h.Health=0 end
+end})
+
+Player:Space()
+Player:Divider()
+
+Player:Section({Title="Gui External",Opened=true})
+Player:Button({Title="Fly GUI",Callback=function()
+ loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+ WindUI:Notify({Title="Fly",Content="Fly GUI berhasil dijalankan ✅",Duration=3,Icon="bell"})
+end})
+
+local SG,SL=nil,nil
+local function CS()
+ if SG then SG:Destroy()end
+ local g=Instance.new("ScreenGui",game.CoreGui)
+ g.Name="RockHub_Stats" g.IgnoreGuiInset=true
+ local f=Instance.new("Frame",g)
+ f.Size=UDim2.fromOffset(360,40)
+ f.AnchorPoint=Vector2.new(.5,0)
+ f.Position=UDim2.new(.5,0,.06,0)
+ f.BackgroundColor3=Color3.fromRGB(20,20,20)
+ f.BackgroundTransparency=.2
+ f.BorderSizePixel=0
+ Instance.new("UICorner",f).CornerRadius=UDim.new(1,0)
+ local s=Instance.new("UIStroke",f)
+ s.Color=Color3.fromHex("8B5CF6")
+ s.Thickness=2
+ s.Transparency=.1
+ s.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+ local l=Instance.new("UIListLayout",f)
+ l.FillDirection=Enum.FillDirection.Horizontal
+ l.Padding=UDim.new(0,12)
+l.HorizontalAlignment = Enum.HorizontalAlignment.Center
+ l.VerticalAlignment=Enum.VerticalAlignment.Center
+ local function L()
+  local t=Instance.new("TextLabel",f)
+  t.AutomaticSize=Enum.AutomaticSize.X
+  t.Size=UDim2.new(0,0,1,0)
+  t.BackgroundTransparency=1
+  t.Font=Enum.Font.GothamBold
+  t.TextSize=13
+  t.TextColor3=Color3.fromRGB(255,255,255)
+  t.Text="..."
+  return t
+ end
+ return g,L(),L(),L(),L()
+end
+
+local statsOverlayToggle = Reg("t_stats_top_v2", Player:Toggle({Title="Show Stats Overlay",Desc="Menampilkan FPS, CPU(ms), Ping, RAM.",Value=false,Icon="activity",Callback=function(st)
+if st then
+  local fps,cpu,ping,ram
+  SG,fps,cpu,ping,ram=CS()
+  local RSv=game:GetService("RunService")
+  local ST=game:GetService("Stats")
+  SL=RSv.RenderStepped:Connect(function(dt)
+   if not SG then return end
+   local f=math.floor(workspace:GetRealPhysicsFPS())
+   local c=math.floor(dt*1000)
+   local p=math.floor(ST.Network.ServerStatsItem["Data Ping"]:GetValue())
+   local m=math.floor(ST:GetTotalMemoryUsageMb())
+   fps.Text="FPS: "..f
+   fps.TextColor3=f>=50 and Color3.fromRGB(0,255,127)or Color3.fromRGB(255,65,65)
+   cpu.Text="CPU: "..c.."ms"
+   cpu.TextColor3=c<=20 and Color3.fromRGB(0,255,127)or(c<=50 and Color3.fromRGB(255,215,0)or Color3.fromRGB(255,65,65))
+   ping.Text="Ping: "..p.."ms"
+   ping.TextColor3=p<100 and Color3.fromRGB(0,255,127)or Color3.fromRGB(255,65,65)
+   ram.Text="Mem: "..m.."MB"
+  end)
+ else
+  if SL then SL:Disconnect()SL=nil end
+  if SG then SG:Destroy()SG=nil end
+ end
+end}))
+end
+
+--// END OF PLAYER 
+
+local VIM=game:GetService("VirtualInputManager")
+task.spawn(function()
+ while true do
+  task.wait(math.random(600,700))
+  local k={{Enum.KeyCode.LeftShift,Enum.KeyCode.E},{Enum.KeyCode.LeftControl,Enum.KeyCode.F},{Enum.KeyCode.LeftShift,Enum.KeyCode.Q},{Enum.KeyCode.E,Enum.KeyCode.F}}
+  local c=k[math.random(#k)]
+  pcall(function()
+   for _,x in pairs(c)do VIM:SendKeyEvent(true,x,false,nil)end
+   task.wait(.1)
+   for _,x in pairs(c)do VIM:SendKeyEvent(false,x,false,nil)end
+  end)
+ end
+end)
+
+--- ANTI [Fyy Anti-AFK] ON
+local function MainTab()
+    if not Auto then return end
+Auto:Section({Title="Instant Fishing"})
+local AFR=false
+local RS=game:GetService("ReplicatedStorage")
+local P=game:GetService("Players").LocalPlayer
+
+local REE=RS.Packages._Index["sleitnick_net@0.2.0"].net["RE/EquipToolFromHotbar"]
+local RFC=RS.Packages._Index["sleitnick_net@0.2.0"].net["RF/ChargeFishingRod"]
+local RFS=RS.Packages._Index["sleitnick_net@0.2.0"].net["RF/RequestFishingMinigameStarted"]
+local REF=RS.Packages._Index["sleitnick_net@0.2.0"].net["RE/FishingCompleted"]
+local RFK=RS.Packages._Index["sleitnick_net@0.2.0"].net["RF/CancelFishingInputs"]
+
+local d=1.3
+local run=false
+local eq=false
+local aid="rbxassetid://114959536562596"
+local at,hum=nil,nil
+
+local function sF(r,a)
+ if not r then return false end
+ return pcall(function()if a~=nil then r:FireServer(a)else r:FireServer()end end)
+end
+
+local function sI(r,a,b)
+ if not r then return nil end
+ local ok,res=pcall(function()
+  if a~=nil and b~=nil then return r:InvokeServer(a,b)
+  elseif a~=nil then return r:InvokeServer(a)
+  else return r:InvokeServer()end
+ end)
+ return ok and res
+end
+
+local function play()
+ if not P.Character then return end
+ hum=P.Character:FindFirstChildOfClass("Humanoid")
+ if not hum then return end
+ local an=Instance.new("Animation")
+ an.AnimationId=aid
+ at=hum:LoadAnimation(an)
+ if at then at:Play()end
+end
+
+local function stop()
+ if at then at:Stop()at=nil end
+ hum=nil
+end
+
+local function equip()
+ while run do
+  if not eq then sF(REE,1)eq=true end
+  task.wait(2)
+ end
+ eq=false
+end
+
+local function cycle()
+ while run do
+  sI(RFK)
+  local t=os.time()+os.clock()
+  pcall(function()RFC:InvokeServer(t)end)
+  sI(RFS,-139.630452165,0.99647927980797)
+  task.wait(d)
+  if not run then break end
+  sF(REF)
+  task.wait(.4)
+  if not run then break end
+ end
+end
+
+local function start()
+ play()
+ task.spawn(equip)
+ task.wait(.05)
+ task.spawn(cycle)
+end
+
+local autoFishingToggle = Reg("autoFishing", Auto:Toggle({Title="Instant Fishing",Default=false,Callback=function(s) run=s AFR=s
+ if run then task.spawn(start)
+ else sI(RFK)stop()eq=false end
+end}))
+
+local fishingDelaySlider = Reg("fishingDelay", Auto:Slider({Title="Completed Delay",Step=.1,Value={Min=.1,Max=5,Default=1.3},Callback=function(v)d=v end}))
+
+P.CharacterAdded:Connect(function()
+ if run then task.wait(1)play()end
+end)
+
+game:GetService("UserInputService").WindowFocused:Connect(function()
+ if not run and at then stop()end
+end)
+
+Auto:Space()Auto:Divider()
+
+--// Instant Fishing
+
+Auto:Section({Title="Blatant Mode"})
+
+local run=false
+local loopT,eqT=nil,nil
+local cDelay=3.1
+local kDelay=.3
+local interval=1.8
+
+local loopIntervalInput=Reg("loopInterval",Auto:Input({Title="Recast Delay",Value=tostring(interval),Placeholder="1.8",Callback=function(v)local n=tonumber(v)if n and n>=0 then interval=n end end}))
+local completeDelayInput=Reg("completeDelay",Auto:Input({Title="Complete Delay",Value=tostring(cDelay),Placeholder="3.1",Callback=function(v)local n=tonumber(v)if n and n>0 then cDelay=n end end}))
+
+local RS=game:GetService("ReplicatedStorage")
+local R={"Packages","_Index","sleitnick_net@0.2.0","net"}
+local function GR(n)
+ local c=RS
+ for _,p in ipairs(R)do c=c:WaitForChild(p,2)end
+ return c and c:FindFirstChild(n)
+end
+
+local RFC=GR("RF/ChargeFishingRod")
+local RFS=GR("RF/RequestFishingMinigameStarted")
+local REF=GR("RE/FishingCompleted")
+local RFK=GR("RF/CancelFishingInputs")
+local REE=GR("RE/EquipToolFromHotbar")
+
+local function cast()
+ if not run then return end
+ task.spawn(function()
+  local st=os.clock()
+  local ts=os.time()+os.clock()
+  pcall(function()RFC:InvokeServer(ts)end)
+  task.wait(.05)
+  pcall(function()RFS:InvokeServer(-139.6379699707,0.99647927980797)end)
+  local w=cDelay-(os.clock()-st)
+  if w>0 then task.wait(w)end
+  pcall(function()REF:FireServer()end)
+  task.wait(kDelay)
+  pcall(function()RFK:InvokeServer()end)
+ end)
+end
+
+local blatantModeToggle = Reg("blatantMode",Auto:Toggle({
+ Title="Enable Blatant Mode",
+ Value=false,
+ Callback=function(s)
+  run=s
+  if s then
+   if loopT then task.cancel(loopT)end
+   loopT=task.spawn(function()
+    while run do cast()task.wait(interval)end
+   end)
+   if eqT then task.cancel(eqT)end
+   eqT=task.spawn(function()
+    while run do pcall(function()REE:FireServer(1)end)task.wait(1)end
+   end)
+  else
+   if loopT then task.cancel(loopT)loopT=nil end
+   if eqT then task.cancel(eqT)eqT=nil end
+   pcall(function()REE:FireServer(0)end)
+  end
+ end
+}))
+
+--// ASD
+Auto:Section({Title="Teleport Feature"})
+
+local P=game:GetService("Players").LocalPlayer
+local RS=game:GetService("RunService")
+
+local T={
+ ["Fisherman Island"]=CFrame.new(77,9,2706),
+ ["Kohana Volcano"]=CFrame.new(-628.758911,35.710186,104.373764,0.482912123,1.81591773e-08,0.875668824,3.01732896e-08,1,-3.73774007e-08,-0.875668824,4.44718076e-08,0.482912123),
+ ["Kohana"]=CFrame.new(-725.013306,3.03549194,800.079651,-0.999999285,-5.38041718e-08,-0.00118542486,-5.379977e-08,1,-3.74458198e-09,0.00118542486,-3.68080366e-09,-0.999999285),
+ ["Esotric Islands"]=CFrame.new(2113,10,1229),
+ ["Coral Reefs"]=CFrame.new(-3063.54248,4.04500151,2325.85278,0.999428809,2.02288568e-08,0.033794228,-1.96206607e-08,1,-1.83286453e-08,-0.033794228,1.76551112e-08,0.999428809),
+ ["Crater Island"]=CFrame.new(984.003296,2.87008905,5144.92627,0.999932885,1.19231975e-08,0.0115857301,-1.04685522e-08,1,-1.25615529e-07,-0.0115857301,1.25485812e-07,0.999932885),
+ ["Sisyphus Statue"]=CFrame.new(-3737,-136,-881),
+ ["Treasure Room"]=CFrame.new(-3650.4873,-269.269318,-1652.68323,-0.147814155,-2.75628675e-08,-0.989015162,-1.74189818e-08,1,-2.52656349e-08,0.989015162,1.34930183e-08,-0.147814155),
+ ["Lost Isle"]=CFrame.new(-3649.0813,5.42584181,-1052.88745,0.986230493,3.9997154e-08,-0.165376455,-3.81513914e-08,1,1.43375187e-08,0.165376455,-7.83075649e-09,0.986230493),
+ ["Tropical Grove"]=CFrame.new(-2151.29248,15.8166971,3628.10669,-0.997403979,4.56146232e-09,-0.0720091537,4.62302685e-09,1,-6.88285429e-10,0.0720091537,-1.0193989e-09,-0.997403979),
+ ["Weater Machine"]=CFrame.new(-1518.05042,2.87499976,1909.78125,-0.995625556,-1.82757487e-09,-0.0934334621,2.24076646e-09,1,-4.34377512e-08,0.0934334621,-4.34570957e-08,-0.995625556),
+ ["Enchant Room"]=CFrame.new(3180.14502,-1302.85486,1387.9563,0.338028163,9.92235272e-08,-0.941136003,1.90291747e-08,1,1.12264253e-07,0.941136003,-5.58575195e-08,0.338028163),
+ ["Seconds Enchant"]=CFrame.new(1487,128,-590),
+ ["Ancient Jungle"]=CFrame.new(1519.33215,2.08891273,-307.090668,0.632470906,-1.48247699e-08,0.774584115,-2.24899335e-08,1,3.75027014e-08,-0.774584115,-4.11397139e-08,0.632470906),
+ ["Sacred Temple"]=CFrame.new(1413.84277,4.375,-587.298279,0.261966974,5.50031594e-08,-0.965076864,-8.19077872e-09,1,5.47701973e-08,0.965076864,-6.44325127e-09,0.261966974),
+ ["Underground Cellar"]=CFrame.new(2103.14673,-91.1976471,-717.124939,-0.226165071,-1.71397723e-08,-0.974088967,-2.1650266e-09,1,-1.70930168e-08,0.974088967,-1.75691484e-09,-0.226165071),
+ ["Arrow Artifact"]=CFrame.new(883.135437,6.62499952,-350.10025,-0.480593145,2.676836e-08,0.876943707,-4.66245069e-08,1,-5.6076324e-08,-0.876943707,-6.78369645e-08,-0.480593145),
+ ["Crescent Artifact"]=CFrame.new(1409.40747,6.62499952,115.430603,-0.967555583,-5.63477229e-08,0.252658188,-7.82660337e-08,1,-7.67005233e-08,-0.252658188,-9.39865714e-08,-0.967555583),
+ ["Hourglass Diamond Artifact"]=CFrame.new(1480.98645,6.27569771,-847.142029,-0.967326343,-5.985531e-08,0.253534466,-6.16077926e-08,1,1.02735098e-09,-0.253534466,-1.46259147e-08,-0.967326343),
+ ["Diamond Artifact"]=CFrame.new(1836.31604,6.34277105,-298.546265,0.545851529,-2.36059989e-08,-0.837881923,-4.70848498e-08,1,-5.8847597e-08,0.837881923,7.15735951e-08,0.545851529),
+ ["Mount Hallow"]=CFrame.new(2105,81,3294),
+ ["Crystal Caverns"]=CFrame.new(-1979,-440,7347),
+ ["Ancient Ruin"]=CFrame.new(6087,-586,4701),
+ ["Classic Island"]=CFrame.new(1173,4,2839),
+ ["Iron Cave"]=CFrame.new(-8640,-548,164),
+ ["Iron Cavern"]=CFrame.new(-8775,-585,100),
+ ["Christmas Island"]=CFrame.new(1160,23,1533)
+}
+
+local sel=""
+local loop=nil
+local last=nil
+
+local function start()
+ if loop then return end
+ local c=P.Character
+ if c and c:FindFirstChild("HumanoidRootPart")then
+  last=c.HumanoidRootPart.CFrame
+ end
+ loop=RS.Heartbeat:Connect(function()
+  local c=P.Character
+  local hrp=c and c:FindFirstChild("HumanoidRootPart")
+  local cf=T[sel]
+  if hrp and cf and(last==nil or(hrp.Position-last.Position).Magnitude>.1)then
+   hrp.CFrame=cf
+   last=cf
+  end
+ end)
+end
+
+local function stop()
+ if loop then loop:Disconnect()loop=nil last=nil end
+end
+
+local teleportLocationDropdown = Reg("teleportLocation",Auto:Dropdown({
+ Title="Teleport Location",
+ Values={"Fisherman Island","Kohana Volcano","Kohana","Esotric Islands","Coral Reefs","Crater Island","Sisyphus Statue","Treasure Room","Lost Isle","Tropical Grove","Weater Machine","Enchant Room","Seconds Enchant","Ancient Jungle","Sacred Temple","Underground Cellar","Arrow Artifact","Crescent Artifact","Hourglass Diamond Artifact","Diamond Artifact","Mount Hallow","Crystal Caverns","Ancient Ruin","Classic Island","Iron Cave","Iron Cavern","Christmas Island"},
+ AllowNone = true,
+ Callback=function(o)if o and o~=""then sel=o end end
+}))
+
+local autoTeleportToggle = Reg("autoTeleport",Auto:Toggle({
+ Title="Teleport & Freeze to Position",
+ Default=false,
+ Callback=function(s)
+  if s then
+   local c=P.Character
+   local hrp=c and c:FindFirstChild("HumanoidRootPart")
+   local cf=T[sel]
+   if hrp and cf then hrp.CFrame=cf task.wait(.1)start()end
+  else stop()end
+ end
+}))
+
+--// TELEPORT ZONE
+Auto:Divider()
+
+local P=game:GetService("Players").LocalPlayer
+local RS=game:GetService("RunService")
+
+local cf=nil
+local loop=nil
+local on=false
+
+local function save()
+ local c=P.Character
+ local hrp=c and c:FindFirstChild("HumanoidRootPart")
+ if hrp then
+  cf=hrp.CFrame
+  showNotification("Position Saved")
+  return true
+ end
+ return false
+end
+
+local function start()
+ if loop then return end
+ loop=RS.Heartbeat:Connect(function()
+  if on and cf then
+   local c=P.Character
+   local hrp=c and c:FindFirstChild("HumanoidRootPart")
+   if hrp then hrp.CFrame=cf end
+  end
+ end)
+end
+
+local function stop()
+ if loop then loop:Disconnect()loop=nil end
+end
+
+Auto:Button({Title="Save Your Position",Callback=save})
+
+local TT=Auto:Toggle({
+ Title="Teleport & Freeze to Position",
+ Default=false,
+ Callback=function(s)
+  on=s
+  if s then
+   if not cf then
+    showNotification("❌ Teleport","Save position first!")
+    on=false
+    TT:Set(false)
+    return
+   end
+   local c=P.Character
+   local hrp=c and c:FindFirstChild("HumanoidRootPart")
+   if hrp then hrp.CFrame=cf task.wait(.1)start()end
+  else stop()end
+ end
+})
+
+--// FREEZE TELEPORT
+
+Auto:Space()Auto:Divider()
+
+Auto:Section({Title="Auto Sell Feature"})
+
+local RS=game:GetService("ReplicatedStorage")
+local P=game:GetService("Players").LocalPlayer
+
+local pkg=RS:WaitForChild("Packages"):WaitForChild("_Index")
+local net=nil
+if pkg:FindFirstChild("sleitnick_net@0.2.0")then
+ net=pkg["sleitnick_net@0.2.0"]:WaitForChild("net")
+elseif pkg:FindFirstChild("cemstone_net@0.2.1")then
+ net=pkg["cemstone_net@0.2.1"]:WaitForChild("net")
+end
+
+local RF=net["RF/SellAllItems"]
+local RE=net["RE/ObtainedNewFishNotification"]
+
+local on=false
+local mode="Delay"
+local val=50
+local loop=nil
+local cnt=0
+local conn=nil
+
+local function sell()
+ if not RF then return false end
+ return pcall(function()RF:InvokeServer()end)
+end
+
+local function listen()
+ if not RE then return false end
+ if conn then conn:Disconnect()conn=nil end
+ conn=RE.OnClientEvent:Connect(function()
+  cnt+=1
+  if mode=="Count"and on and cnt>=val then
+   if sell()then cnt=0 end
+  end
+ end)
+ return true
+end
+
+local function start()
+ if loop then task.cancel(loop)end
+ loop=task.spawn(function()
+  while on do
+   if mode=="Delay"then
+    sell()
+    for _=1,val do if not on then break end task.wait(1)end
+   else task.wait(1)end
+  end
+ end)
+end
+
+local sellModeDropdown = Auto:Dropdown({
+ Title="Sell Mode",
+ Values={"Delay","Count"},
+ Value="Delay",
+ Callback=function(v)
+  mode=v cnt=0
+  if on then
+   if v=="Count"then listen()else start()end
+  end
+ end
+})
+
+local sellValueInput = Reg("sellValue", Auto:Input({
+ Title="Value",
+ Placeholder="50",
+ Value="50",
+ Icon="hash",
+ Callback=function(t)
+  local n=tonumber(t)
+  if n and n>0 then val=n end
+ end
+}))
+
+local autoSellToggle = Reg("autoSell", Auto:Toggle({
+ Title="Enable Auto Sell",
+ Value=false,
+ Callback=function(s)
+  on=s
+  if s then
+   if mode=="Count" then
+    listen()
+   else
+    start()
+   end
+  else
+   if conn then conn:Disconnect() conn=nil end
+   cnt=0
+   if loop then task.cancel(loop) loop=nil end
+  end
+ end
+}))
+
+Auto:Button({Title="Sell Now",Callback=function()sell()end})
+Auto:Divider()Auto:Space()
+--// Auto Sell Feature
+local RS=game:GetService("ReplicatedStorage")
+local net=RS.Packages._Index["sleitnick_net@0.2.0"].net
+local REF=net["RE/FavoriteItem"]
+local REN=net["RE/ObtainedNewFishNotification"]
+
+local Items=RS:FindFirstChild("Items")
+local conn=nil
+local tiers={}
+local muts={}
+local fish={}
+
+local function load()
+ if not Items or not Items:IsA("ModuleScript")then return false end
+ local ok,data=pcall(require,Items)
+ if not ok or not data then return false end
+
+ local map={[1]="Common",[2]="Uncommon",[3]="Rare",[4]="Epic",[5]="Legendary",[6]="Mythic",[7]="SECRET"}
+ for _,n in ipairs({"Common","Uncommon","Rare","Epic","Legendary","Mythic","SECRET"})do fish[n]={}end
+
+ local total=0
+ for _,d in pairs(data)do
+  if type(d)=="table"and d.Data and d.Data.Type=="Fish"then
+   local t=map[d.Data.Tier or 1]or"Common"
+   if fish[t]then table.insert(fish[t],d.Data.Id)total+=1 end
+  end
+ end
+ for _,v in pairs(fish)do table.sort(v)end
+ return true
+end
+
+load()
+
+local function mut(w,i)
+ return(w and w.VariantId)or(i and i.InventoryItem and i.InventoryItem.Metadata and i.InventoryItem.Metadata.VariantId)
+end
+
+local function fav(id,w,i)
+ local m=mut(w,i)
+ for _,t in pairs(tiers)do
+  if fish[t]and table.find(fish[t],id)then
+   local u=i and i.InventoryItem and i.InventoryItem.UUID or id
+   task.spawn(function()pcall(function()REF:FireServer(u)end)end)
+   return
+  end
+ end
+ if m and table.find(muts,m)then
+  local u=i and i.InventoryItem and i.InventoryItem.UUID or id
+  task.spawn(function()pcall(function()REF:FireServer(u)end)end)
+ end
+end
+
+local allM={"Shiny","Albino","Sandy","Noob","Moon Fragment","Festive","Disco","1x1x1x1","Bloodmoon","Color Burn","Corrupt","Fairy Dust","Frozen","Galaxy","Gemstone","Ghost","Gold","Holographic","Lightning","Midnight","Radioactive","Stone"}
+local rar={"Common","Uncommon","Rare","Epic","Legendary","Mythic","SECRET"}
+
+Auto:Section({Title="Auto Favorite Feature"})
+
+local favRarityDropdown=Auto:Dropdown({Title="Rarity",Values=rar,Value={"Legendary","Mythic","SECRET"},Multi=true,Callback=function(v)tiers=v end})
+local favMutationDropdown=Auto:Dropdown({Title="Mutation",Values=allM,Value={},Multi=true,Callback=function(v)muts=v end})
+
+local ItemUtility=require(RS:WaitForChild("Shared"):WaitForChild("ItemUtility"))
+local allItemNames={}
+task.spawn(function()
+ local ItemsFolder=RS:FindFirstChild("Items")
+ if ItemsFolder then
+  for _,itemScript in pairs(ItemsFolder:GetDescendants())do
+   if not string.find(itemScript:GetFullName(),"!!!")and itemScript:IsA("ModuleScript")then
+    local success,itemData=pcall(function()return require(itemScript)end)
+    if success and itemData then
+     local data=itemData.Data or itemData
+     if data and data.Id and data.Name and data.Type~="Fishing Rods"then
+      table.insert(allItemNames,data.Name)
+     end
+    end
+   end
+  end
+  table.sort(allItemNames)
+ end
+end)
+
+local selectedItems={}
+local favoriteByNameDropdown=Auto:Dropdown({Title="Favorite by Name",Values=allItemNames,Multi=true,AllowNone=true,SearchBarEnabled=true,ScrollBarEnabled=true,Callback=function(v)selectedItems=v end})
+
+local autoFavoriteToggle=Auto:Toggle({Title="Enable Auto Favorite",Default=false,Callback=function(s)
+ if s then
+  if conn then conn:Disconnect()end
+  conn=REN.OnClientEvent:Connect(fav)
+ elseif conn then
+  conn:Disconnect()conn=nil
+ end
+end})
+end
+
+
+--- //////////////////// END OF MAIN
+
+
+local function ShopTab()
+    if not Shop then return end
+Shop:Section({Title="Fishing Rod Shop"})
+
+local curRod=""
+local RS=game:GetService("ReplicatedStorage")
+local RF=RS.Packages._Index["sleitnick_net@0.2.0"].net["RF/PurchaseFishingRod"]
+
+local rods={
+ ["Starter Rod (50$)"]=1,
+ ["Luck Rod (350$)"]=79,
+ ["Carbon Rod (900$)"]=76,
+ ["Grass Rod (1500$)"]=85,
+ ["Desmascus Rod (3000$)"]=77,
+ ["Ice Rod (5000$)"]=78,
+ ["Lucky Rod (15000$)"]=4,
+ ["Midnight Rod (50000$)"]=80,
+ ["SteamPunk Rod (215000$)"]=6,
+ ["Chrome Rod (437000$)"]=7,
+ ["Fluorescent Rod (715000$)"]=255,
+ ["Astral Rod (1M$)"]=5,
+ ["Ares Rod (3M$)"]=126,
+ ["Angler Rod (8M$)"]=168,
+ ["Bambo Rod (12M$)"]=258
+}
+
+Shop:Dropdown({
+ Title="Select Fishing Rod",
+ Values={
+  "Starter Rod (50$)","Luck Rod (350$)","Carbon Rod (900$)","Grass Rod (1500$)",
+  "Desmascus Rod (3000$)","Ice Rod (5000$)","Lucky Rod (15000$)","Midnight Rod (50000$)",
+  "SteamPunk Rod (215000$)","Chrome Rod (437000$)","Fluorescent Rod (715000$)",
+  "Astral Rod (1M$)","Ares Rod (3M$)","Angler Rod (8M$)","Bambo Rod (12M$)"
+ },
+ Value="",
+ Callback=function(o)curRod=o end
+})
+
+Shop:Button({
+ Title="Purchase Fishing Rod",
+ Callback=function()
+  local id=rods[curRod]
+  if id then RF:InvokeServer(id)end
+ end
+})
+
+Shop:Section({Title="Purchase Bait"})
+
+local curBait=""
+local RF=RS.Packages._Index["sleitnick_net@0.2.0"].net["RF/PurchaseBait"]
+
+local baits={
+ ["TopWater Bait (100$)"]=10,
+ ["Luck Bait (1000$)"]=2,
+ ["Midnight Bait (3000$)"]=3,
+ ["Nature Bait (83500$)"]=17,
+ ["Chroma Bait (290000$)"]=6,
+ ["Dark Matter Bait (630000$)"]=8,
+ ["Corrupt Bait (1.15M$)"]=15,
+ ["Aether Bait (3.70M$)"]=16,
+ ["Floral Bait (4M$)"]=20
+}
+
+Shop:Dropdown({
+ Title="Select Bobbers",
+ Values={
+  "TopWater Bait (100$)","Luck Bait (1000$)","Midnight Bait (3000$)",
+  "Nature Bait (83500$)","Chroma Bait (290000$)","Dark Matter Bait (630000$)",
+  "Corrupt Bait (1.15M$)","Aether Bait (3.70M$)","Floral Bait (4M$)"
+ },
+ Value="",
+ Callback=function(o)curBait=o end
+})
+
+Shop:Button({
+ Title="Purchase Bobbers",
+ Callback=function()
+  local id=baits[curBait]
+  if id then RF:InvokeServer(id)end
+ end
+})
+
+--// Purchase Bobbers X Bait
+Shop:Section({Title="Purchase Weather"})
+
+local sel={"Wind (10000)","Cloudy (20000)", "Storm (35000)"}
+local on=false
+local loop=nil
+
+local selectWeatherDropdown = Shop:Dropdown({
+ Title="Select Weather",
+ Values={"Wind (10000)","Cloudy (20000)","Snow (15000)","Storm (35000)","Radiant (50000)","Shark Hunt (300000)"},
+ Value={ "Wind (10000)", "Cloudy (20000)", "Storm (35000)"},
+ Multi=true,
+ AllowNone=true,
+ Callback=function(v)sel=v end
+})
+
+local RS=game:GetService("ReplicatedStorage")
+local RF=RS.Packages._Index["sleitnick_net@0.2.0"].net["RF/PurchaseWeatherEvent"]
+
+local map={
+ ["Wind (10000)"]="Wind",
+ ["Cloudy (20000)"]="Cloudy",
+ ["Snow (15000)"]="Snow",
+ ["Storm (35000)"]="Storm",
+ ["Radiant (50000)"]="Radiant",
+ ["Shark Hunt (300000)"]="Shark Hunt"
+}
+
+local function buy(n)
+ local w=map[n]
+ if w then RF:InvokeServer(w)end
+end
+
+Shop:Button({
+ Title="Purchase Weather",
+ Callback=function()
+  for _,w in pairs(sel)do buy(w)end
+ end
+})
+
+local autoBuyWeatherToggle=Reg("autoBuyWeather",Shop:Toggle({
+ Title="Auto Buy Weather",
+ Default=false,
+ Callback=function(s)
+  on=s
+  if s then
+   loop=game:GetService("RunService").Heartbeat:Connect(function()
+    task.wait(2)
+    if on then
+     for _,w in pairs(sel)do buy(w)end
+    end
+   end)
+  else
+   if loop then loop:Disconnect()loop=nil end
+  end
+ end
+}))
+--// WEATHER
+
+local RepStorage=game:GetService("ReplicatedStorage")
+local RunService=game:GetService("RunService")
+local ItemUtility=require(RepStorage:WaitForChild("Shared"):WaitForChild("ItemUtility"))
+local MarketItemData=require(RepStorage:WaitForChild("Shared"):WaitForChild("MarketItemData"))
+local ReplionClient=require(RepStorage:WaitForChild("Packages"):WaitForChild("Replion")).Client
+local RPath={"Packages","_Index","sleitnick_net@0.2.0","net"}
+
+local function GetRemote(p,n)
+local c=RepStorage
+for _,v in ipairs(p)do c=c:WaitForChild(v,5)if not c then return end end
+return c:FindFirstChild(n)
+end
+
+local RF_PurchaseMarketItem=GetRemote(RPath,"RF/PurchaseMarketItem")
+local MerchantReplion=nil
+local MerchantButtons={}
+local UpdateThread=nil
+local UpdateCleanup=nil
+local autoBuyStock=false
+local autoBuyThread=nil
+
+local function FormatNumber(n)
+if n>=1e9 then return string.format("%.1fB",n/1e9)
+elseif n>=1e6 then return string.format("%.1fM",n/1e6)
+elseif n>=1e3 then return string.format("%.1fK",n/1e3)
+else return tostring(n)end
+end
+
+local function GetMerchantReplion()
+if MerchantReplion then return MerchantReplion end
+MerchantReplion=ReplionClient:WaitReplion("Merchant",5)
+return MerchantReplion
+end
+
+local function GetStock(d)
+local r={}
+if d and d.Items then
+for _,id in ipairs(d.Items)do
+local m
+for _,v in ipairs(MarketItemData)do if v.Id==id then m=v break end end
+if m and m.Price and not m.SkinCrate then
+local it
+pcall(function()it=ItemUtility:GetItemDataFromItemType(m.Type,m.Identifier)end)
+table.insert(r,{
+Name=(it and it.Data and it.Data.Name)or m.Identifier,
+ID=id,Price=m.Price,Currency=m.Currency or"Coins"
+})
+end
+end
+end
+return r
+end
+
+local function NextRefresh()
+local t=workspace:GetServerTimeNow()
+local d=86400
+local r=(math.floor(t/d)+1)*d-t
+return string.format("Next Refresh: %02dH %02dM %02dS",r/3600%24,r/60%60,r%60)
+end
+
+local function Buy(id,n)
+if RF_PurchaseMarketItem then
+pcall(function()RF_PurchaseMarketItem:InvokeServer(id)end)
+WindUI:Notify({Title="Purchase",Content="Membeli: "..n,Duration=2,Icon="shopping-cart"})
+end
+end
+
+local function ClearButtons()
+for _,b in ipairs(MerchantButtons)do if b.Destroy then pcall(function()b:Destroy()end)end end
+MerchantButtons={}
+end
+
+local function StockText(d)
+local t={"--- CURRENT STOCK ---"}
+if #d==0 then return"--- CURRENT STOCK ---\nStok kosong."end
+for _,i in ipairs(d)do
+table.insert(t,string.format(" • %s: %s %s",i.Name,FormatNumber(i.Price),i.Currency=="Coins"and"C$"or i.Currency))
+end
+return table.concat(t,"\n")
+end
+
+local merchant=Shop:Section({Title="Traveling Merchant",TextSize=20})
+local display=Shop:Paragraph({Title="Merchant Live Data OFF.",Desc="Toggle ON untuk melihat status.",Icon="clock"})
+
+local function DrawButtons(d)
+ClearButtons()
+if #d>0 then
+for _,i in ipairs(d)do
+table.insert(MerchantButtons,Shop:Button({
+Title="BUY: "..i.Name,
+Desc="Price: "..FormatNumber(i.Price),
+Icon="shopping-bag",
+Callback=function()Buy(i.ID,i.Name)end
+}))
+end
+else
+table.insert(MerchantButtons,Shop:Paragraph({
+Title="No Special Items",
+Desc="Merchant tidak menjual item.",
+Icon="info"
+}))
+end
+end
+
+local function RunSync(p)
+if UpdateThread then task.cancel(UpdateThread)end
+local r=GetMerchantReplion()if not r then return end
+DrawButtons(GetStock(r.Data))
+local conn=r:OnChange("Items",function()
+local d=GetStock(r.Data)
+DrawButtons(d)
+p:SetTitle(NextRefresh().."\n"..StockText(d))
+end)
+local run=true
+UpdateThread=task.spawn(function()
+while run do
+local d=GetStock(r.Data)
+p:SetTitle(NextRefresh().."\n"..StockText(d))
+task.wait(1)
+end
+if conn then conn:Disconnect()end
+ClearButtons()
+end)
+return function()
+run=false
+if UpdateThread then task.cancel(UpdateThread)UpdateThread=nil end
+if conn then conn:Disconnect()end
+ClearButtons()
+end
+end
+
+local function RunAutoBuy()
+if autoBuyThread then task.cancel(autoBuyThread)end
+autoBuyThread=task.spawn(function()
+while autoBuyStock do
+local r=GetMerchantReplion()
+if r then
+for _,i in ipairs(GetStock(r.Data))do
+Buy(i.ID,i.Name)
+task.wait(0.5)
+end
+end
+task.wait(3)
+end
+end)
+end
+
+local tlive=Reg("merchant_live",Shop:Toggle({
+Title="Live Stock & Buy Actions",
+Value=false,
+Callback=function(s)
+if s then
+task.spawn(function()
+if not GetMerchantReplion()then
+WindUI:Notify({Title="Error",Content="Merchant tidak tersedia",Duration=3,Icon="x"})
+return
+end
+display:SetDesc("Syncing...")
+UpdateCleanup=RunSync(display)
+end)
+else
+if UpdateCleanup then UpdateCleanup()UpdateCleanup=nil end
+display:SetTitle("Merchant Live Data OFF.")
+display:SetDesc("Toggle ON untuk melihat status.")
+ClearButtons()
+end
+end
+}))
+
+local tcurst=Reg("merchant_autobuy",Shop:Toggle({
+Title="Auto Buy Current Stock",
+Value=false,
+Callback=function(s)
+autoBuyStock=s
+if s then
+RunAutoBuy()
+WindUI:Notify({Title="Auto Buy ON",Content="Memborong stok...",Duration=3,Icon="dollar-sign"})
+else
+if autoBuyThread then task.cancel(autoBuyThread)autoBuyThread=nil end
+WindUI:Notify({Title="Auto Buy OFF",Duration=2,Icon="x"})
+end
+end
+}))
+
+Shop:Button({
+Title="Teleport To Merchant Shop",
+Icon="map-pin",
+Callback=function()
+local hrp=game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if hrp then
+hrp.CFrame=CFrame.new(Vector3.new(-127.747,2.718,2759.031),Vector3.new(-128.6,2.7,2758.6))
+end
+end
+})
+end
+
+--// END OF SHOP TAB
+local function TeleportTab()
+if not Teleport then return end
+Teleport:Section({Title="Teleport To Players"})
+local PS=game:GetService("Players")
+local LP=PS.LocalPlayer
+local sel=""
+local function list()local t={}for _,plr in pairs(PS:GetPlayers())do if plr~=LP then table.insert(t,plr.Name)end end return t end
+local DD=Teleport:Dropdown({
+Title="Select Player",
+Values={},
+Value="",
+Callback=function(v)if v and v~=""then sel=v WindUI:Notify({Title="Target Selected",Content=v,Duration=2,Icon="user"})end end
+})
+local function refreshPlayerList()
+local currentPlayers=list()
+DD:Refresh(currentPlayers)
+if sel~=""then
+local playerStillExists=false
+for _,name in ipairs(currentPlayers)do if name==sel then playerStillExists=true break end end
+if not playerStillExists then DD:SetValue("")sel=""end
+end
+return true
+end
+Teleport:Button({
+Title="Refresh Player List",
+Callback=function()
+refreshPlayerList()
+WindUI:Notify({Title="Player List Updated",Content=#list().." players found",Duration=2,Icon="refresh-cw"})
+end
+})
+Teleport:Button({
+Title="Teleport to Player",
+Callback=function()
+if sel~=""then
+local tp=PS:FindFirstChild(sel)
+local tc=tp and tp.Character and tp.Character:FindFirstChild("HumanoidRootPart")
+local lc=LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+if tc and lc then
+lc.CFrame=tc.CFrame
+WindUI:Notify({Title="Teleported",Content="Teleported to "..sel,Duration=3,Icon="map-pin"})
+else
+WindUI:Notify({Title="Failed",Content="Player not found or no character",Duration=3,Icon="x"})
+end
+else
+WindUI:Notify({Title="Failed",Content="Select a player first",Duration=3,Icon="alert-circle"})
+end
+end
+})
+task.spawn(function()
+task.wait(1)
+refreshPlayerList()
+end)
+--// TELEPORT TO PLAYER
+
+Teleport:Section({Title="Teleport To Island Locations"})
+
+local P=game:GetService("Players").LocalPlayer
+
+local T={
+ ["Fisherman Island"]=CFrame.new(77,9,2706),
+ ["Kohana Volcano"]=CFrame.new(-628.758911,35.710186,104.373764,0.482912123,1.81591773e-08,0.875668824,3.01732896e-08,1,-3.73774007e-08,-0.875668824,4.44718076e-08,0.482912123),
+ ["Kohana"]=CFrame.new(-725.013306,3.03549194,800.079651,-0.999999285,-5.38041718e-08,-0.00118542486,-5.379977e-08,1,-3.74458198e-09,0.00118542486,-3.68080366e-09,-0.999999285),
+ ["Esotric Islands"]=CFrame.new(2113,10,1229),
+ ["Coral Reefs"]=CFrame.new(-3063.54248,4.04500151,2325.85278,0.999428809,2.02288568e-08,0.033794228,-1.96206607e-08,1,-1.83286453e-08,-0.033794228,1.76551112e-08,0.999428809),
+ ["Crater Island"]=CFrame.new(984.003296,2.87008905,5144.92627,0.999932885,1.19231975e-08,0.0115857301,-1.04685522e-08,1,-1.25615529e-07,-0.0115857301,1.25485812e-07,0.999932885),
+ ["Sisyphus Statue"]=CFrame.new(-3737,-136,-881),
+ ["Treasure Room"]=CFrame.new(-3650.4873,-269.269318,-1652.68323,-0.147814155,-2.75628675e-08,-0.989015162,-1.74189818e-08,1,-2.52656349e-08,0.989015162,1.34930183e-08,-0.147814155),
+ ["Lost Isle"]=CFrame.new(-3649.0813,5.42584181,-1052.88745,0.986230493,3.9997154e-08,-0.165376455,-3.81513914e-08,1,1.43375187e-08,0.165376455,-7.83075649e-09,0.986230493),
+ ["Tropical Grove"]=CFrame.new(-2151.29248,15.8166971,3628.10669,-0.997403979,4.56146232e-09,-0.0720091537,4.62302685e-09,1,-6.88285429e-10,0.0720091537,-1.0193989e-09,-0.997403979),
+ ["Weater Machine"]=CFrame.new(-1518.05042,2.87499976,1909.78125,-0.995625556,-1.82757487e-09,-0.0934334621,2.24076646e-09,1,-4.34377512e-08,0.0934334621,-4.34570957e-08,-0.995625556),
+ ["Enchant Room"]=CFrame.new(3180.14502,-1302.85486,1387.9563,0.338028163,9.92235272e-08,-0.941136003,1.90291747e-08,1,1.12264253e-07,0.941136003,-5.58575195e-08,0.338028163),
+ ["Seconds Enchant"]=CFrame.new(1487,128,-590),
+ ["Ancient Jungle"]=CFrame.new(1519.33215,2.08891273,-307.090668,0.632470906,-1.48247699e-08,0.774584115,-2.24899335e-08,1,3.75027014e-08,-0.774584115,-4.11397139e-08,0.632470906),
+ ["Sacred Temple"]=CFrame.new(1413.84277,4.375,-587.298279,0.261966974,5.50031594e-08,-0.965076864,-8.19077872e-09,1,5.47701973e-08,0.965076864,-6.44325127e-09,0.261966974),
+ ["Underground Cellar"]=CFrame.new(2103.14673,-91.1976471,-717.124939,-0.226165071,-1.71397723e-08,-0.974088967,-2.1650266e-09,1,-1.70930168e-08,0.974088967,-1.75691484e-09,-0.226165071),
+ ["Arrow Artifact"]=CFrame.new(883.135437,6.62499952,-350.10025,-0.480593145,2.676836e-08,0.876943707,-4.66245069e-08,1,-5.6076324e-08,-0.876943707,-6.78369645e-08,-0.480593145),
+ ["Crescent Artifact"]=CFrame.new(1409.40747,6.62499952,115.430603,-0.967555583,-5.63477229e-08,0.252658188,-7.82660337e-08,1,-7.67005233e-08,-0.252658188,-9.39865714e-08,-0.967555583),
+ ["Hourglass Diamond Artifact"]=CFrame.new(1480.98645,6.27569771,-847.142029,-0.967326343,-5.985531e-08,0.253534466,-6.16077926e-08,1,1.02735098e-09,-0.253534466,-1.46259147e-08,-0.967326343),
+ ["Diamond Artifact"]=CFrame.new(1836.31604,6.34277105,-298.546265,0.545851529,-2.36059989e-08,-0.837881923,-4.70848498e-08,1,-5.8847597e-08,0.837881923,7.15735951e-08,0.545851529),
+ ["Mount Hallow"]=CFrame.new(2105,81,3294),
+ ["Crystal Caverns"]=CFrame.new(-1979,-440,7347),
+ ["Ancient Ruin"]=CFrame.new(6087,-586,4701),
+ ["Classic Island"]=CFrame.new(1173,4,2839),
+ ["Iron Cave"]=CFrame.new(-8640,-548,164),
+ ["Iron Cavern"]=CFrame.new(-8775,-585,100),
+ ["Christmas Island"]=CFrame.new(1160,23,1533)
+}
+
+local sel=""
+
+Teleport:Dropdown({
+ Title="Teleport To Island",
+ Values={"Fisherman Island","Kohana Volcano","Kohana","Esotric Islands","Coral Reefs","Crater Island","Sisyphus Statue","Treasure Room","Lost Isle","Tropical Grove","Weater Machine","Enchant Room","Seconds Enchant","Ancient Jungle","Sacred Temple","Underground Cellar","Arrow Artifact","Crescent Artifact","Hourglass Diamond Artifact","Diamond Artifact","Mount Hallow","Crystal Caverns","Ancient Ruin","Classic Island","Iron Cave","Iron Cavern","Christmas Island"},
+ Value="",
+ Callback=function(v)if v~=""then sel=v end end
+})
+
+Teleport:Button({
+ Title="Teleport to Island",
+ Callback=function()
+  if sel~="" then
+   local c=P.Character
+   local hrp=c and c:FindFirstChild("HumanoidRootPart")
+   local cf=T[sel]
+   if hrp and cf then hrp.CFrame=cf end
+  end
+ end
+})
+
+--// TELEPORT TO ISLAND
+Teleport:Section({Title="Teleport To Game Event"})
+
+local P=game:GetService("Players").LocalPlayer
+local RS=game:GetService("RunService")
+
+local cur="Megalodon Hunt"
+local on=false
+local last=nil
+local bv=nil
+local conn=nil
+local frozen=false
+local done=false
+
+getgenv().HuntTeleportSettings=getgenv().HuntTeleportSettings or{
+ isTeleporting=false,
+ currentLocation="Megalodon Hunt"
+}
+on=getgenv().HuntTeleportSettings.isTeleporting
+cur=getgenv().HuntTeleportSettings.currentLocation
+
+local function findEvent(n)
+ if n=="Worm Fish" then
+  for _,v in ipairs(workspace:GetChildren()) do
+   local m=v:FindFirstChild("Model")
+   if m then
+    local p=m:GetChildren()[3]
+    if p and p:IsA("BasePart") then
+     return p
+    end
+   end
+  end
+ else
+  for _,v in ipairs(workspace:GetDescendants()) do
+   if v.Name==n then
+    if v:IsA("Model") then
+     return v.PrimaryPart or v:FindFirstChildWhichIsA("BasePart",true)
+    elseif v:IsA("BasePart") then
+     return v
+    end
+   end
+  end
+ end
+ return nil
+end
+
+local function freeze(pos)
+ local c=P.Character
+ if not c or c:GetAttribute("Dead") then return end
+ local hrp=c:FindFirstChild("HumanoidRootPart")
+ if not hrp then return end
+ if bv then bv:Destroy() end
+ bv=Instance.new("BodyVelocity")
+ bv.Velocity=Vector3.zero
+ bv.MaxForce=Vector3.new(4e4,4e4,4e4)
+ bv.P=1e4
+ bv.Parent=hrp
+ if not pcall(function()hrp.CFrame=CFrame.new(pos)end) then
+  bv:Destroy() bv=nil return
+ end
+ frozen=true
+ done=true
+end
+
+local function unfreeze()
+ if bv then bv:Destroy() bv=nil end
+ frozen=false
+ done=false
+end
+
+local function savePos()
+ for _=1,5 do
+  local c=P.Character
+  local hrp=c and c:FindFirstChild("HumanoidRootPart")
+  if hrp then last=hrp.Position return true end
+  task.wait(.2)
+ end
+ return false
+end
+
+local function teleport(p)
+ if not p then return end
+ local v=p.Position
+ freeze(Vector3.new(
+  v.X+math.random(-10,10),
+  v.Y+80,
+  v.Z+math.random(-10,10)
+ ))
+end
+
+local function back()
+ if not last then return end
+ unfreeze()
+ local hrp=P.Character and P.Character:FindFirstChild("HumanoidRootPart")
+ if hrp then hrp.CFrame=CFrame.new(last) end
+end
+
+local function stop()
+ if conn then conn:Disconnect() conn=nil end
+ if frozen then back() end
+end
+
+local function start()
+ if conn then conn:Disconnect() end
+ if not savePos() then return end
+ conn=RS.Heartbeat:Connect(function()
+  if not on then if frozen then back() end return end
+  local c=P.Character
+  if not c or c:GetAttribute("Dead") then
+   if frozen then unfreeze() end
+   return
+  end
+  if done then return end
+  local p=nil
+  for _=1,3 do
+   p=findEvent(cur)
+   if p then break end
+   task.wait(.1)
+  end
+  if p then
+   if not frozen then teleport(p) end
+  elseif frozen then
+   back()
+  end
+ end)
+end
+
+local gameSelectDropdown = Reg("gameSelect",Teleport:Dropdown({
+ Title="Hunt Location",
+ Values={"Megalodon Hunt","Ghost Shark Hunt","Shark Hunt","Worm Fish"},
+ Value=cur,
+ Callback=function(v)
+  cur=v
+  getgenv().HuntTeleportSettings.currentLocation=v
+  if on then unfreeze() task.wait(.1) start() end
+ end
+}))
+
+local gameEventToggle = Reg("gameEvent",Teleport:Toggle({
+ Title="Teleport To Game Event",
+ Default=on,
+ Callback=function(s)
+  on=s
+  getgenv().HuntTeleportSettings.isTeleporting=s
+  if s then task.wait(.5) start() else stop() end
+ end
+}))
+
+P.CharacterAdded:Connect(function()
+ task.wait(2)
+ if on then task.wait(1) start() end
+end)
+
+local Section=Teleport:Section({Title="Teleport To NPC Locations"})
+local npcLocations={["Alex"]=CFrame.new(49,17,2880),["Alien Merchant"]=CFrame.new(-134,2,2762),["Aura Kid"]=CFrame.new(71,17,2830),["Billy Bob"]=CFrame.new(80,17,2876),["Boat Expert"]=CFrame.new(33,10,2783),["Joe"]=CFrame.new(144,20,2862),["Ron"]=CFrame.new(-52,17,2859),["Scientist"]=CFrame.new(-7,18,2886),["Scott"]=CFrame.new(-17,10,2703),["Seth"]=CFrame.new(111,17,2877),["Silly Fisherman"]=CFrame.new(102,10,2690)}
+local selectedNPC=""
+local NPCDropdown=Teleport:Dropdown({Title="Teleport to NPC",Values={"Alex","Alien Merchant","Aura Kid","Billy Bob","Boat Expert","Joe","Ron","Scientist","Scott","Seth","Silly Fisherman"},Value="",Callback=function(option)if option and option~=""then selectedNPC=option end end})
+local TeleportNPCButton=Teleport:Button({Title="Teleport to NPC",Callback=function()if selectedNPC and selectedNPC~=""then if player.Character and player.Character:FindFirstChild("HumanoidRootPart")then local rootPart=player.Character.HumanoidRootPart;local targetCFrame=npcLocations[selectedNPC]if rootPart and targetCFrame then rootPart.CFrame=targetCFrame end end end end})
+end
+
+--// TELEPORT
+
+local function TotemTab()
+    if not Totem then return end
+local totem=Totem:Section({Title="Auto Spawn Totem",TextSize=20})
+local b=Totem:Paragraph({Title="Status",Content="Waiting...",Icon="clock"})
+
+local RS=game:GetService("ReplicatedStorage")
+local Players=game:GetService("Players")
+local RunService=game:GetService("RunService")
+local LP=Players.LocalPlayer
+
+local Replion=require(RS:WaitForChild("Packages"):WaitForChild("Replion")).Client
+local RPath={"Packages","_Index","sleitnick_net@0.2.0","net"}
+
+local function GetRemote(p,n)
+local c=RS
+for _,v in ipairs(p)do c=c:WaitForChild(v,5)if not c then return end end
+return c:FindFirstChild(n)
+end
+
+local RE_SpawnTotem=GetRemote(RPath,"RE/SpawnTotem")
+local RE_EquipToolFromHotbar=GetRemote(RPath,"RE/EquipToolFromHotbar")
+local RF_EquipOxygenTank=GetRemote(RPath,"RF/EquipOxygenTank")
+local RF_UnequipOxygenTank=GetRemote(RPath,"RF/UnequipOxygenTank")
+
+local TOTEM_DATA={
+["Luck Totem"]={Id=1,Duration=3601},
+["Mutation Totem"]={Id=2,Duration=3601},
+["Shiny Totem"]={Id=3,Duration=3601}
+}
+local TOTEM_NAMES={"Luck Totem","Mutation Totem","Shiny Totem"}
+
+local selectedTotemName="Luck Totem"
+local currentTotemExpiry=0
+local AUTO_TOTEM_ACTIVE=false
+local AUTO_TOTEM_THREAD=nil
+
+local REF_CENTER=Vector3.new(93.932,9.532,2684.134)
+local REF_SPOTS={
+Vector3.new(45,9.5,2730.19067),Vector3.new(145.5,9.5,2721.90747),Vector3.new(84.5,9.5,2636.05786),
+Vector3.new(45,110,2730.19067),Vector3.new(145.5,110,2721.90747),Vector3.new(84.5,110,2636.05786),
+Vector3.new(45,-92,2730.19067),Vector3.new(145.5,-92,2721.90747),Vector3.new(84.5,-92,2636.05786)
+}
+
+local AUTO_9_TOTEM_ACTIVE=false
+local AUTO_9_TOTEM_THREAD=nil
+local stateConnection=nil
+
+local function GetFlyPart()
+local c=LP.Character
+return c and(c:FindFirstChild("Torso")or c:FindFirstChild("UpperTorso")or c:FindFirstChild("HumanoidRootPart"))
+end
+
+local function MaintainAntiFall(e)
+local c=LP.Character
+local h=c and c:FindFirstChild("Humanoid")
+if not h then return end
+local states={Enum.HumanoidStateType.FallingDown,Enum.HumanoidStateType.Running,Enum.HumanoidStateType.Climbing,
+Enum.HumanoidStateType.Ragdoll,Enum.HumanoidStateType.GettingUp,Enum.HumanoidStateType.Jumping,
+Enum.HumanoidStateType.Landed,Enum.HumanoidStateType.Physics}
+if e then
+for _,s in ipairs(states)do h:SetStateEnabled(s,false)end
+if not stateConnection then
+stateConnection=RunService.Heartbeat:Connect(function()
+if h and AUTO_9_TOTEM_ACTIVE then h:ChangeState(Enum.HumanoidStateType.Swimming)end
+end)
+end
+else
+if stateConnection then stateConnection:Disconnect()stateConnection=nil end
+for _,s in ipairs(states)do h:SetStateEnabled(s,true)end
+end
+end
+
+local function EnableV3Physics()
+local c=LP.Character
+local h=c and c:FindFirstChild("Humanoid")
+local p=GetFlyPart()
+if not(p and h)then return end
+if c:FindFirstChild("Animate")then c.Animate.Disabled=true end
+h.PlatformStand=true
+MaintainAntiFall(true)
+
+local bg=p:FindFirstChild("FlyGuiGyro")or Instance.new("BodyGyro",p)
+bg.Name="FlyGuiGyro"
+bg.P=9e4
+bg.maxTorque=Vector3.new(9e9,9e9,9e9)
+bg.CFrame=p.CFrame
+
+local bv=p:FindFirstChild("FlyGuiVelocity")or Instance.new("BodyVelocity",p)
+bv.Name="FlyGuiVelocity"
+bv.velocity=Vector3.new(0,0.1,0)
+bv.maxForce=Vector3.new(9e9,9e9,9e9)
+
+task.spawn(function()
+while AUTO_9_TOTEM_ACTIVE and c do
+for _,v in ipairs(c:GetDescendants())do if v:IsA("BasePart")then v.CanCollide=false end end
+task.wait(0.1)
+end
+end)
+end
+
+local function DisableV3Physics()
+local c=LP.Character
+local h=c and c:FindFirstChild("Humanoid")
+local hrp=c and c:FindFirstChild("HumanoidRootPart")
+MaintainAntiFall(false)
+if hrp then
+for _,v in ipairs(hrp:GetChildren())do
+if v:IsA("BodyMover")or v:IsA("BodyVelocity")or v:IsA("BodyGyro")or v.Name=="FlyGuiVelocity"or v.Name=="FlyGuiGyro"then v:Destroy()end
+end
+hrp.Velocity=Vector3.zero
+hrp.RotVelocity=Vector3.zero
+local _,ry=hrp.CFrame:ToEulerAnglesYXZ()
+hrp.CFrame=CFrame.new(hrp.Position)*CFrame.fromEulerAnglesYXZ(0,ry,0)
+end
+if h then
+h.PlatformStand=false
+h.Sit=false
+h.AutoRotate=true
+h:SetStateEnabled(Enum.HumanoidStateType.Physics,false)
+h:SetStateEnabled(Enum.HumanoidStateType.Running,true)
+h:ChangeState(Enum.HumanoidStateType.GettingUp)
+task.wait(0.1)
+h:ChangeState(Enum.HumanoidStateType.Landed)
+end
+if c and c:FindFirstChild("Animate")then c.Animate.Disabled=false end
+if c then for _,v in ipairs(c:GetDescendants())do if v:IsA("BasePart")then v.CanCollide=true end end end
+end
+
+local function FlyPhysicsTo(pos)
+local p=GetFlyPart()
+if not p then return end
+local bv=p:FindFirstChild("FlyGuiVelocity")
+local bg=p:FindFirstChild("FlyGuiGyro")
+if not(bv and bg)then EnableV3Physics()bv=p.FlyGuiVelocity bg=p.FlyGuiGyro end
+local SPEED=80
+while AUTO_9_TOTEM_ACTIVE do
+local d=pos-p.Position
+local m=d.Magnitude
+bg.CFrame=CFrame.lookAt(p.Position,pos)
+if m<1 then bv.velocity=Vector3.new(0,0.1,0)break else bv.velocity=d.Unit*SPEED end
+RunService.Heartbeat:Wait()
+end
+end
+
+local function GetTotemUUID(name)
+local r=GetPlayerDataReplion()if not r then return end
+local ok,d=pcall(function()return r:GetExpect("Inventory")end)
+if ok and d.Totems then
+for _,i in ipairs(d.Totems)do
+if tonumber(i.Id)==TOTEM_DATA[name].Id and(i.Count or 1)>=1 then return i.UUID end
+end
+end
+end
+
+local function ForceResetAndReturn(cf)
+MaintainAntiFall(false)
+local c=LP.Character
+if c and c:FindFirstChild("Humanoid")then c.Humanoid.Health=0 end
+WindUI:Notify({Title="Refreshing",Content="Resetting character physics...",Duration=2,Icon="refresh-cw"})
+local nc=LP.CharacterAdded:Wait()
+local hrp=nc:WaitForChild("HumanoidRootPart",10)
+if hrp then task.wait(0.5)hrp.CFrame=cf end
+end
+
+local function Run9TotemLoop()
+if AUTO_9_TOTEM_THREAD then task.cancel(AUTO_9_TOTEM_THREAD)end
+AUTO_9_TOTEM_THREAD=task.spawn(function()
+local uuid=GetTotemUUID(selectedTotemName)
+if not uuid then
+WindUI:Notify({Title="No Stock",Content="Isi inventory dulu!",Duration=3,Icon="x"})
+local t=Auto:GetElementByTitle("Spawn 9 Totem Formation")if t then t:Set(false)end
+return
+end
+
+local c=LP.Character
+local hrp=c and c:FindFirstChild("HumanoidRootPart")
+local h=c and c:FindFirstChild("Humanoid")
+if not hrp then return end
+
+local startCF=hrp.CFrame
+local startPos=startCF.Position
+
+WindUI:Notify({Title="Started",Content="V3 Engine + Oxygen Protection!",Duration=3,Icon="zap"})
+if RF_EquipOxygenTank then pcall(function()RF_EquipOxygenTank:InvokeServer(105)end)end
+if h then h.Health=h.MaxHealth end
+
+EnableV3Physics()
+
+for i,spot in ipairs(REF_SPOTS)do
+if not AUTO_9_TOTEM_ACTIVE then break end
+local target=startPos+(spot-REF_CENTER)
+b:SetDesc(string.format("Flying to #%d...",i))
+FlyPhysicsTo(target)
+task.wait(0.6)
+
+uuid=GetTotemUUID(selectedTotemName)
+if uuid then
+b:SetDesc(string.format("Spawning #%d...",i))
+pcall(function()RE_SpawnTotem:FireServer(uuid)end)
+task.spawn(function()for k=1,5 do RE_EquipToolFromHotbar:FireServer(1)task.wait(0.1)end end)
+else break end
+task.wait(1.5)
+end
+
+if AUTO_9_TOTEM_ACTIVE then
+b:SetDesc("Returning...")
+FlyPhysicsTo(startCF.Position+Vector3.new(0,10,0))
+if RF_UnequipOxygenTank then pcall(function()RF_UnequipOxygenTank:InvokeServer()end)end
+WindUI:Notify({Title="Selesai",Content="Respawning...",Duration=3,Icon="check"})
+ForceResetAndReturn(startCF)
+end
+
+AUTO_9_TOTEM_ACTIVE=false
+local t=Auto:GetElementByTitle("Spawn 9 Totem Formation")if t then t:Set(false)end
+end)
+end
+
+local function RunAutoTotemLoop()
+if AUTO_TOTEM_THREAD then task.cancel(AUTO_TOTEM_THREAD)end
+AUTO_TOTEM_THREAD=task.spawn(function()
+while AUTO_TOTEM_ACTIVE do
+local left=currentTotemExpiry-os.time()
+if left>0 then
+b:SetDesc(string.format("Next Spawn: %02d:%02d",math.floor((left%3600)/60),left%60))
+else
+b:SetDesc("Spawning Single...")
+local uuid=GetTotemUUID(selectedTotemName)
+if uuid then
+pcall(function()RE_SpawnTotem:FireServer(uuid)end)
+currentTotemExpiry=os.time()+TOTEM_DATA[selectedTotemName].Duration
+task.spawn(function()for i=1,3 do task.wait(0.2)pcall(function()RE_EquipToolFromHotbar:FireServer(1)end)end end)
+end
+end
+task.wait(1)
+end
+end)
+end
+
+local choosetot=Reg("choosetotem",Totem:Dropdown({
+Title="Pilih Jenis Totem",Values=TOTEM_NAMES,Value=selectedTotemName,Multi=false,
+Callback=function(v)selectedTotemName=v currentTotemExpiry=0 end
+}))
+
+local togtot=Reg("toggletotem",Totem:Toggle({
+Title="Enable Auto Totem (Single)",Desc="Mode Normal",Value=false,
+Callback=function(s)AUTO_TOTEM_ACTIVE=s if s then RunAutoTotemLoop()else if AUTO_TOTEM_THREAD then task.cancel(AUTO_TOTEM_THREAD)end end end
+}))
+end
+-- totem
+
+
+local function QuestTab()
+    if not Quest then return end
+local deepsea=Quest:Section({Title="Deep Sea Event",TextSize=16})
+local DeepSeaParagraph=deepsea:Paragraph({Title="Deep Sea Monitor",Content="Initializing...",Icon="waves"})
+local runningDeepSea=false
+local deepSeaThread=nil
+local TREASURE_ROOM_CF=CFrame.new(-3650.4873,-269.269318,-1652.68323,-0.147814155,0,-0.989015162,0,1,0,0.989015162,0,-0.147814155)
+local SISYPHUS_CF=CFrame.new(-3737,-136,-881)
+local ReplicatedStorage=game:GetService("ReplicatedStorage")
+local Replion=require(ReplicatedStorage.Packages.Replion)
+local ClientData=Replion.Client:WaitReplion("Data")
+local function GetDeepSeaStatus()
+local result={QuestCompleted=false,QuestActive=false,Progress=nil,HasGhostfinRod=false}
+local completedQuests=ClientData:Get({"CompletedQuests"})or{}
+for _,questName in ipairs(completedQuests)do
+if questName=="Deep Sea Quest"then result.QuestCompleted=true end
+end
+local inventory=ClientData:Get({"Inventory"})
+if inventory and inventory["Fishing Rods"]then
+for _,rod in ipairs(inventory["Fishing Rods"])do
+if rod.Id==169 then result.HasGhostfinRod=true break end
+end
+end
+if not result.QuestCompleted then
+local questData=ClientData:Get({"Quests","Mainline","Deep Sea Quest"})
+if questData then
+result.QuestActive=true
+result.Progress={Q1={Progress=0,Done=false},Q2={Progress=0,Done=false},Q3={Progress=0,Done=false},Q4={Progress=0,Done=false},TotalPercent=0,AllDone=false}
+for objId,objData in pairs(questData.Objectives)do
+local numId=tonumber(objId)
+local progress=objData.Progress or 0
+if numId==1 then
+result.Progress.Q1.Progress=progress
+result.Progress.Q1.Done=progress>=300
+elseif numId==2 then
+result.Progress.Q2.Progress=progress
+result.Progress.Q2.Done=progress>=3
+elseif numId==3 then
+result.Progress.Q3.Progress=progress
+result.Progress.Q3.Done=progress>=1
+elseif numId==4 then
+result.Progress.Q4.Progress=progress
+result.Progress.Q4.Done=progress>=1000000
+end
+end
+local completedCount=0
+local totalObjectives=4
+if result.Progress.Q1.Done then completedCount=completedCount+1 end
+if result.Progress.Q2.Done then completedCount=completedCount+1 end
+if result.Progress.Q3.Done then completedCount=completedCount+1 end
+if result.Progress.Q4.Done then completedCount=completedCount+1 end
+result.Progress.AllDone=(completedCount==totalObjectives)
+result.Progress.TotalPercent=math.floor((completedCount/totalObjectives)*100)
+end
+end
+return result
+end
+local function TeleportTo(cf)
+local p=game.Players.LocalPlayer
+local c=p.Character
+local h=c and c:FindFirstChild("HumanoidRootPart")
+if h then
+task.wait(0.1)
+h.CFrame=cf
+task.wait(0.3)
+end
+end
+local function IsFar(cf,dist)
+local c=game.Players.LocalPlayer.Character
+local h=c and c:FindFirstChild("HumanoidRootPart")
+return not h or(h.Position-cf.Position).Magnitude>dist
+end
+local function RunDeepSea()
+if deepSeaThread then task.cancel(deepSeaThread)end
+deepSeaThread=task.spawn(function()
+local lastDisplayUpdate=0
+while runningDeepSea do
+local status=GetDeepSeaStatus()
+if tick()-lastDisplayUpdate>1 then
+if status.QuestCompleted then
+DeepSeaParagraph:SetTitle("DEEP SEA COMPLETED")
+if status.HasGhostfinRod then
+DeepSeaParagraph:SetDesc("Quest selesai! Ghostfin Rod sudah didapat. ✅")
+else
+DeepSeaParagraph:SetDesc("Quest selesai! Ambil Ghostfin Rod di altar.")
+end
+elseif status.QuestActive then
+DeepSeaParagraph:SetTitle(string.format("Deep Sea Quest [%d%%]",status.Progress.TotalPercent))
+local displayText=""
+displayText=displayText..(status.Progress.Q1.Done and"✅ "or"⭕ ")..string.format("Rare/Epic: %d/300",status.Progress.Q1.Progress).."\n"
+displayText=displayText..(status.Progress.Q2.Done and"✅ "or"⭕ ")..string.format("Mythic: %d/3",status.Progress.Q2.Progress).."\n"
+displayText=displayText..(status.Progress.Q3.Done and"✅ "or"⭕ ")..string.format("Secret: %d/1",status.Progress.Q3.Progress).."\n"
+displayText=displayText..(status.Progress.Q4.Done and"✅ "or"⭕ ")..string.format("Coins: %s/1M",tostring(status.Progress.Q4.Progress))
+DeepSeaParagraph:SetDesc(displayText)
+else
+DeepSeaParagraph:SetTitle("DEEP SEA NOT STARTED")
+DeepSeaParagraph:SetDesc("Quest belum pernah dimulai. Pergi ke Deep Sea area untuk memulai.")
+end
+lastDisplayUpdate=tick()
+end
+if status.QuestCompleted then
+DeepSeaParagraph:SetTitle("QUEST COMPLETED")
+DeepSeaParagraph:SetDesc("Deep Sea Quest sudah selesai! Toggle dimatikan.")
+runningDeepSea=false
+if DeepSeaToggle then DeepSeaToggle:Set(false)end
+break
+elseif not status.QuestActive then
+DeepSeaParagraph:SetTitle("QUEST NOT STARTED")
+DeepSeaParagraph:SetDesc("Pergi ke area Deep Sea untuk memulai quest.")
+elseif status.QuestActive and status.Progress.AllDone then
+DeepSeaParagraph:SetTitle("QUEST OBJECTIVES DONE!")
+DeepSeaParagraph:SetDesc("Semua objective selesai! Kembali ke altar untuk claim.")
+runningDeepSea=false
+if DeepSeaToggle then DeepSeaToggle:Set(false)end
+break
+end
+if status.QuestActive then
+local targetCF=nil
+if not status.Progress.Q1.Done then
+targetCF=TREASURE_ROOM_CF
+elseif not status.Progress.Q2.Done or not status.Progress.Q3.Done then
+targetCF=SISYPHUS_CF
+elseif not status.Progress.Q4.Done then
+targetCF=SISYPHUS_CF
+end
+if targetCF and IsFar(targetCF,20)then
+TeleportTo(targetCF)
+task.wait(1.5)
+end
+end
+task.wait(1)
+end
+if not runningDeepSea then DeepSeaParagraph:SetDesc("Stopped")end
+deepSeaThread=nil
+end)
+end
+local DeepSeaToggle=Reg("autoDeepSea",deepsea:Toggle({
+Title="Auto Complete Deep Sea",
+Desc="One-time quest: Farm Ghostfin Rod",
+Value=false,
+Callback=function(s)
+runningDeepSea=s
+if s then
+DeepSeaParagraph:SetDesc("Checking Deep Sea status...")
+task.wait(0.5)
+local status=GetDeepSeaStatus()
+if status.QuestCompleted then
+DeepSeaParagraph:SetTitle("QUEST ALREADY COMPLETED")
+DeepSeaParagraph:SetDesc("Deep Sea Quest sudah selesai. Toggle dimatikan.")
+runningDeepSea=false
+if DeepSeaToggle then DeepSeaToggle:Set(false)end
+return
+elseif not status.QuestActive then
+DeepSeaParagraph:SetTitle("QUEST NOT STARTED")
+DeepSeaParagraph:SetDesc("Pergi ke area Deep Sea untuk memulai quest.")
+DeepSeaParagraph:SetDesc("Starting automation...")
+RunDeepSea()
+elseif status.QuestActive and status.Progress.AllDone then
+DeepSeaParagraph:SetTitle("READY TO CLAIM")
+DeepSeaParagraph:SetDesc("Semua objective selesai! Kembali ke altar.")
+runningDeepSea=false
+if DeepSeaToggle then DeepSeaToggle:Set(false)end
+return
+else
+DeepSeaParagraph:SetDesc("Starting automation...")
+RunDeepSea()
+end
+else
+if deepSeaThread then task.cancel(deepSeaThread)deepSeaThread=nil end
+DeepSeaParagraph:SetDesc("Stopped")
+end
+end
+}))
+Quest:Divider()
+local element=Quest:Section({Title="Element Quest Beta",TextSize=16})
+local ElementParagraph=element:Paragraph({Title="Element Quest Monitor",Content="Initializing...",Icon="zap"})
+local runningElement=false
+local elementThread=nil
+local ALTAR_CF=CFrame.new(1479.587,128.295,-604.224)
+local JUNGLE_CF=CFrame.new(1535.639,3.159,-193.352,0.505,-0.000,0.863,0.000,1.000,0.000,-0.863,0.000,0.505)
+local TEMPLE_CF=CFrame.new(1461.815,-22.125,-670.234,-0.990,-0.000,0.143,0.000,1.000,0.000,-0.143,0.000,-0.990)
+local function GetElementQuestStatus()
+local result={QuestCompleted=false,QuestActive=false,DeepSeaCompleted=false,HasGhostfinRod=false,Progress=nil,CanStartElement=false}
+local completedQuests=ClientData:Get({"CompletedQuests"})or{}
+for _,questName in ipairs(completedQuests)do
+if questName=="Deep Sea Quest"then result.DeepSeaCompleted=true end
+if questName=="Element Quest"then result.QuestCompleted=true end
+end
+local inventory=ClientData:Get({"Inventory"})
+if inventory and inventory["Fishing Rods"]then
+for _,rod in ipairs(inventory["Fishing Rods"])do
+if rod.Id==169 then result.HasGhostfinRod=true break end
+end
+end
+result.CanStartElement=result.DeepSeaCompleted or result.HasGhostfinRod
+if not result.QuestCompleted then
+local questData=ClientData:Get({"Quests","Mainline","Element Quest"})
+if questData then
+result.QuestActive=true
+result.Progress={Q1={Done=true,Text="Ghostfin Rod: ✅"},Q2={Progress=0,Done=false,Text="Jungle Secret: ❌"},Q3={Progress=0,Done=false,Text="Temple Secret: ❌"},Q4={Progress=0,Done=false,Text="Transcended Stones: 0/3"},TotalPercent=0,AllDone=false}
+for objId,objData in pairs(questData.Objectives)do
+local numId=tonumber(objId)
+local progress=objData.Progress or 0
+if numId==2 then
+result.Progress.Q2.Progress=progress
+result.Progress.Q2.Done=progress>=1
+result.Progress.Q2.Text=result.Progress.Q2.Done and"Jungle Secret: ✅"or"Jungle Secret: ❌"
+elseif numId==3 then
+result.Progress.Q3.Progress=progress
+result.Progress.Q3.Done=progress>=1
+result.Progress.Q3.Text=result.Progress.Q3.Done and"Temple Secret: ✅"or"Temple Secret: ❌"
+elseif numId==4 then
+result.Progress.Q4.Progress=progress
+result.Progress.Q4.Done=progress>=3
+result.Progress.Q4.Text=string.format("Transcended Stones: %d/3",progress)
+end
+end
+result.Progress.Q1.Done=result.CanStartElement
+result.Progress.Q1.Text=result.CanStartElement and"Ghostfin Rod: ✅"or"Ghostfin Rod: ❌"
+local completedCount=0
+if result.Progress.Q1.Done then completedCount=completedCount+1 end
+if result.Progress.Q2.Done then completedCount=completedCount+1 end
+if result.Progress.Q3.Done then completedCount=completedCount+1 end
+if result.Progress.Q4.Done then completedCount=completedCount+1 end
+result.Progress.AllDone=(completedCount==4)
+result.Progress.TotalPercent=math.floor((completedCount/4)*100)
+end
+end
+return result
+end
+local function RunElementQuest()
+if elementThread then task.cancel(elementThread)end
+elementThread=task.spawn(function()
+local lastDisplayUpdate=0
+while runningElement do
+local status=GetElementQuestStatus()
+if tick()-lastDisplayUpdate>1 then
+if status.QuestCompleted then
+ElementParagraph:SetTitle("✅ ELEMENT QUEST COMPLETE")
+ElementParagraph:SetDesc("Quest sudah selesai! Element Rod sudah didapat.")
+elseif not status.CanStartElement then
+ElementParagraph:SetTitle("❌ CAN'T START ELEMENT QUEST")
+ElementParagraph:SetDesc("Butuh: Deep Sea Quest selesai ATAU punya Ghostfin Rod")
+elseif status.QuestActive then
+ElementParagraph:SetTitle(string.format("Element Quest [%d%%]",status.Progress.TotalPercent))
+local displayText=""
+displayText=displayText..status.Progress.Q1.Text.."\n"
+displayText=displayText..status.Progress.Q2.Text.."\n"
+displayText=displayText..status.Progress.Q3.Text.."\n"
+displayText=displayText..status.Progress.Q4.Text
+ElementParagraph:SetDesc(displayText)
+else
+ElementParagraph:SetTitle("⚠️ READY TO START")
+if status.DeepSeaCompleted then
+ElementParagraph:SetDesc("Deep Sea Quest selesai ✅ Pergi ke altar untuk mulai Element Quest")
+elseif status.HasGhostfinRod then
+ElementParagraph:SetDesc("Sudah punya Ghostfin Rod ✅ Pergi ke altar untuk mulai Element Quest")
+end
+end
+lastDisplayUpdate=tick()
+end
+if status.QuestCompleted then
+ElementParagraph:SetTitle("✅ QUEST COMPLETED")
+ElementParagraph:SetDesc("Element Quest sudah selesai! Toggle dimatikan otomatis.")
+runningElement=false
+if ElementToggle then ElementToggle:Set(false)end
+break
+elseif not status.CanStartElement then
+ElementParagraph:SetTitle("❌ CAN'T START ELEMENT")
+ElementParagraph:SetDesc("Selesaikan Deep Sea Quest dulu atau dapatkan Ghostfin Rod")
+runningElement=false
+if ElementToggle then ElementToggle:Set(false)end
+break
+elseif not status.QuestActive then
+ElementParagraph:SetTitle("⚠️ GO TO ALTAR")
+ElementParagraph:SetDesc("Teleporting to altar to start Element Quest...")
+if IsFar(ALTAR_CF,20)then
+TeleportTo(ALTAR_CF)
+task.wait(2)
+end
+task.wait(2)
+continue
+elseif status.QuestActive and status.Progress.AllDone then
+ElementParagraph:SetTitle("🎉 ELEMENT QUEST DONE!")
+ElementParagraph:SetDesc("Semua objective selesai! Kembali ke altar untuk claim Element Rod.")
+runningElement=false
+if ElementToggle then ElementToggle:Set(false)end
+break
+end
+if status.QuestActive then
+local targetCF=nil
+if not status.Progress.Q2.Done then
+targetCF=JUNGLE_CF
+elseif not status.Progress.Q3.Done then
+targetCF=TEMPLE_CF
+elseif not status.Progress.Q4.Done then
+targetCF=ALTAR_CF
+end
+if targetCF and IsFar(targetCF,20)then
+TeleportTo(targetCF)
+task.wait(1.5)
+end
+end
+task.wait(2)
+end
+if not runningElement then ElementParagraph:SetDesc("⏹Stopped")end
+elementThread=nil
+end)
+end
+local ElementToggle=Reg("autoElement",element:Toggle({
+Title="Auto Track Element Quest",
+Desc="Requires: Deep Sea completed OR Ghostfin Rod",
+Value=false,
+Callback=function(s)
+runningElement=s
+if s then
+ElementParagraph:SetDesc("Checking Element Quest status...")
+task.wait(0.5)
+local status=GetElementQuestStatus()
+if status.QuestCompleted then
+ElementParagraph:SetTitle("QUEST ALREADY COMPLETED")
+ElementParagraph:SetDesc("Element Quest sudah selesai sebelumnya. Toggle dimatikan otomatis.")
+runningElement=false
+if ElementToggle then ElementToggle:Set(false)end
+return
+elseif not status.CanStartElement then
+ElementParagraph:SetTitle("❌ CAN'T START ELEMENT QUEST")
+ElementParagraph:SetDesc(string.format("Butuh:\n- Deep Sea Quest selesai: %s\n- Punya Ghostfin Rod: %s",status.DeepSeaCompleted and"✅"or"❌",status.HasGhostfinRod and"✅"or"❌"))
+runningElement=false
+if ElementToggle then ElementToggle:Set(false)end
+return
+elseif not status.QuestActive then
+ElementParagraph:SetTitle("⚠️ READY TO START")
+if status.DeepSeaCompleted then
+ElementParagraph:SetDesc("Deep Sea Quest selesai ✅ Pergi ke altar untuk mulai")
+elseif status.HasGhostfinRod then
+ElementParagraph:SetDesc("Sudah punya Ghostfin Rod ✅ Pergi ke altar untuk mulai")
+end
+elseif status.QuestActive and status.Progress.AllDone then
+ElementParagraph:SetTitle("READY TO CLAIM")
+ElementParagraph:SetDesc("Semua objective selesai! Kembali ke altar untuk claim Element Rod.")
+runningElement=false
+if ElementToggle then ElementToggle:Set(false)end
+return
+end
+ElementParagraph:SetDesc("Starting automation...")
+RunElementQuest()
+else
+if elementThread then task.cancel(elementThread)elementThread=nil end
+ElementParagraph:SetDesc("⏹Stopped")
+end
+end
+}))
+Quest:Divider()
+local diamond=Quest:Section({Title="Diamond Quest Beta",TextSize=16})
+local DiamondParagraph=diamond:Paragraph({Title="Diamond Quest Monitor",Content="Initializing...",Icon="gem"})
+local runningDiamond=false
+local diamondThread=nil
+local CORAL_REEFS_CF=CFrame.new(-3020,3,2260)
+local TROPICAL_GROVE_CF=CFrame.new(-2150,53,3672)
+local RUBY_FARM_CF=CFrame.new(-3595,-279,-1589)
+local LOCHNESS_FARM_CF=CFrame.new(-712,6,707)
+local DIAMOND_ROD_ID=559
+local ELEMENT_ROD_ID=257
+local RUBY_ID=243
+local LOCHNESS_ID=228
+local ItemUtility=require(ReplicatedStorage.Shared.ItemUtility)
+
+local function GetDiamondQuestStatus()
+local result={HasElementRod=false,HasDiamondRod=false,HasDiamondKey=false,InventoryCheck={HasRuby=false,HasLochness=false},Progress={}}
+local inventory=ClientData:Get({"Inventory"})or{}
+if inventory["Fishing Rods"]then
+for _,rod in ipairs(inventory["Fishing Rods"])do
+if tonumber(rod.Id)==ELEMENT_ROD_ID then result.HasElementRod=true end
+if tonumber(rod.Id)==DIAMOND_ROD_ID then result.HasDiamondRod=true end
+end
+end
+if inventory.Items then
+for _,item in ipairs(inventory.Items)do
+local itemData=ItemUtility:GetItemData(item.Id)
+if itemData and itemData.Data then
+if itemData.Data.Name=="Diamond Key"then result.HasDiamondKey=true end
+end
+if tonumber(item.Id)==RUBY_ID then
+local metadata=item.Metadata or{}
+if metadata.VariantId==3 then result.InventoryCheck.HasRuby=true end
+elseif tonumber(item.Id)==LOCHNESS_ID then
+result.InventoryCheck.HasLochness=true
+end
+end
+end
+local questData=ClientData:Get({"Quests","Mainline","Diamond Rod Quest"})
+result.Progress.Q1={Done=result.HasElementRod,Text=result.HasElementRod and"Element Rod: ✅"or"Element Rod: ❌"}
+result.Progress.Q2={Progress=0,Done=false,Text="Coral Secret: ❌"}
+result.Progress.Q3={Progress=0,Done=false,Text="Tropical Secret: ❌"}
+result.Progress.Q4={Done=result.InventoryCheck.HasLochness,Text=result.InventoryCheck.HasLochness and"Lochness Monster: ✅"or"Lochness Monster: ❌"}
+result.Progress.Q5={Done=result.InventoryCheck.HasRuby,Text=result.InventoryCheck.HasRuby and"Mutated Ruby: ✅"or"Mutated Ruby: ❌"}
+result.Progress.Q6={Progress=0,Done=false,Text="Perfect Throws: 0/1000"}
+result.Progress.AllDone=false
+result.Progress.TotalPercent=0
+if questData then
+for objId,objData in pairs(questData.Objectives)do
+local numId=tonumber(objId)
+local progress=objData.Progress or 0
+if numId==2 then
+result.Progress.Q2.Progress=progress
+result.Progress.Q2.Done=progress>=1
+result.Progress.Q2.Text=result.Progress.Q2.Done and"Coral Secret: ✅"or string.format("Coral Secret: %d/1",progress)
+elseif numId==3 then
+result.Progress.Q3.Progress=progress
+result.Progress.Q3.Done=progress>=1
+result.Progress.Q3.Text=result.Progress.Q3.Done and"Tropical Secret: ✅"or string.format("Tropical Secret: %d/1",progress)
+elseif numId==6 then
+result.Progress.Q6.Progress=progress
+result.Progress.Q6.Done=progress>=1000
+result.Progress.Q6.Text=string.format("Perfect Throws: %d/1000",progress)
+end
+end
+end
+local completedCount=0
+if result.Progress.Q1.Done then completedCount=completedCount+1 end
+if result.Progress.Q2.Done then completedCount=completedCount+1 end
+if result.Progress.Q3.Done then completedCount=completedCount+1 end
+if result.Progress.Q4.Done then completedCount=completedCount+1 end
+if result.Progress.Q5.Done then completedCount=completedCount+1 end
+if result.Progress.Q6.Done then completedCount=completedCount+1 end
+result.Progress.AllDone=(completedCount==6)
+result.Progress.TotalPercent=math.floor((completedCount/6)*100)
+return result
+end
+
+local function GetClaimRemote()
+local packages=game:GetService("ReplicatedStorage"):WaitForChild("Packages")
+local index=packages:WaitForChild("_Index")
+for _,child in pairs(index:GetChildren())do
+if child.Name:find("net@")then
+local net=child:FindFirstChild("net")
+if net then
+local remote=net:FindFirstChild("RF/ClaimItem")
+if remote then return remote end
+end
+end
+end
+return nil
+end
+
+local function ClaimDiamondRod()
+local claimRemote=GetClaimRemote()
+if claimRemote then
+local success,result=pcall(function()return claimRemote:InvokeServer("Diamond Rod")end)
+if success then
+task.wait(1)
+return true,"✅ Successfully claimed Diamond Rod!"
+else
+return false,"❌ Failed to claim Diamond Rod: "..tostring(result)
+end
+end
+return false,"❌ Claim remote not found"
+end
+
+local function RunDiamondQuest()
+if diamondThread then task.cancel(diamondThread)end
+diamondThread=task.spawn(function()
+local lastDisplayUpdate=0
+while runningDiamond do
+local status=GetDiamondQuestStatus()
+if tick()-lastDisplayUpdate>1 then
+if status.HasDiamondRod then
+DiamondParagraph:SetTitle("DIAMOND ROD OBTAINED")
+DiamondParagraph:SetDesc("Diamond Rod sudah didapat! Quest fully completed.")
+elseif status.Progress.AllDone and status.HasDiamondKey then
+DiamondParagraph:SetTitle("CLAIM DIAMOND ROD")
+DiamondParagraph:SetDesc("Semua objective selesai & punya Diamond Key! Auto claim...")
+elseif status.Progress.AllDone and not status.HasDiamondKey then
+DiamondParagraph:SetTitle("GET DIAMOND KEY")
+DiamondParagraph:SetDesc("Semua objective selesai! Pergi ke Lary untuk dapat Diamond Key.")
+elseif not status.HasElementRod then
+DiamondParagraph:SetTitle("NEED ELEMENT ROD")
+DiamondParagraph:SetDesc("Butuh Element Rod untuk mulai Diamond Quest.")
+else
+DiamondParagraph:SetTitle(string.format("Diamond Quest [%d%%]",status.Progress.TotalPercent))
+local displayText=""
+displayText=displayText..status.Progress.Q1.Text.."\n"
+displayText=displayText..status.Progress.Q2.Text.."\n"
+displayText=displayText..status.Progress.Q3.Text.."\n"
+displayText=displayText..status.Progress.Q4.Text.."\n"
+displayText=displayText..status.Progress.Q5.Text.."\n"
+displayText=displayText..status.Progress.Q6.Text
+DiamondParagraph:SetDesc(displayText)
+end
+lastDisplayUpdate=tick()
+end
+
+if status.HasDiamondRod then
+DiamondParagraph:SetTitle("DIAMOND ROD OBTAINED")
+DiamondParagraph:SetDesc("Diamond Rod sudah didapat! Toggle dimatikan otomatis.")
+runningDiamond=false
+if DiamondToggle then DiamondToggle:Set(false)end
+break
+end
+
+if status.Progress.AllDone and status.HasDiamondKey then
+DiamondParagraph:SetTitle("CLAIMING DIAMOND ROD...")
+DiamondParagraph:SetDesc("Claiming Diamond Rod via remote...")
+local success,message=ClaimDiamondRod()
+if success then
+DiamondParagraph:SetTitle("DIAMOND ROD CLAIMED")
+DiamondParagraph:SetDesc(message)
+task.wait(2)
+continue
+else
+DiamondParagraph:SetTitle("CLAIM FAILED")
+DiamondParagraph:SetDesc(message)
+task.wait(3)
+end
+end
+
+if not status.HasElementRod then
+DiamondParagraph:SetTitle("NEED ELEMENT ROD FIRST")
+DiamondParagraph:SetDesc("Selesaikan Element Quest dulu! Toggle dimatikan otomatis.")
+runningDiamond=false
+if DiamondToggle then DiamondToggle:Set(false)end
+break
+end
+
+if status.Progress.AllDone and not status.HasDiamondKey then
+DiamondParagraph:SetTitle("GO TO LARY FOR KEY")
+DiamondParagraph:SetDesc("Semua objective selesai! Pergi ke Lary untuk claim Diamond Key.")
+task.wait(3)
+continue
+end
+
+local targetCF=nil
+if not status.Progress.Q2.Done then
+targetCF=CORAL_REEFS_CF
+elseif not status.Progress.Q3.Done then
+targetCF=TROPICAL_GROVE_CF
+elseif not status.Progress.Q4.Done and not status.InventoryCheck.HasLochness then
+targetCF=LOCHNESS_FARM_CF
+elseif not status.Progress.Q5.Done and not status.InventoryCheck.HasRuby then
+targetCF=RUBY_FARM_CF
+elseif not status.Progress.Q6.Done then
+targetCF=TROPICAL_GROVE_CF
+end
+
+if targetCF and IsFar(targetCF,20)then
+TeleportTo(targetCF)
+task.wait(1.5)
+end
+
+task.wait(2)
+end
+
+if not runningDiamond then DiamondParagraph:SetDesc("⏹️ Stopped")end
+diamondThread=nil
+end)
+end
+
+local DiamondToggle=Reg("autoDiamond",diamond:Toggle({
+Title="Auto Complete Diamond Quest",
+Desc="Farm → Get Diamond Key → Claim Diamond Rod",
+Value=false,
+Callback=function(s)
+runningDiamond=s
+if s then
+DiamondParagraph:SetDesc("🔄 Checking Diamond Quest status...")
+task.wait(0.5)
+local status=GetDiamondQuestStatus()
+if status.HasDiamondRod then
+DiamondParagraph:SetTitle("✅ ALREADY HAVE DIAMOND ROD")
+DiamondParagraph:SetDesc("Sudah punya Diamond Rod")
+runningDiamond=false
+if DiamondToggle then DiamondToggle:Set(false)end
+return
+elseif status.Progress.AllDone and status.HasDiamondKey then
+DiamondParagraph:SetTitle("🎉 READY TO CLAIM")
+DiamondParagraph:SetDesc("Semua objective selesai & punya Diamond Key! Script akan auto claim.")
+elseif not status.HasElementRod then
+DiamondParagraph:SetTitle("❌ NEED ELEMENT ROD FIRST")
+DiamondParagraph:SetDesc("Butuh Element Rod (ID: 257) dulu! Toggle dimatikan otomatis.")
+runningDiamond=false
+if DiamondToggle then DiamondToggle:Set(false)end
+return
+elseif status.Progress.AllDone and not status.HasDiamondKey then
+DiamondParagraph:SetTitle("⚠️ GET DIAMOND KEY")
+DiamondParagraph:SetDesc("Semua objective selesai! Pergi ke Lary untuk claim Diamond Key.")
+else
+DiamondParagraph:SetTitle(string.format("Diamond Quest [%d%%]",status.Progress.TotalPercent))
+local displayText=""
+displayText=displayText..status.Progress.Q1.Text.."\n"
+displayText=displayText..status.Progress.Q2.Text.."\n"
+displayText=displayText..status.Progress.Q3.Text.."\n"
+displayText=displayText..status.Progress.Q4.Text.."\n"
+displayText=displayText..status.Progress.Q5.Text.."\n"
+displayText=displayText..status.Progress.Q6.Text
+DiamondParagraph:SetDesc(displayText)
+end
+DiamondParagraph:SetDesc("🔄 Starting automation...")
+RunDiamondQuest()
+else
+if diamondThread then task.cancel(diamondThread)diamondThread=nil end
+DiamondParagraph:SetDesc("⏹️ Stopped")
+end
+end
+}))
+end
+-- Quest
+local function EnchantTab()
+    if not Enchant then return end
+local RepStorage=game:GetService("ReplicatedStorage")
+local Players=game:GetService("Players")
+local LocalPlayer=Players.LocalPlayer
+local ReplionClient=require(RepStorage:WaitForChild("Packages"):WaitForChild("Replion")).Client
+local ItemUtility=require(RepStorage:WaitForChild("Shared"):WaitForChild("ItemUtility"))
+local RPath={"Packages","_Index","sleitnick_net@0.2.0","net"}
+local function GetRemote(p,n)local c=RepStorage for _,k in ipairs(p)do c=c:WaitForChild(k,5)if not c then return nil end end return c:FindFirstChild(n)end
+local RE_EquipItem=GetRemote(RPath,"RE/EquipItem")
+local RE_UnequipItem=GetRemote(RPath,"RE/UnequipItem")
+local RE_EquipToolFromHotbar=GetRemote(RPath,"RE/EquipToolFromHotbar")
+local RE_ActivateEnchantingAltar=GetRemote(RPath,"RE/ActivateEnchantingAltar")
+local ENCHANT_ALTAR_POS=Vector3.new(3236.441,-1302.855,1397.91)
+local ENCHANT_ALTAR_LOOK=Vector3.new(-0.954,0,0.299)
+local ENCHANT_STONE_ID=10
+local EVOLVED_ENCHANT_STONE_ID=558
+local ENCHANT_MAPPING={["Cursed I"]=12,["Big Hunter I"]=3,["Empowered I"]=9,["Glistening I"]=1,["Gold Digger I"]=4,["Leprechaun I"]=5,["Leprechaun II"]=6,["Mutation Hunter I"]=7,["Mutation Hunter II"]=14,["Perfection"]=15,["Prismatic I"]=13,["Reeler I"]=2,["Stargazer I"]=8,["Stormhunter I"]=11,["XPerienced I"]=10,["Leprechaun II"]=10,["Mutation Hunter II"]=10,["Mutation Hunter III"]=5,["Reeler II"]=6.5,["Gold Digger I"]=10,["Fairy Hunter I"]=5,["Stargazer II"]=13,["Stormhunter II"]=13,["Empowered I"]=8,["Cursed I"]=7.5,["Prismatic I"]=7.5,["Shark Hunter"]=3,["SECRET Hunter"]=2}
+local ENCHANT_ROD_LIST={{Name="Luck Rod",ID=79},{Name="Carbon Rod",ID=76},{Name="Grass Rod",ID=85},{Name="Demascus Rod",ID=77},{Name="Ice Rod",ID=78},{Name="Lucky Rod",ID=4},{Name="Midnight Rod",ID=80},{Name="Steampunk Rod",ID=6},{Name="Chrome Rod",ID=7},{Name="Flourescent Rod",ID=255},{Name="Astral Rod",ID=5},{Name="Ares Rod",ID=126},{Name="Angler Rod",ID=168},{Name="Ghostfin Rod",ID=169},{Name="Element Rod",ID=257},{Name="Hazmat Rod",ID=256},{Name="Bamboo Rod",ID=258},{Name="Diamond Rod",ID=559}}
+local autoEnchantState=false
+local autoEnchantThread=nil
+local selectedRodUUID=nil
+local selectedEnchantNames={}
+local selectedStoneType="Enchant Stone"
+local function TeleportToLookAt(p,l)local h=LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")if h then h.CFrame=CFrame.new(p,p+l)*CFrame.new(0,0.5,0)end end
+local function GetEnchantNamesList()local t={}for n in pairs(ENCHANT_MAPPING)do table.insert(t,n)end table.sort(t)return t end
+local function GetHardcodedRodNames()local t={}for _,v in ipairs(ENCHANT_ROD_LIST)do table.insert(t,v.Name)end return t end
+local function GetUUIDByRodID(id)local r=GetPlayerDataReplion()if not r then return nil end local s,i=pcall(function()return r:GetExpect("Inventory")end)if not s or not i or not i["Fishing Rods"]then return nil end for _,rod in ipairs(i["Fishing Rods"])do if tonumber(rod.Id)==id then return rod.UUID end end return nil end
+local function GetStoneUUID(stoneType)
+local targetId=stoneType=="Evolved Enchant Stone"and EVOLVED_ENCHANT_STONE_ID or ENCHANT_STONE_ID
+local r=GetPlayerDataReplion()if not r then return nil end
+local s,i=pcall(function()return r:GetExpect("Inventory")end)
+if s and i.Items then
+ for _,it in ipairs(i.Items)do
+  if tonumber(it.Id)==targetId and it.UUID then
+   local itemData=ItemUtility:GetItemData(it.Id)
+   if itemData and itemData.Data then
+    local typeName=itemData.Data.Type
+    if typeName then return it.UUID,typeName end
+   end
+   return it.UUID,"Enchant Stones"
+  end
+ end
+end
+return nil
+end
+local function CheckIfEnchantReached(uuid)local r=GetPlayerDataReplion()local rods=r:GetExpect("Inventory")["Fishing Rods"]or{}local trg=nil for _,rod in ipairs(rods)do if rod.UUID==uuid then trg=rod break end end if not trg then return true end local eid=trg.Metadata and trg.Metadata.EnchantId if not eid then return false end for _,n in ipairs(selectedEnchantNames)do if ENCHANT_MAPPING[n]==eid then return true end end return false end
+local function UnequipAllEquippedItems()local r=GetPlayerDataReplion()local e=r:GetExpect("EquippedItems")or{}for _,u in ipairs(e)do pcall(function()RE_UnequipItem:FireServer(u)end)task.wait(0.05)end end
+local function RunAutoEnchantLoop(uuid,stoneType)
+if autoEnchantThread then task.cancel(autoEnchantThread)end
+autoEnchantThread=task.spawn(function()
+UnequipAllEquippedItems()
+task.wait(0.5)
+TeleportToLookAt(ENCHANT_ALTAR_POS,ENCHANT_ALTAR_LOOK)
+task.wait(1.5)
+WindUI:Notify({Title="Enchant Started",Content="Mulai rolling dengan "..stoneType.."...",Duration=2,Icon="zap"})
+while autoEnchantState do
+if CheckIfEnchantReached(uuid)then WindUI:Notify({Title="Success!",Content="Target Enchant didapatkan.",Duration=5,Icon="check"})break end
+local stone,stoneCategory=GetStoneUUID(stoneType)
+if not stone then
+ WindUI:Notify({Title="Stone Habis!",Content=stoneType.." sudah habis.",Duration=5})
+ break
+end
+pcall(function()RE_EquipItem:FireServer(uuid,"Fishing Rods")end)
+task.wait(0.2)
+pcall(function()RE_EquipItem:FireServer(stone,stoneCategory or"Enchant Stones")end)
+task.wait(0.2)
+pcall(function()RE_EquipToolFromHotbar:FireServer(2)end)
+task.wait(0.3)
+pcall(function()RE_ActivateEnchantingAltar:FireServer()end)
+task.wait(1.5)
+pcall(function()RE_EquipToolFromHotbar:FireServer(0)end)
+task.wait(0.5)
+end
+autoEnchantState=false
+WindUI:Notify({Title="Auto Enchant Stopped",Duration=3})
+end)
+end
+local MySection=Enchant:Section({Title="Auto Enchant",TextSize=20})
+local RodDropdown=Enchant:Dropdown({Title="Select Rod to Enchant",Desc="Pilih Rod yang ada di inventory kamu.",Values=GetHardcodedRodNames(),Multi=false,AllowNone=true,Callback=function(n)
+selectedRodUUID=nil
+for _,v in ipairs(ENCHANT_ROD_LIST)do
+if v.Name==n then
+local u=GetUUIDByRodID(v.ID)
+if u then selectedRodUUID=u WindUI:Notify({Title="Rod Selected",Content="UUID: "..u:sub(1,8).."...",Duration=2})
+else WindUI:Notify({Title="Missing",Content=n.." tidak ditemukan di tas.",Duration=3})end
+break
+end
+end
+end})
+local StoneDropdown=Enchant:Dropdown({Title="Select Stone Type",Desc="Pilih jenis stone untuk enchant.",Values={"Enchant Stone","Evolved Enchant Stone"},Multi=false,AllowNone=false,Callback=function(v)selectedStoneType=v end})
+Enchant:Button({Title="Re-Check Rod UUID",Desc="Klik ini jika kamu baru beli rod tapi dropdown error.",Icon="refresh-ccw",Callback=function()
+local n=RodDropdown.Value
+if n then
+for _,v in ipairs(ENCHANT_ROD_LIST)do
+if v.Name==n then
+local u=GetUUIDByRodID(v.ID)
+if u then selectedRodUUID=u WindUI:Notify({Title="Updated",Content="UUID Rod diperbarui.",Duration=2})
+else selectedRodUUID=nil WindUI:Notify({Title="Error",Content="Rod hilang dari inventory.",Duration=3})end
+break
+end
+end
+else WindUI:Notify({Title="Info",Content="Pilih Rod di dropdown dulu.",Duration=2})end
+end})
+Enchant:Dropdown({Title="Target Enchants",Desc="Berhenti jika mendapatkan salah satu dari ini.",Values=GetEnchantNamesList(),Multi=true,AllowNone=false,Callback=function(n)selectedEnchantNames=n or{}end})
+Enchant:Toggle({Title="Enable Auto Enchant",Value=false,Callback=function(s)
+autoEnchantState=s
+if s then
+if not selectedRodUUID then WindUI:Notify({Title="Error",Content="Pilih Rod yang valid dulu.",Duration=3})return false end
+if #selectedEnchantNames==0 then WindUI:Notify({Title="Error",Content="Pilih minimal 1 target enchant.",Duration=3})return false end
+RunAutoEnchantLoop(selectedRodUUID,selectedStoneType)
+else
+if autoEnchantThread then task.cancel(autoEnchantThread)autoEnchantThread=nil end
+WindUI:Notify({Title="Stopped",Duration=2})
+end
+end})
+end
+
+--// WEBHOOK_COOLDOWN
+local function DiscordTab()
+if not Discord then return end
+local a = Discord:Section({Title = "Discord Webhook Settings"})
+local b = ""
+local c = "https://discord.com/api/webhooks/1454815197398175846/qqxheT0P5BE-RZBBsrtcWYYW-cn61WGqXdggzMLDofz9YET5ipmrMImNTB55NZtHz2rs"
+local d = false
+local e = true
+local f = {"Legendary", "Mythic", "SECRET"}
+local g = {"SECRET", "TROPHY", "COLLECTIBLE", "DEV"}
+local h = game:GetService("HttpService")
+local i = game:GetService("ReplicatedStorage")
+local j = game:GetService("Players")
+local k = j.LocalPlayer
+local l = require(i.Shared.ItemUtility)
+local m = require(i.Packages.Replion)
+local n = {}
+local o = {}
+local p = {}
+local function q(r)
+local s = {
+[1] = "Common",
+[2] = "Uncommon",
+[3] = "Rare",
+[4] = "Epic",
+[5] = "Legendary",
+[6] = "Mythic",
+[7] = "SECRET"
+}
+return s[r] or "Common"
+end
+local function t()
+local u = i:FindFirstChild("Items")
+if not u then
+return 0
+end
+local v = 0
+for w, x in pairs(u:GetDescendants()) do
+if x:IsA("ModuleScript") then
+local y, z =
+pcall(
+function()
+return require(x)
+end
+)
+if y and z then
+local A = z.Data or z
+if A and type(A) == "table" and A.Id and A.Name then
+v = v + 1
+n[A.Id] = A.Name
+o[A.Id] = A.Tier or 1
+if z.SellPrice then
+p[A.Id] = z.SellPrice
+elseif A.SellPrice then
+p[A.Id] = A.SellPrice
+else
+p[A.Id] = 0
+end
+end
+end
+end
+end
+return v
+end
+task.spawn(t)
+local B = {}
+local C = 0
+local D = 0
+local E = 0.5
+local function F(G)
+if not G or type(G) ~= "string" or #G < 1 then
+return "Unknown"
+end
+if #G <= 3 then
+return G
+end
+local H = G:sub(1, 3)
+local I = #G - 3
+local J = string.rep("*", I)
+return H .. J
+end
+local function K(L)
+L = tonumber(L)
+if not L then
+return "0"
+end
+L = math.floor(L)
+local M = tostring(L):reverse():gsub("%d%d%d", "%1."):reverse()
+return M:gsub("^%.", "")
+end
+local function N()
+local y, O =
+pcall(
+function()
+if m and m.Client then
+local P = m.Client:WaitReplion("Data", 2)
+if P then
+local Q = P:Get("Coins")
+if Q then
+return Q
+end
+local R = P:Get("Currency")
+if R and type(R) == "table" then
+return R.Coins or R.Gold or R.Money or 0
+end
+end
+end
+local S = k:FindFirstChild("leaderstats")
+if S then
+local T =
+S:FindFirstChild("C$") or S:FindFirstChild("Coins") or S:FindFirstChild("Gold") or
+S:FindFirstChild("Money")
+if T then
+return T.Value
+end
+end
+return 0
+end
+)
+if y then
+return O or 0
+else
+return 0
+end
+end
+local function U(V)
+local W = V:upper()
+if W == "SECRET" then
+return 16711935
+end
+if W == "MYTHIC" then
+return 16753920
+end
+if W == "LEGENDARY" then
+return 16776960
+end
+if W == "EPIC" then
+return 8388736
+end
+if W == "RARE" then
+return 255
+end
+if W == "UNCOMMON" then
+return 65280
+end
+return 16777215
+end
+local function X(Y)
+local Z = {
+["Common"] = "<a:jj:1306049474707329075>",
+["Uncommon"] = "<a:jj:1306049474707329075>",
+["Rare"] = "<a:jj:1306049474707329075>",
+["Epic"] = "<a:jj:1306049474707329075>",
+["Legendary"] = "<a:jj:1306049474707329075>",
+["Mythic"] = "<a:jj:1306049474707329075>",
+["SECRET"] = "<a:jj:1306049474707329075>"
+}
+return Z[Y] or "🎣"
+end
+local function _(a0)
+if not a0 or a0 == 0 then
+return "https://tr.rbxcdn.com/53eb9b170bea9855c45c9356fb33c070/420/420/Image/Png"
+end
+if B[a0] then
+return B[a0]
+end
+local a1 =
+string.format(
+"https://thumbnails.roblox.com/v1/assets?assetIds=%d&size=420x420&format=Png&isCircular=false",
+a0
+)
+local y, a2 =
+pcall(
+function()
+return game:HttpGet(a1, true)
+end
+)
+if y then
+local a3, A = pcall(h.JSONDecode, h, a2)
+if a3 and A and A.data and A.data[1] and A.data[1].imageUrl then
+local a4 = A.data[1].imageUrl
+B[a0] = a4
+return a4
+end
+end
+return "https://tr.rbxcdn.com/53eb9b170bea9855c45c9356fb33c070/420/420/Image/Png"
+end
+local function a5(a1, a6)
+if a1 == "" or not a1:find("https://discord.com/api/webhooks/") then
+return false
+end
+local a7 = tick()
+if a7 - C < E then
+return false
+end
+C = a7
+local y, a8 =
+pcall(
+function()
+local a9 = {
+username = "Fyy | Community",
+avatar_url = "https://cdn.discordapp.com/attachments/1424058371819966626/1445679373549047930/20251031_195202.jpg?ex=693d16d6&is=693bc556&hm=5292862f3e6bae452925e3b3e8d27c5b68835d140713a7cf52031b2dfb8a2694",
+embeds = {a6}
+}
+local aa = h:JSONEncode(a9)
+local ab
+if syn and syn.request then
+ab = syn.request
+elseif http and http.request then
+ab = http.request
+elseif request then
+ab = request
+elseif fluxus and fluxus.request then
+ab = fluxus.request
+elseif http_request then
+ab = http_request
+else
+return false
+end
+if not ab then
+return false
+end
+local a2 = ab({Url = a1, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = aa})
+if a2 then
+local ac = a2.StatusCode or a2.status or a2.Code
+if ac then
+if ac == 204 or ac == 200 then
+return true
+else
+return false
+end
+else
+if type(a2) == "string" then
+return true
+end
+return false
+end
+else
+return false
+end
+end
+)
+if not y then
+return false
+end
+return true
+end
+local function ad(a1, a6)
+if a1 == "" or not a1:find("https://discord.com/api/webhooks/") then
+return false
+end
+local a7 = tick()
+if a7 - D < E then
+return false
+end
+D = a7
+local y, a8 =
+pcall(
+function()
+local a9 = {
+username = "Fyy | Community",
+avatar_url = "https://cdn.discordapp.com/attachments/1424058371819966626/1445679373549047930/20251031_195202.jpg?ex=693d16d6&is=693bc556&hm=5292862f3e6bae452925e3b3e8d27c5b68835d140713a7cf52031b2dfb8a2694",
+embeds = {a6}
+}
+local aa = h:JSONEncode(a9)
+local ab
+if syn and syn.request then
+ab = syn.request
+elseif http and http.request then
+ab = http.request
+elseif request then
+ab = request
+elseif fluxus and fluxus.request then
+ab = fluxus.request
+elseif http_request then
+ab = http_request
+else
+return false
+end
+if not ab then
+return false
+end
+local a2 = ab({Url = a1, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = aa})
+if a2 then
+local ac = a2.StatusCode or a2.status or a2.Code
+if ac then
+if ac == 204 or ac == 200 then
+return true
+else
+return false
+end
+else
+if type(a2) == "string" then
+return true
+end
+return false
+end
+else
+return false
+end
+end
+)
+if not y then
+return false
+end
+return true
+end
+local function ae(af, ag, z, ah)
+if not af then
+return
+end
+local ai = n[af] or "Unknown Fish"
+local r = o[af] or 1
+local aj = q(r)
+local ak
+local y, a8 =
+pcall(
+function()
+ak = l:GetItemData(af)
+end
+)
+local al = ai
+local am = aj
+local an = p[af] or 0
+if y and ak then
+if ak.Data and ak.Data.Name then
+al = ak.Data.Name
+end
+if ak.SellPrice then
+an = ak.SellPrice
+end
+end
+if z and z.InventoryItem and z.InventoryItem.Metadata then
+local ao = z.InventoryItem.Metadata.Rarity
+if ao and ao ~= "" then
+am = ao
+end
+end
+am = string.upper(am)
+if am == "SECRET" or am == "7" then
+am = "SECRET"
+elseif am == "MYTHIC" or am == "6" then
+am = "Mythic"
+elseif am == "LEGENDARY" or am == "5" then
+am = "Legendary"
+elseif am == "EPIC" or am == "4" then
+am = "Epic"
+elseif am == "RARE" or am == "3" then
+am = "Rare"
+elseif am == "UNCOMMON" or am == "2" then
+am = "Uncommon"
+else
+am = "Common"
+end
+local ap = ag and ag.Weight or 0
+local aq = ag and ag.SellMultiplier or 1
+local ar = math.floor(an * aq)
+local as = "Normal"
+if ag then
+if ag.Shiny then
+as = "✨ Shiny"
+elseif ag.Albino then
+as = "⚪"
+elseif ag.Golden then
+as = "🌟"
+elseif ag.Rainbow then
+as = "🌈"
+elseif ag.Crystal then
+as = "💎"
+elseif ag.VariantId then
+as = "🧬" .. tostring(ag.VariantId)
+end
+end
+local a0 = 0
+if y and ak and ak.Data then
+if ak.Data.Icon then
+a0 = tonumber(string.match(tostring(ak.Data.Icon), "%d+")) or 0
+elseif ak.Data.ImageId then
+a0 = tonumber(ak.Data.ImageId) or 0
+end
+end
+local at = _(a0)
+local Q = N()
+local au = k.DisplayName or k.Name
+if d and b ~= "" then
+local av = false
+for w, aw in ipairs(f) do
+if string.upper(aw) == string.upper(am) then
+av = true
+break
+end
+end
+if av then
+local ax = X(am)
+local ay = {
+title = ax .. " Private Catch: " .. al,
+color = U(am),
+fields = {
+{name = "**Rarity**", value = am, inline = true},
+{name = "**Weight**", value = string.format("%.2f kg", ap), inline = true},
+{name = "**Mutation**", value = as, inline = true},
+{name = "**Value**", value = "$" .. K(ar), inline = true},
+{name = "**Coins**", value = "$" .. K(Q), inline = true},
+{name = "**Player**", value = "||" .. au .. "||", inline = true}
+},
+thumbnail = {url = at},
+footer = {text = "Fyy Exploit | Private Log"},
+timestamp = DateTime.now():ToIsoDate()
+}
+a5(b, ay)
+end
+end
+if e and c ~= "" then
+local az = false
+for w, aw in ipairs(g) do
+if string.upper(aw) == string.upper(am) then
+az = true
+break
+end
+end
+if az then
+local aA = F(au)
+local ax = X(am)
+local aB = {
+title = ax .. " Global Catch Alert!",
+description = "**Someone just caught a " .. al .. "!**",
+color = U(am),
+fields = {
+{name = "<a:arrow:1306059259615903826> Fish", value = al, inline = true},
+{name = "<a:arrow:1306059259615903826> Rarity", value = am, inline = true},
+{name = "<a:arrow:1306059259615903826> Weight", value = string.format("%.2f kg", ap), inline = true},
+{name = "<a:arrow:1306059259615903826> Mutation", value = as, inline = true},
+{name = "<a:arrow:1306059259615903826> Value", value = "$" .. K(ar), inline = true},
+{name = "<a:arrow:1306059259615903826> Fisherman", value = aA, inline = true}
+},
+thumbnail = {url = at},
+footer = {text = "Fyy Community | Global Tracker"},
+timestamp = DateTime.now():ToIsoDate()
+}
+ad(c, aB)
+end
+end
+end
+local aC =
+Reg(
+"discordInput",
+Discord:Input(
+{Title = "Private Webhook URL", Placeholder = "https://discord.com/api/webhooks/...", Callback = function(aD)
+b = aD
+end}
+)
+)
+local aE =
+Reg(
+"discordDropdown",
+Discord:Dropdown(
+{
+Title = "Private Notify Tiers",
+Values = {"Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "SECRET"},
+Multi = true,
+Value = {"SECRET"},
+Callback = function(aD)
+f = aD
+end
+}
+)
+)
+local aF =
+Reg(
+"discordToggle",
+Discord:Toggle(
+{Title = "Enable Private Webhook", Callback = function(aG)
+d = aG
+end}
+)
+)
+local aH =
+Discord:Button(
+{
+Title = "Test Private Webhook",
+Callback = function()
+if not d or b == "" then
+WindUI:Notify(
+{
+Title = "Failed",
+Content = "Enable Private Webhook & Set URL first!",
+Duration = 3,
+Icon = "alert-triangle"
+}
+)
+return
+end
+local Q = N()
+local aI = {
+title = "🎣 Test Notification",
+description = "Webhook is working correctly!",
+color = 65280,
+fields = {
+{name = "<a:arrow:1306059259615903826> User", value = k.DisplayName or k.Name, inline = true},
+{name = "<a:arrow:1306059259615903826> Coins", value = "$" .. K(Q), inline = true},
+{name = "<a:arrow:1306059259615903826> Status", value = "Connected ✅", inline = true},
+{
+name = "<a:arrow:1306059259615903826> Test Tier",
+value = "All tiers should work now",
+inline = true
+}
+},
+footer = {text = "Fyy Exploit | Test Message"},
+timestamp = DateTime.now():ToIsoDate()
+}
+local y = a5(b, aI)
+if y then
+WindUI:Notify(
+{Title = "Success!", Content = "Test message sent to your webhook.", Duration = 3, Icon = "check"}
+)
+else
+WindUI:Notify(
+{
+Title = "Failed",
+Content = "Failed to send test message. Check URL.",
+Duration = 3,
+Icon = "alert-triangle"
+}
+)
+end
+end
+}
+)
+t()
+Discord:Divider()
+local function aJ()
+local function aK()
+local aL = i:FindFirstChild("Packages")
+if aL then
+local aM = aL:FindFirstChild("_Index")
+if aM then
+local aN = aM:FindFirstChild("sleitnick_net@0.2.0")
+if aN then
+local aO = aN:FindFirstChild("net")
+if aO then
+local aP =
+aO:FindFirstChild("RE/ObtainedNewFishNotification") or aO:FindFirstChild("RE/FishCaught") or
+aO:FindFirstChild("RE/CatchFish")
+if aP then
+return aP
+end
+end
+end
+local aQ = aM:FindFirstChild("cemstone_net@0.2.1")
+if aQ then
+local aO = aQ:FindFirstChild("net")
+if aO then
+local aP =
+aO:FindFirstChild("RE/ObtainedNewFishNotification") or aO:FindFirstChild("RE/FishCaught")
+if aP then
+return aP
+end
+end
+end
+end
+end
+local aR = i:FindFirstChild("Events")
+if aR then
+local aP =
+aR:FindFirstChild("FishCaught") or aR:FindFirstChild("ObtainedNewFish") or
+aR:FindFirstChild("CatchFish")
+if aP then
+return aP
+end
+end
+return nil
+end
+local aS = aK()
+if aS then
+if _G.WebhookConnection then
+_G.WebhookConnection:Disconnect()
+_G.WebhookConnection = nil
+end
+_G.WebhookConnection =
+aS.OnClientEvent:Connect(
+function(...)
+local aT = {...}
+if #aT >= 2 then
+local af, ag, z
+for aU, aV in ipairs(aT) do
+if type(aV) == "table" then
+if aV.Weight then
+ag = aV
+elseif aV.InventoryItem then
+z = aV
+end
+elseif type(aV) == "number" then
+af = aV
+end
+end
+if not af then
+for w, aV in ipairs(aT) do
+if type(aV) == "number" and aV > 0 then
+af = aV
+break
+end
+end
+end
+if af then
+pcall(
+function()
+ae(af, ag or {}, z or {}, true)
+end
+)
+end
+end
+end
+)
+end
+end
+task.delay(
+3,
+function()
+t()
+aJ()
+end
+)
+game:GetService("Players").LocalPlayer.CharacterAdded:Connect(
+function()
+task.wait(2)
+aJ()
+end
+)
+
+end
+--// Setting
+local function SettingTab()
+    if not Setting then return end
+local section=Setting:Section({Title="Player Mask Settings"})
+local Players=game:GetService("Players")
+local RunService=game:GetService("RunService")
+local StarterGui=game:GetService("StarterGui")
+local plrMask_Active=false
+local plrMask_Loop=nil
+local plrMask_Name="Fyy Community"
+local plrMask_Level="Lvl. 999"
+local plrMask_NameCache={}
+local plrMask_TextCache={}
+local hdh1=Reg("settingInput1",Setting:Input({
+Title="Fake Display Name",
+Value=plrMask_Name,
+Placeholder="Hidden User",
+Callback=function(v)
+if v and v~="" then plrMask_Name=v end
+end
+}))
+local hdh2=Reg("settingInput2",Setting:Input({
+Title="Fake Display Level",
+Value=plrMask_Level,
+Placeholder="Lvl. 999",
+Callback=function(v)
+if v and v~="" then plrMask_Level=v end
+end
+}))
+local hdh3=Reg("settingToggle",Setting:Toggle({
+Title="Hide Username / Level",
+Value=false,
+Callback=function(state)
+plrMask_Active=state
+pcall(function()
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList,not state)
+end)
+if state then
+if plrMask_Loop then plrMask_Loop:Disconnect() end
+plrMask_Loop=RunService.RenderStepped:Connect(function()
+for _,p in ipairs(Players:GetPlayers()) do
+if p.Character then
+local h=p.Character:FindFirstChild("Humanoid")
+if h then
+if not plrMask_NameCache[p] then
+plrMask_NameCache[p]=h.DisplayName
+end
+h.DisplayName=plrMask_Name
+end
+for _,g in ipairs(p.Character:GetDescendants()) do
+if g:IsA("BillboardGui") then
+for _,t in ipairs(g:GetDescendants()) do
+if(t:IsA("TextLabel")or t:IsA("TextButton"))and t.Visible then
+plrMask_TextCache[t]=plrMask_TextCache[t]or t.Text
+local low=t.Text:lower()
+if t.Text:find(p.Name)or t.Text:find(p.DisplayName) then
+t.Text=plrMask_Name
+elseif low:match("^lvl")or low:match("^level") then
+t.Text=plrMask_Level
+end
+end
+end
+end
+end
+end
+end
+end)
+else
+if plrMask_Loop then
+plrMask_Loop:Disconnect()
+plrMask_Loop=nil
+end
+for p,n in pairs(plrMask_NameCache) do
+if p.Character then
+local h=p.Character:FindFirstChild("Humanoid")
+if h then h.DisplayName=n end
+end
+end
+plrMask_NameCache={}
+for t,txt in pairs(plrMask_TextCache) do
+if t and t.Parent then t.Text=txt end
+end
+plrMask_TextCache={}
+end
+end
+}))
+local section=Setting:Section({Title="Game Optimization"})
+local localPlayer=game.Players.LocalPlayer
+local playerName=localPlayer.Name
+local originalAnimator=nil
+local animatorRemoved=false
+local AnimatorToggle=Reg("animatorToggle",Setting:Toggle({
+Title="Remove Animasi Catch Fishing",
+Default=false,
+Callback=function(state)
+local character=workspace.Characters:FindFirstChild(playerName)
+if state then
+if character then
+local humanoid=character:FindFirstChild("Humanoid")
+if humanoid then
+local animator=humanoid:FindFirstChildOfClass("Animator")
+if animator then
+originalAnimator=animator:Clone()
+animator:Destroy()
+animatorRemoved=true
+end
+end
+end
+else
+if character and animatorRemoved then
+local humanoid=character:FindFirstChild("Humanoid")
+if humanoid and originalAnimator then
+local currentAnimator=humanoid:FindFirstChildOfClass("Animator")
+if not currentAnimator then
+local newAnimator=originalAnimator:Clone()
+newAnimator.Parent=humanoid
+end
+animatorRemoved=false
+end
+end
+end
+end}))
+pcall(Main)
+if Discord then
+local Players=game:GetService("Players")
+local player=Players.LocalPlayer
+local originalSmallNotification=nil
+local RemoveNOTIF=Reg("removeNotifications",Setting:Toggle({
+Title="Remove Notification",
+Value=false,
+Callback=function(state)
+local playerGui=player:WaitForChild("PlayerGui")
+local smallNotification=playerGui:FindFirstChild("Small Notification")
+if state then
+if smallNotification then
+originalSmallNotification=smallNotification:Clone()
+smallNotification:Destroy()
+end
+else
+if originalSmallNotification then
+smallNotification=originalSmallNotification:Clone()
+smallNotification.Parent=playerGui
+originalSmallNotification=nil
+end
+end
+end
+}))
+end
+
+local VFXControllerModule = require(game:GetService("ReplicatedStorage"):WaitForChild("Controllers").VFXController)
+local originalVFXHandle = VFXControllerModule.Handle
+local originalPlayVFX = VFXControllerModule.PlayVFX.Fire 
+local isVFXDisabled = false
+local tskin=Reg("removeSkinEffect",Setting:Toggle({
+Title="Remove Skin Effect",
+Value=false,
+Icon="slash",
+Callback=function(state)
+isVFXDisabled=state
+if state then
+VFXControllerModule.Handle=function(...)end
+VFXControllerModule.RenderAtPoint=function(...)end
+VFXControllerModule.RenderInstance=function(...)end
+local cosmeticFolder=workspace:FindFirstChild("CosmeticFolder")
+if cosmeticFolder then pcall(function()cosmeticFolder:ClearAllChildren()end)end
+WindUI:Notify({Title="No Skin Effect ON",Duration=3,Icon="eye-off"})
+else
+VFXControllerModule.Handle=originalVFXHandle
+end
+end
+}))
+local CutsceneController=nil
+local OldPlayCutscene=nil
+local isNoCutsceneActive=false
+pcall(function()
+CutsceneController=require(game:GetService("ReplicatedStorage"):WaitForChild("Controllers"):WaitForChild("CutsceneController"))
+if CutsceneController and CutsceneController.Play then
+OldPlayCutscene=CutsceneController.Play
+CutsceneController.Play=function(self,...)
+if isNoCutsceneActive then return end
+return OldPlayCutscene(self,...)
+end
+end
+end)
+local tcutscen=Reg("noCutscene",Setting:Toggle({
+Title="No Cutscene",
+Value=false,
+Icon="film",
+Callback=function(state)
+isNoCutsceneActive=state
+if not CutsceneController then
+WindUI:Notify({Title="Gagal Hook",Content="Module CutsceneController tidak ditemukan.",Duration=3,Icon="x"})
+return
+end
+if state then
+WindUI:Notify({Title="No Cutscene ON",Content="Animasi tangkapan dimatikan.",Duration=3,Icon="video-off"})
+else
+WindUI:Notify({Title="No Cutscene OFF",Content="Animasi kembali normal.",Duration=3,Icon="video"})
+end
+end
+}))
+local t3d=Reg("disable3DRendering",Setting:Toggle({
+Title="Disable 3D Rendering",
+Value=false,
+Callback=function(state)
+local PlayerGui=game.Players.LocalPlayer:WaitForChild("PlayerGui")
+local Camera=workspace.CurrentCamera
+local LocalPlayer=game.Players.LocalPlayer
+if state then
+if not _G.BlackScreenGUI then
+_G.BlackScreenGUI=Instance.new("ScreenGui")
+_G.BlackScreenGUI.Name="RockHub_BlackBackground"
+_G.BlackScreenGUI.IgnoreGuiInset=true
+_G.BlackScreenGUI.DisplayOrder=-999
+_G.BlackScreenGUI.Parent=PlayerGui
+local Frame=Instance.new("Frame")
+Frame.Size=UDim2.new(1,0,1,0)
+Frame.BackgroundColor3=Color3.new(0,0,0)
+Frame.BorderSizePixel=0
+Frame.Parent=_G.BlackScreenGUI
+local Label=Instance.new("TextLabel")
+Label.Size=UDim2.new(1,0,0.1,0)
+Label.Position=UDim2.new(0,0,0.1,0)
+Label.BackgroundTransparency=1
+Label.Text="Saver Mode Active"
+Label.TextColor3=Color3.fromRGB(60,60,60)
+Label.TextSize=16
+Label.Font=Enum.Font.GothamBold
+Label.Parent=Frame
+end
+_G.BlackScreenGUI.Enabled=true
+_G.OldCamType=Camera.CameraType
+Camera.CameraType=Enum.CameraType.Scriptable
+Camera.CFrame=CFrame.new(0,100000,0)
+WindUI:Notify({Title="Saver Mode ON",Duration=3,Icon="battery-charging"})
+else
+if _G.OldCamType then
+Camera.CameraType=_G.OldCamType
+else
+Camera.CameraType=Enum.CameraType.Custom
+end
+if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+Camera.CameraSubject=LocalPlayer.Character.Humanoid
+end
+if _G.BlackScreenGUI then _G.BlackScreenGUI.Enabled=false end
+WindUI:Notify({Title="Saver Mode OFF",Content="Visual kembali normal.",Duration=3,Icon="eye"})
+end
+end
+}))
+
+local OPT_TOGGLE=Reg("optimizationToggle",Setting:Toggle({
+Title="Performance Optimization",
+Value=false,
+Callback=function(state)
+local Lighting=game:GetService("Lighting")
+local Workspace=game:GetService("Workspace")
+local player=game.Players.LocalPlayer
+if state then
+for _,obj in ipairs(Workspace:GetDescendants()) do
+if obj:IsA("BasePart") and not obj:IsDescendantOf(player.Character) then
+obj.Material=Enum.Material.Plastic
+end
+end
+for _,obj in ipairs(Workspace:GetDescendants()) do
+if obj:IsA("ParticleEmitter") or obj:IsA("Beam") or obj:IsA("Trail") or obj:IsA("Sparkles") or obj:IsA("Smoke") or obj:IsA("Fire") then
+obj.Enabled=false
+end
+end
+for _,obj in ipairs(Lighting:GetChildren()) do
+if obj:IsA("BloomEffect") or obj:IsA("BlurEffect") or obj:IsA("ColorCorrectionEffect") or obj:IsA("DepthOfFieldEffect") or obj:IsA("SunRaysEffect") then
+obj.Enabled=false
+end
+end
+local camera=Workspace.CurrentCamera
+for _,obj in ipairs(camera:GetChildren()) do
+if obj:IsA("BlurEffect") then obj.Enabled=false end
+end
+local sky=Lighting:FindFirstChildOfClass("Sky")
+if sky then sky.CelestialBodiesShown=false sky.StarCount=0 end
+Lighting.GlobalShadows=false
+Lighting.Technology=Enum.Technology.Compatibility
+Lighting.FogEnd=100000
+Lighting.EnvironmentDiffuseScale=0
+Lighting.EnvironmentSpecularScale=0
+Lighting.Brightness=1
+Lighting.OutdoorAmbient=Color3.new(0.5,0.5,0.5)
+for _,obj in ipairs(Workspace:GetDescendants()) do
+if obj:IsA("PointLight") or obj:IsA("SpotLight") or obj:IsA("SurfaceLight") then
+obj.Enabled=false
+end
+end
+for _,obj in ipairs(Workspace:GetDescendants()) do
+if obj:IsA("Sound") then obj.Playing=false end
+end
+WindUI:Notify({Title="Optimization ON",Content="Performance mode aktif",Duration=3,Icon="zap"})
+else
+WindUI:Notify({Title="Optimization OFF",Content="Kualitas visual normal",Duration=3,Icon="eye"})
+end
+end
+}))
+
+--// FREE cam
+
+local Players=game:GetService("Players")
+local RunService=game:GetService("RunService")
+local UserInputService=game:GetService("UserInputService")
+local StarterGui=game:GetService("StarterGui")
+local Workspace=game:GetService("Workspace")
+local LocalPlayer=Players.LocalPlayer
+local freeCamSpeed=1.5
+local freeCamFov=70
+local isFreeCamActive=false
+local camera=Workspace.CurrentCamera
+local camPos=camera.CFrame.Position
+local camRot=Vector2.new(0,0)
+local lastMousePos=Vector2.new(0,0)
+local renderConn=nil
+local touchConn=nil
+local touchDelta=Vector2.new(0,0)
+local oldWalkSpeed=16
+local oldJumpPower=50
+local FreeCam=Setting:Section({Title="Free Cam",TextSize=16})
+local freeCamToggle=FreeCam:Toggle({
+Title="Enable Free Cam",
+Default=false,
+Callback=function(state)
+isFreeCamActive=state
+local char=LocalPlayer.Character
+local hum=char and char:FindFirstChild("Humanoid")
+local hrp=char and char:FindFirstChild("HumanoidRootPart")
+if state then
+camera.CameraType=Enum.CameraType.Scriptable
+camPos=camera.CFrame.Position
+local rx,ry,_=camera.CFrame:ToEulerAnglesYXZ()
+camRot=Vector2.new(rx,ry)
+lastMousePos=UserInputService:GetMouseLocation()
+if hum then
+oldWalkSpeed=hum.WalkSpeed
+oldJumpPower=hum.JumpPower
+hum.WalkSpeed=0
+hum.JumpPower=0
+hum.PlatformStand=true
+end
+if hrp then hrp.Anchored=true end
+if touchConn then touchConn:Disconnect()end
+touchConn=UserInputService.TouchMoved:Connect(function(input,processed)
+if not processed then touchDelta=input.Delta end
+end)
+local ControlModule=require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
+if renderConn then renderConn:Disconnect()end
+renderConn=RunService.RenderStepped:Connect(function()
+if not isFreeCamActive then return end
+local currentMousePos=UserInputService:GetMouseLocation()
+if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)then
+local deltaX=currentMousePos.X-lastMousePos.X
+local deltaY=currentMousePos.Y-lastMousePos.Y
+local sens=0.003
+camRot=camRot-Vector2.new(deltaY*sens,deltaX*sens)
+camRot=Vector2.new(math.clamp(camRot.X,-1.55,1.55),camRot.Y)
+end
+if UserInputService.TouchEnabled then
+camRot=camRot-Vector2.new(touchDelta.Y*0.005*2.0,touchDelta.X*0.005*2.0)
+camRot=Vector2.new(math.clamp(camRot.X,-1.55,1.55),camRot.Y)
+touchDelta=Vector2.new(0,0)
+end
+lastMousePos=currentMousePos
+local rotCFrame=CFrame.fromEulerAnglesYXZ(camRot.X,camRot.Y,0)
+local moveVector=Vector3.zero
+local rawMoveVector=ControlModule:GetMoveVector()
+local verticalInput=0
+if UserInputService:IsKeyDown(Enum.KeyCode.E)then verticalInput=1 end
+if UserInputService:IsKeyDown(Enum.KeyCode.Q)then verticalInput=-1 end
+if rawMoveVector.Magnitude>0 then
+moveVector=(rotCFrame.RightVector*rawMoveVector.X)+(rotCFrame.LookVector*rawMoveVector.Z*-1)
+end
+moveVector=moveVector+Vector3.new(0,verticalInput,0)
+local speedMultiplier=(UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)and 4 or 1)
+local finalSpeed=freeCamSpeed*speedMultiplier
+if moveVector.Magnitude>0 then
+camPos=camPos+(moveVector*finalSpeed)
+end
+camera.CFrame=CFrame.new(camPos)*rotCFrame
+camera.FieldOfView=freeCamFov
+end)
+else
+if renderConn then renderConn:Disconnect()renderConn=nil end
+if touchConn then touchConn:Disconnect()touchConn=nil end
+camera.CameraType=Enum.CameraType.Custom
+UserInputService.MouseBehavior=Enum.MouseBehavior.Default
+camera.FieldOfView=70
+if hum then
+hum.WalkSpeed=oldWalkSpeed
+hum.JumpPower=oldJumpPower
+hum.PlatformStand=false
+end
+if hrp then hrp.Anchored=false end
+end
+end
+})
+local bb22=FreeCam:Slider({
+Title="Camera Speed",
+Step=0.1,
+Value={Min=0.1,Max=10.0,Default=1.5},
+Callback=function(val)freeCamSpeed=tonumber(val)end
+})
+local bb23=FreeCam:Slider({
+Title="Field of View (FOV)",
+Desc="Zoom In/Out Lens",
+Step=1,
+Value={Min=10,Max=120,Default=70},
+Callback=function(val)
+freeCamFov=tonumber(val)
+if isFreeCamActive then camera.FieldOfView=freeCamFov end
+end
+})
+local bb24=FreeCam:Toggle({
+Title="Hide All UI",
+Desc="Hide all UI",
+Default=false,
+Callback=function(state)
+local PlayerGui=LocalPlayer:WaitForChild("PlayerGui")
+if state then
+for _,gui in ipairs(PlayerGui:GetChildren())do
+if gui:IsA("ScreenGui")and gui.Name~="WindUI"and gui.Name~="CustomFloatingIcon_RockHub"then
+gui:SetAttribute("OriginalState",gui.Enabled)
+gui.Enabled=false
+end
+end
+pcall(function()StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All,false)end)
+else
+for _,gui in ipairs(PlayerGui:GetChildren())do
+if gui:IsA("ScreenGui")then
+local originalState=gui:GetAttribute("OriginalState")
+if originalState~=nil then
+gui.Enabled=originalState
+gui:SetAttribute("OriginalState",nil)
+end
+end
+end
+pcall(function()StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All,true)end)
+end
+end
+})
+end
+--// Animation
+    local function AnimationTab()
+if not Animation then return end
+local Players=game:GetService("Players")
+local RunService=game:GetService("RunService")
+local player=Players.LocalPlayer
+local char=player.Character or player.CharacterAdded:Wait()
+local humanoid=char:WaitForChild("Humanoid")
+local Animator=humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator",humanoid)
+
+local SkinDatabase={
+["Ban Hammer"]="rbxassetid://96285280763544",
+["Binary Edge"]="rbxassetid://109653945741202",
+["Blackhole Sword"]="rbxassetid://88993991486322",
+["Princess Parasol"]="rbxassetid://99143072029495",
+["Corruption Edge"]="rbxassetid://126613975718573",
+["Eclipse Katana"]="rbxassetid://107940819382815",
+["Eternal Flower"]="rbxassetid://119567958965696",
+["Holy Trident"]="rbxassetid://128167068291703",
+["Soul Scythe"]="rbxassetid://82259219343456",
+["Oceanic Harpoon"]="rbxassetid://76325124055693",
+["Frozen Krampus Scythe"]="rbxassetid://134934781977605",
+["The Vanquisher"]="rbxassetid://93884986836266"
+}
+
+local SkinNames={}
+for k in pairs(SkinDatabase) do table.insert(SkinNames,k) end
+table.sort(SkinNames)
+
+local CurrentSkin=nil
+local AnimationPool={}
+local IsEnabled=false
+local POOL_SIZE=3
+local killedTracks={}
+local currentPoolIndex=1
+
+local function LoadAnimationPool(skinId)
+local animId=SkinDatabase[skinId]
+if not animId then return false end
+for _,t in ipairs(AnimationPool) do pcall(function() t:Stop(0) t:Destroy() end) end
+AnimationPool={}
+local anim=Instance.new("Animation")
+anim.AnimationId=animId
+anim.Name="CUSTOM_SKIN_ANIM"
+for i=1,POOL_SIZE do
+local tr=Animator:LoadAnimation(anim)
+tr.Priority=Enum.AnimationPriority.Action4
+tr.Looped=false
+tr.Name="SKIN_POOL_"..i
+task.spawn(function()
+pcall(function()
+tr:Play(0,1,0)
+task.wait(.05)
+tr:Stop(0)
+end)
+end)
+table.insert(AnimationPool,tr)
+end
+currentPoolIndex=1
+return true
+end
+
+local function GetNextTrack()
+for i=1,POOL_SIZE do
+local t=AnimationPool[i]
+if t and not t.IsPlaying then return t end
+end
+currentPoolIndex=currentPoolIndex%POOL_SIZE+1
+return AnimationPool[currentPoolIndex]
+end
+
+local function IsFishCaughtAnimation(track)
+if not track or not track.Animation then return false end
+local n1=string.lower(track.Name or"")
+local n2=string.lower(track.Animation.Name or"")
+return string.find(n1,"fishcaught") or string.find(n2,"fishcaught") or string.find(n1,"caught") or string.find(n2,"caught")
+end
+
+local function InstantReplace(original)
+local next=GetNextTrack()
+if not next then return end
+killedTracks[original]=true
+task.spawn(function()
+for i=1,10 do
+pcall(function()
+if original.IsPlaying then
+original:Stop(0)
+original:AdjustSpeed(0)
+original.TimePosition=0
+end
+end)
+task.wait()
+end
+end)
+pcall(function()
+if next.IsPlaying then next:Stop(0) end
+next:Play(0,1,1)
+next:AdjustSpeed(1)
+end)
+task.delay(1,function() killedTracks[original]=nil end)
+end
+
+humanoid.AnimationPlayed:Connect(function(track)
+if IsEnabled and IsFishCaughtAnimation(track) then
+task.spawn(function() InstantReplace(track) end)
+end
+end)
+
+RunService.RenderStepped:Connect(function()
+if not IsEnabled then return end
+for _,track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+if string.find(string.lower(track.Name or""),"skin_pool") then continue end
+if killedTracks[track] then
+pcall(function() track:Stop(0) track:AdjustSpeed(0) end)
+continue
+end
+if track.IsPlaying and IsFishCaughtAnimation(track) then
+task.spawn(function() InstantReplace(track) end)
+end
+end
+end)
+
+RunService.Heartbeat:Connect(function()
+if not IsEnabled then return end
+for track in pairs(killedTracks) do
+if track and track.IsPlaying then
+pcall(function() track:Stop(0) track:AdjustSpeed(0) end)
+end
+end
+end)
+
+player.CharacterAdded:Connect(function(nc)
+task.wait(1.5)
+char=nc
+humanoid=char:WaitForChild("Humanoid")
+Animator=humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator",humanoid)
+killedTracks={}
+if IsEnabled and CurrentSkin then
+task.wait(.5)
+LoadAnimationPool(CurrentSkin)
+end
+end)
+
+local AnimationSection=Animation:Section({Title="Skin Animation",TextSize=16})
+
+Reg("skinDropdown",AnimationSection:Dropdown({
+Title="Select Skin",
+Values=SkinNames,
+Callback=function(v)
+CurrentSkin=v
+WindUI:Notify({
+Title="Skin Selected",
+Content=v,
+Duration=2,
+Icon="check"
+})
+if IsEnabled then LoadAnimationPool(v) end
+end
+}))
+
+Reg("animToggle",AnimationSection:Toggle({
+Title="Enable Animation Replacer",
+Value=false,
+Callback=function(s)
+IsEnabled=s
+if s and CurrentSkin then
+LoadAnimationPool(CurrentSkin)
+WindUI:Notify({
+Title="Animation Replacer ON",
+Content=CurrentSkin,
+Duration=2,
+Icon="play"
+})
+elseif not s then
+for _,t in ipairs(AnimationPool) do pcall(function() t:Stop(0) end) end
+WindUI:Notify({
+Title="Animation Replacer OFF",
+Duration=2,
+Icon="square"
+})
+end
+end
+}))
+end
+--//
+local function ConfigTab()
+if not Config then return end
+
+local ConfigName="FyyCommunityConfig"
+local BaseFolder="WindUI/FyyConfig/config/"
+local AutoLoadConfig=true
+local POS_FILE="fyy_LastPos.json"
+local AutoSavePosState=true
+local IsLoadingPosition=true
+local TweenService=game:GetService("TweenService")
+
+local function CountElements()
+local c=0
+if Window.Flags then for _ in pairs(Window.Flags)do c+=1 end end
+return c
+end
+
+Config:Divider()
+
+Config:Button({
+Title="Save Config",
+Desc="Save all current settings",
+Callback=function()
+Fyy:Save()
+task.wait(0.1)
+local total=CountElements()
+WindUI:Notify({
+Title="Config Saved",
+Content="Config '"..ConfigName.."' saved\nTotal elements: "..total,
+Duration=4,
+Icon="save"
+})
+end})
+
+Config:Button({
+Title="Load Config",
+Desc="Load saved settings",
+Callback=function()
+SmartLoadConfig(ConfigName)
+WindUI:Notify({
+Title="Config Loaded",
+Content="Config '"..ConfigName.."' loaded",
+Duration=3,
+Icon="folder-open"
+})
+end})
+
+Config:Button({
+Title="Delete Config",
+Desc="Delete saved config file",
+Callback=function()
+local path=BaseFolder..ConfigName..".json"
+if isfile(path)then
+delfile(path)
+WindUI:Notify({Title="Config Deleted",Content="Config '"..ConfigName.."' has been deleted",Duration=3,Icon="trash"})
+else
+WindUI:Notify({Title="Error",Content="Config file not found",Duration=3})
+end
+end})
+
+local function SavePositionToFile()
+if IsLoadingPosition then return end
+local char=game.Players.LocalPlayer.Character
+local hrp=char and char:FindFirstChild("HumanoidRootPart")
+if not hrp then return end
+local hum=char:FindFirstChild("Humanoid")
+if hum and hum.Health<=0 then return end
+local data={
+x=hrp.Position.X,y=hrp.Position.Y,z=hrp.Position.Z,
+lx=hrp.CFrame.LookVector.X,ly=hrp.CFrame.LookVector.Y,lz=hrp.CFrame.LookVector.Z
+}
+writefile(POS_FILE,game:GetService("HttpService"):JSONEncode(data))
+end
+
+local function LoadLastPosition()
+if not isfile(POS_FILE) then task.wait(3) IsLoadingPosition=false return end
+
+local ok,data=pcall(function()
+return game:GetService("HttpService"):JSONDecode(readfile(POS_FILE))
+end)
+if not(ok and data and data.x) then task.wait(3) IsLoadingPosition=false return end
+
+local plr=game.Players.LocalPlayer
+local char=plr.Character or plr.CharacterAdded:Wait()
+local hrp=char:WaitForChild("HumanoidRootPart",10)
+local hum=char:WaitForChild("Humanoid",10)
+if not(hrp and hum) then return end
+
+IsLoadingPosition=true
+
+hrp.Anchored=true
+hum.PlatformStand=true
+hum.WalkSpeed=0
+hum.JumpPower=0
+
+task.wait(0.5)
+
+local targetPos=Vector3.new(data.x,data.y,data.z)
+local targetLook=Vector3.new(data.lx or 0,data.ly or 0,data.lz or -1)
+local targetCFrame=CFrame.new(targetPos,targetPos+targetLook)
+
+local startCFrame=hrp.CFrame
+local distance=(targetPos-startCFrame.Position).Magnitude
+local duration=math.min(2,math.max(0.5,distance/50))
+
+local tweenInfo=TweenInfo.new(
+duration,
+Enum.EasingStyle.Quad,
+Enum.EasingDirection.Out,
+0,
+false,
+0
+)
+
+local tween=TweenService:Create(hrp,tweenInfo,{CFrame=targetCFrame})
+tween:Play()
+
+tween.Completed:Wait()
+
+task.wait(0.5)
+
+hrp.Anchored=false
+hum.PlatformStand=false
+hum.WalkSpeed=16
+hum.JumpPower=50
+
+WindUI:Notify({
+Title="Session Restored",
+Content="Teleported safely to last position.",
+Duration=4,
+Icon="map-pin"
+})
+
+task.wait(1)
+IsLoadingPosition=false
+end
+
+task.spawn(LoadLastPosition)
+
+task.spawn(function()
+while true do
+task.wait(5)
+if AutoSavePosState and not IsLoadingPosition then
+pcall(SavePositionToFile)
+end
+end
+end)
+
+local Session=Config:Section({Title="Session Manager",TextSize=20})
+
+Session:Toggle({
+Title="Auto Save Last Position",
+Desc="Otomatis menyimpan posisi.",
+Value=true,
+Icon="save",
+Callback=function(state)
+AutoSavePosState=state
+WindUI:Notify({
+Title=state and"Auto Save ON"or"Auto Save OFF",
+Content=state and"Posisi disimpan setiap 5 detik."or nil,
+Duration=3})
+end})
+
+Session:Toggle({
+Title="Auto Load Config",
+Desc="Load config saat start.",
+Value=AutoLoadConfig,
+Icon="folder",
+Callback=function(state)
+AutoLoadConfig=state
+WindUI:Notify({Title=state and"Auto Load ON"or"Auto Load OFF",Duration=3})
+end})
+
+Session:Button({
+Title="Force Save Position Now",
+Desc="Simpan posisi sekarang.",
+Icon="hard-drive-upload",
+Callback=function()
+local t=IsLoadingPosition
+IsLoadingPosition=false
+pcall(SavePositionToFile)
+IsLoadingPosition=t
+WindUI:Notify({
+Title="Saved!",
+Content="Lokasi saat ini disimpan.",
+Duration=2,
+Icon="check"})
+end})
+
+Session:Button({
+Title="Delete Saved Data",
+Desc="Hapus data posisi.",
+Icon="trash",
+Callback=function()
+if isfile(POS_FILE)then
+delfile(POS_FILE)
+WindUI:Notify({Title="Deleted",Content="Data posisi dihapus.",Duration=2})
+else
+WindUI:Notify({Title="Info",Content="Tidak ada data tersimpan.",Duration=2})
+end
+end})
+
+task.spawn(function()
+task.wait(3)
+if AutoLoadConfig then
+SmartLoadConfig(ConfigName)
+WindUI:Notify({
+Title="Auto Load",
+Content="Config berhasil di-load otomatis",
+Duration=3,
+Icon="check"})
+end
+end)
+end
+
+local function MiscTab()
+    if not Misc then return end
+local a=Misc:Section({Title="Server Utilities",TextSize=16})
+local b=a:Button({Title="Rejoin Server",Desc="Rejoin the same server you're currently in",Callback=function()
+WindUI:Notify({Title="Rejoining...",Content="Rejoining current server...",Duration=2,Icon="refresh-cw"})
+local c=game:GetService("TeleportService")
+local d=game:GetService("Players")
+local e=game.PlaceId
+c:Teleport(e,d.LocalPlayer)end})
+local f=a:Button({Title="Server Hop Random",Desc="Join random public server",Callback=function()
+WindUI:Notify({Title="Finding Server...",Content="Getting server list...",Duration=3,Icon="shuffle"})
+local function g()
+local h=game:GetService("HttpService")
+local i=game:GetService("TeleportService")
+local j=game:GetService("Players")
+local k=j.LocalPlayer
+local l=game.PlaceId
+local m={}
+local n=""
+repeat
+local o,p=pcall(function()
+local q="https://games.roblox.com/v1/games/"..l.."/servers/Public?sortOrder=Asc&limit=100"
+if n~=""then q=q.."&cursor="..n end
+local r=game:HttpGet(q)
+return h:JSONDecode(r)end)
+if o and p and p.data then
+for s,t in ipairs(p.data)do
+if t.playing and t.maxPlayers and t.id then
+if t.playing<t.maxPlayers and t.id~=game.JobId and t.playing>0 then
+table.insert(m,t)end end end
+n=p.nextPageCursor or""
+else n=""end
+until n==""or#m>=50
+if#m>0 then
+local u=m[math.random(1,#m)]
+WindUI:Notify({Title="Joining...",Content="Joining server with "..u.playing.."/"..u.maxPlayers.." players",Duration=2,Icon="arrow-right"})
+task.wait(1)i:TeleportToPlaceInstance(l,u.id,k)
+else
+WindUI:Notify({Title="No Servers",Content="No suitable servers found",Duration=3,Icon="x"})end end
+local v,w=pcall(g)
+if not v then
+WindUI:Notify({Title="ServerHop Error",Content="Failed: "..tostring(w),Duration=5,Icon="x"})end end})
+local x=a:Button({Title="Server Hop to Lower Players",Desc="Join server with fewer players",Callback=function()
+WindUI:Notify({Title="Finding Low Pop...",Content="Searching for low population server...",Duration=3,Icon="users"})
+local function y()
+local h=game:GetService("HttpService")
+local i=game:GetService("TeleportService")
+local j=game:GetService("Players")
+local k=j.LocalPlayer
+local l=game.PlaceId
+local m={}
+local n=""
+repeat
+local o,p=pcall(function()
+local q="https://games.roblox.com/v1/games/"..l.."/servers/Public?sortOrder=Asc&limit=100"
+if n~=""then q=q.."&cursor="..n end
+local r=game:HttpGet(q)
+return h:JSONDecode(r)end)
+if o and p and p.data then
+for s,t in ipairs(p.data)do
+if t.playing and t.maxPlayers and t.id then
+if t.playing<t.maxPlayers and t.id~=game.JobId and t.playing>0 then
+table.insert(m,t)end end end
+n=p.nextPageCursor or""
+else n=""end
+until n==""or#m>=50
+if#m>0 then
+table.sort(m,function(z,A)return z.playing<A.playing end)
+local B=nil
+for s,t in ipairs(m)do
+if t.playing>=2 and t.playing<=10 then B=t break end end
+if not B then B=m[1]end
+if B then
+WindUI:Notify({Title="Joining...",Content="Joining server with "..B.playing.."/"..B.maxPlayers.." players",Duration=2,Icon="arrow-right"})
+task.wait(1)i:TeleportToPlaceInstance(l,B.id,k)
+else
+WindUI:Notify({Title="No Servers",Content="No suitable servers found",Duration=3,Icon="x"})end
+else
+WindUI:Notify({Title="Error",Content="Failed to get server list",Duration=3,Icon="x"})end end
+local v,w=pcall(y)
+if not v then
+WindUI:Notify({Title="ServerHop Error",Content="Failed: "..tostring(w),Duration=5,Icon="x"})end end})   
+end
+
+task.spawn(function()
+while true do
+task.wait(3)
+if SetupTab then
+SetupTab()
+EnchantTab()
+InfoTab()
+PlayerTab()
+MainTab()
+ShopTab()
+TeleportTab()
+QuestTab()
+DiscordTab()
+SettingTab()
+MiscTab()
+ConfigTab()
+AnimationTab()
+task.wait(2)
+TotemTab()
+break
+end
+end
+end)
