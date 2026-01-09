@@ -985,6 +985,7 @@ local blatantModeToggle = Reg("blatantMode",Auto:Toggle({
 }))
 
 --// BLATANT
+
 local RS=game:GetService("ReplicatedStorage")
 local net=RS:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
 
@@ -1006,93 +1007,37 @@ local KD=.3
 
 local function safe(f)task.spawn(function()pcall(f)end)end
 
--- GoodPerfectionStable MODIFIED
-local GPS_Enabled=false
-local GPS_monitor=nil
-
-local function disableAutoFishingButton()
-local playerGui=game:GetService("Players").LocalPlayer.PlayerGui
-if playerGui then
-local backpack=playerGui:FindFirstChild("Backpack")
-if backpack then
-local autoButton=backpack:FindFirstChild("AutoFishingButton")
-if autoButton and autoButton.Visible then
-autoButton.Visible=false
-return true
-end
-end
-end
-return false
-end
-
-local function enableAutoFishingButton()
-local playerGui=game:GetService("Players").LocalPlayer.PlayerGui
-if playerGui then
-local backpack=playerGui:FindFirstChild("Backpack")
-if backpack then
-local autoButton=backpack:FindFirstChild("AutoFishingButton")
-if autoButton and not autoButton.Visible then
-autoButton.Visible=true
-return true
-end
-end
-end
-return false
-end
-
-local function GPS_startMonitoring()
-GPS_monitor=task.spawn(function()
-while GPS_Enabled do
-disableAutoFishingButton()
-task.wait(0.1)
-end
-end)
-end
-
-local function GPS_start()
-if GPS_Enabled then return end
-GPS_Enabled=true
-disableAutoFishingButton()
-GPS_startMonitoring()
-end
-
-local function GPS_stop()
-if not GPS_Enabled then return end
-GPS_Enabled=false
-enableAutoFishingButton()
-end
-
 local function loop()
-while active do
-local t=tick()
-safe(function()RFC:InvokeServer({[1]=t})end)
-task.wait(CD)
-local r=tick()
-safe(function()RFS:InvokeServer(1,0,r)end)
-casts+=1
-task.wait(FD)
-safe(function()REF:FireServer()end)
-task.wait(KD)
-safe(function()RFK:InvokeServer()end)
-end
+ while active do
+  local t=tick()
+  safe(function()RFC:InvokeServer({[1]=t})end)
+  task.wait(CD)
+  local r=tick()
+  safe(function()RFS:InvokeServer(1,0,r)end)
+  casts+=1
+  task.wait(FD)
+  safe(function()REF:FireServer()end)
+  task.wait(KD)
+  safe(function()RFK:InvokeServer()end)
+ end
 end
 
 REM.OnClientEvent:Connect(function()
-if not active then return end
-task.spawn(function()
-task.wait(FD)
-safe(function()REF:FireServer()end)
-task.wait(KD)
-safe(function()RFK:InvokeServer()end)
-end)
+ if not active then return end
+ task.spawn(function()
+  task.wait(FD)
+  safe(function()REF:FireServer()end)
+  task.wait(KD)
+  safe(function()RFK:InvokeServer()end)
+ end)
 end)
 
 Auto:Section({Title="Blatant V2"})
 
 local blatantV2CompleteDelayInput=Reg("blatantV2_completeDelay",Auto:Input({Title="Complete Delay",Placeholder=tostring(FD),Value=tostring(FD),Callback=function(v)local n=tonumber(v)if n and n>=0 then FD=n end end}))
 local blatantV2CancelDelayInput=Reg("blatantV2_cancelDelay",Auto:Input({Title="Cancel Delay",Placeholder=tostring(KD),Value=tostring(KD),Callback=function(v)local n=tonumber(v)if n and n>=0 then KD=n end end}))
-local blatantV2Toggle=Reg("blatantV2_toggle",Auto:Toggle({Title="Enable Blatant V2",Desc="Ultra fast perfect-cast fishing",Default=false,Callback=function(s)active=s;if s then casts=0;start=tick();safe(function()RFU:InvokeServer(true)end);GPS_start();thread=task.spawn(loop);else if thread then task.cancel(thread)thread=nil end;safe(function()RFU:InvokeServer(false)end);GPS_stop();task.wait(.2);safe(function()RFK:InvokeServer()end);end end}))
-
+local blatantV2Toggle=Reg("blatantV2_toggle",Auto:Toggle({Title="Enable Blatant V2",Desc="Ultra fast perfect-cast fishing",Default=false,Callback=function(s)active=s;if s then casts=0;start=tick();thread=task.spawn(loop);else if thread then task.cancel(thread)thread=nil end;safe(function()RFU:InvokeServer(true)end);task.wait(.2);safe(function()RFK:InvokeServer()end);end end}))
+local RS=game:GetService("ReplicatedStorage")
 local Net=RS:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
 local Equip=Net:WaitForChild("RE/EquipToolFromHotbar")
 local Unequip=Net:WaitForChild("RE/UnequipToolFromHotbar")
