@@ -1006,29 +1006,35 @@ local KD=.3
 
 local function safe(f)task.spawn(function()pcall(f)end)end
 
--- GoodPerfectionStable
+-- GoodPerfectionStable MODIFIED
 local GPS_Enabled=false
 local GPS_monitor=nil
 
-local function disableFishingGUI()
+local function disableAutoFishingButton()
 local playerGui=game:GetService("Players").LocalPlayer.PlayerGui
 if playerGui then
-local fishingGui=playerGui:FindFirstChild("Fishing")
-if fishingGui and fishingGui.Enabled then
-fishingGui.Enabled=false
+local backpack=playerGui:FindFirstChild("Backpack")
+if backpack then
+local autoButton=backpack:FindFirstChild("AutoFishingButton")
+if autoButton and autoButton.Visible then
+autoButton.Visible=false
 return true
+end
 end
 end
 return false
 end
 
-local function enableFishingGUI()
+local function enableAutoFishingButton()
 local playerGui=game:GetService("Players").LocalPlayer.PlayerGui
 if playerGui then
-local fishingGui=playerGui:FindFirstChild("Fishing")
-if fishingGui and not fishingGui.Enabled then
-fishingGui.Enabled=true
+local backpack=playerGui:FindFirstChild("Backpack")
+if backpack then
+local autoButton=backpack:FindFirstChild("AutoFishingButton")
+if autoButton and not autoButton.Visible then
+autoButton.Visible=true
 return true
+end
 end
 end
 return false
@@ -1037,7 +1043,7 @@ end
 local function GPS_startMonitoring()
 GPS_monitor=task.spawn(function()
 while GPS_Enabled do
-disableFishingGUI()
+disableAutoFishingButton()
 task.wait(0.1)
 end
 end)
@@ -1046,14 +1052,14 @@ end
 local function GPS_start()
 if GPS_Enabled then return end
 GPS_Enabled=true
-disableFishingGUI()
+disableAutoFishingButton()
 GPS_startMonitoring()
 end
 
 local function GPS_stop()
 if not GPS_Enabled then return end
 GPS_Enabled=false
-enableFishingGUI()
+enableAutoFishingButton()
 end
 
 local function loop()
