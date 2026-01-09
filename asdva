@@ -1,22 +1,9 @@
-local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fyywannafly-sudo/FyyCommunity/refs/heads/main/lib_fyy"))()
-
-
-
-WindUI:AddTheme({
-    Name = "Fyy Community",
-    Accent = WindUI:Gradient({
-        ["0"]   = { Color = Color3.fromHex("#1f1f23"), Transparency = 0 },
-        ["100"] = { Color = Color3.fromHex("#18181b"), Transparency = 0 },
-    }),
-    Dialog = Color3.fromHex("#161616"),
-    Outline = Color3.fromHex("#FFFFFF"),
-    Text = Color3.fromHex("#FFFFFF"),
-    Placeholder = Color3.fromHex("#7a7a7a"),
-    Background = Color3.fromHex("#101010"),
-    Button = Color3.fromHex("#52525b"),
-    Icon = Color3.fromHex("#a1a1aa")
-})
-
+function load()
+print("leave this blank or put anything")
+warn("made by uerd with ❤")    
+end
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+--dont change anything until you know what you do
 WindUI.Services.junkiedev = {
     Name = "Junkie Development",
     Icon = "bug-off",
@@ -74,52 +61,34 @@ WindUI.Services.junkiedev = {
     end
 }
 
+--//CONTIUNE HERE!!
+
 local Window = WindUI:CreateWindow({
-    Title = "Fyy Community",
-    Icon = "rbxassetid://106899268176689",
-    Author = "Fyy X Fish IT",
-    Folder = "FyyConfig",
-    Size = UDim2.fromOffset(530, 300),
-    MinSize = Vector2.new(320, 300),
+    Title = "My Super Hub",
+    Icon = "door-open",
+    Author = "by .ftgs and .ftgs",
+    Folder = "MySuperHub",
+    Size = UDim2.fromOffset(580, 460),
+    MinSize = Vector2.new(560, 350),
     MaxSize = Vector2.new(850, 560),
     Transparent = true,
     Theme = "Dark",
-    Resizable = false,
-    SideBarWidth = 150,
+    Resizable = true,
+    SideBarWidth = 200,
+    BackgroundImageTransparency = 0.42,
     HideSearchBar = true,
     ScrollBarEnabled = false,
-    KeySystem = {                                                   
-        Note = "Example Key System. With pandadevelopment.",        
-        API = {                                                     
+    KeySystem = {                                                               
+        Note = "hi, im uerd.",                     
+        API = {                                                       
             { 
-                Type = "junkiedev", 
-                ServiceId = "FREEMIUM", 
-                ApiKey = "712f720c-02a4-4b9f-aa3f-3d3f5c835116", 
-                Providers = "prem",
-            },                                                      
-        },                                                          
-    },                                                              
-})
-Window:SetToggleKey(Enum.KeyCode.G)
-
-Window:EditOpenButton({
-    Title = "Fyy Community",
-    Icon = "rbxassetid://106899268176689",
-    CornerRadius = UDim.new(0,16),
-    StrokeThickness = 2,
-    Color = ColorSequence.new(
-        Color3.fromHex("AA00FF")
-    ),
-    OnlyMobile = true,
-    Enabled = true,
-    Draggable = true,
-})
-
-Window:SetIconSize(35) 
-Window:Tag({
-    Title = "1.0.8",
-    Color = Color3.fromHex("#30ff6a"),
-    Radius = 13, 
+                Type = "junkiedev",
+                ServiceId = "FREEMIUM",
+                ApiKey = "712f720c-02a4-4b9f-aa3f-3d3f5c835116",
+                Provider = "prem",
+            }    
+        }
+    }
 })
 
 local UIS=game:GetService("UserInputService")
