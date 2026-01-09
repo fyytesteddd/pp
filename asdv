@@ -1,5 +1,7 @@
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fyywannafly-sudo/FyyCommunity/refs/heads/main/lib_fyy"))()
 
+
+
 WindUI:AddTheme({
     Name = "Fyy Community",
     Accent = WindUI:Gradient({
@@ -15,6 +17,63 @@ WindUI:AddTheme({
     Icon = Color3.fromHex("#a1a1aa")
 })
 
+WindUI.Services.junkiedev = {
+    Name = "Junkie Development",
+    Icon = "bug-off",
+    Args = { "ServiceId", "ApiKey", "Provider" },
+    New = function(ServiceId, ApiKey, Provider)
+        JunkieProtected.API_KEY = ApiKey
+        JunkieProtected.PROVIDER = Provider
+        JunkieProtected.SERVICE_ID = ServiceId
+
+        local function ValidateKey(key)
+            if not key or key == "" then
+                print("❌ No key provided!")
+                game.Players.LocalPlayer:Kick("No key provided. Please get a key.")
+                return false
+            end
+
+            local keylessCheck = JunkieProtected.IsKeylessMode()
+            if keylessCheck and keylessCheck.keyless_mode then
+                print("Keyless mode enabled - Starting script...")
+                return true
+            end
+
+            local result = JunkieProtected.ValidateKey({ Key = key })
+            if result == "valid" then
+                print("Key is valid! Starting script...")
+                load()
+                
+                if _G.JD_IsPremium then
+                    print("🌟 Premium user detected!")
+                else
+                    print("📝 Standard user")
+                end
+                
+                return true
+            else
+                local keyLink = JunkieProtected.GetKeyLink()
+                print("❌ Invalid key!")
+                game.Players.LocalPlayer:Kick("Invalid key. Get one from: " .. keyLink)
+                return false
+            end
+        end
+
+        local function copyLink()
+            local link = JunkieProtected.GetKeyLink()
+            print("Get your key: " .. link)
+            if setclipboard then
+                setclipboard(link)
+            end
+        end
+
+        return {
+            Verify = ValidateKey,
+            Copy = copyLink
+        }
+    end
+}
+
 local Window = WindUI:CreateWindow({
     Title = "Fyy Community",
     Icon = "rbxassetid://106899268176689",
@@ -29,8 +88,18 @@ local Window = WindUI:CreateWindow({
     SideBarWidth = 150,
     HideSearchBar = true,
     ScrollBarEnabled = false,
+    KeySystem = {                                                   
+        Note = "Example Key System. With pandadevelopment.",        
+        API = {                                                     
+            { 
+                Type = "junkiedev", 
+                ServiceId = "FREEMIUM", 
+                ApiKey = "712f720c-02a4-4b9f-aa3f-3d3f5c835116", 
+                Providers = "prem",
+            },                                                      
+        },                                                          
+    },                                                              
 })
-
 Window:SetToggleKey(Enum.KeyCode.G)
 
 Window:EditOpenButton({
@@ -163,29 +232,8 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function()
 end)
 I()
 
---// 
 
-
-local Info, Premium, Player, Auto, Shop, Teleport, Totem
-local Quest, Event, Trade, Enchant, Discord, Config, Setting, Misc , Animation
-
-local function SetupTab()
-    if not Info then Info = Window:Tab({ Title = "Info", Icon = "info" }) end
-    if not Player then Player = Window:Tab({ Title = "Player", Icon = "user" }) end
-    if not Auto then Auto = Window:Tab({ Title = "Main", Icon = "play" }) end
-    if not Shop then Shop = Window:Tab({ Title = "Shop", Icon = "shopping-cart" }) end
-    if not Teleport then Teleport = Window:Tab({ Title = "Teleport", Icon = "map-pin" }) end
-    if not Totem then Totem = Window:Tab({ Title = "Totem", Icon = "hexagon" }) end
-    if not Quest then Quest = Window:Tab({ Title = "Quest", Icon = "loader" }) end
-    if not Enchant then Enchant = Window:Tab({ Title = "Enchants", Icon = "star" }) end
-    if not Animation then Animation = Window:Tab({ Title = "Animation", Icon = "gem" }) end
-    if not Discord then Discord = Window:Tab({ Title = "Webhook", Icon = "megaphone" }) end
-    if not Config then Config = Window:Tab({ Title = "Config", Icon = "folder" }) end
-    if not Setting then Setting = Window:Tab({ Title = "Settings", Icon = "settings" }) end
-    if not Misc then Misc = Window:Tab({ Title = "Misc", Icon = "globe" }) end
-end
-
---// 
+--// cc
 
 local Fyy=Window.ConfigManager:CreateConfig("FyyCommunityConfig")
 local ElementRegistry={}
@@ -4214,7 +4262,7 @@ end
 task.spawn(function()
 while true do
 task.wait(3)
-if SetupTab then
+if menucrate then
 SetupTab()
 EnchantTab()
 InfoTab()
