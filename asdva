@@ -4209,8 +4209,7 @@ end}))
 end
 --// OMAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 local function TradeTab()
-    if not Trade then return end
-
+if not Trade then return end
 local RepStorage=game:GetService("ReplicatedStorage")
 local Players=game:GetService("Players")
 local LocalPlayer=Players.LocalPlayer
@@ -4251,6 +4250,10 @@ local name=item.Identifier or"Unknown"
 local rarity=item.Metadata and item.Metadata.Rarity or"COMMON"
 if ItemUtility then local d=ItemUtility:GetItemData(item.Id)if d and d.Data and d.Data.Name then name=d.Data.Name end end
 return name,rarity
+end
+local function GetPlayerDataReplion()
+local s,r=pcall(function()return ReplionClient:WaitReplion("Data")end)
+return s and r or nil
 end
 local function GetItemsToTrade()
 local r=GetPlayerDataReplion()if not r then return{}end
@@ -4329,18 +4332,27 @@ Trade:Divider()
 local PlayerDropdown=Trade:Dropdown({Title="Select Target Player",Values={},Multi=false,AllowNone=false,Callback=function(n)local p=Players:FindFirstChild(n)if p then selectedTradeTargetId=p.UserId WindUI:Notify({Title="Target Set",Content=p.Name,Duration=2,Icon="user"})else selectedTradeTargetId=nil end end})
 Trade:Button({Title="Refresh Players",Icon="refresh-ccw",Callback=function()local l={}for _,p in ipairs(Players:GetPlayers())do if p~=LocalPlayer then table.insert(l,p.Name)end end pcall(function()PlayerDropdown:Refresh(l)end)pcall(function()PlayerDropdown:Set(false)end)WindUI:Notify({Title="List Updated",Content=#l.." players found.",Duration=2})end})
 local tradeDropdown
-Trade:Input({Title="Search Item Name",Placeholder="e.g. Aurora",Icon="search",Callback=function(t)
-if not tradeDropdown then return end
-if t==""or#t<2 then tradeDropdown:Refresh({"Ketik minimal 2 huruf..."})return end
-local res,cnt={},0
-local l=t:lower()
-for _,n in ipairs(GlobalItemCache)do
-if n:lower():find(l)then table.insert(res,n)cnt+=1 if cnt>=25 then break end end
+local function ScanBackpackItems()
+local items=GetItemsToTrade()
+local itemNames={}
+for _,item in ipairs(items)do
+if not table.find(itemNames,item.Name)then
+table.insert(itemNames,item.Name)
 end
-if #res==0 then table.insert(res,"Not Found")end
-tradeDropdown:Refresh(res)
+end
+return itemNames
+end
+Trade:Button({Title="Scan Backpack",Icon="package",Callback=function()
+local scanned=ScanBackpackItems()
+if #scanned>0 then
+tradeDropdown:Refresh(scanned)
+WindUI:Notify({Title="Scan Complete",Content=#scanned.." items in backpack",Duration=2})
+else
+tradeDropdown:Refresh({"No items found"})
+WindUI:Notify({Title="Empty",Content="Backpack kosong atau semua favorit",Duration=2})
+end
 end})
-tradeDropdown=Trade:Dropdown({Title="Select Item to Trade",Desc="Pilih item spesifik dari hasil pencarian.",Values={"Ketik nama item di atas..."},Multi=false,AllowNone=true,Callback=function(n)selectedTradeItemName=n end})
+tradeDropdown=Trade:Dropdown({Title="Select Item from Backpack",Values={"Click Scan Backpack first"},Multi=false,AllowNone=true,Callback=function(n)selectedTradeItemName=n end})
 Trade:Dropdown({Title="Filter Rarity (Optional)",Values={"Common","Uncommon","Rare","Epic","Legendary","Mythic","SECRET","Trophy","Collectible","DEV"},AllowNone=true,Callback=function(r)selectedTradeRarity=r end})
 Trade:Toggle({Title="Hold Favorite Items",Desc="Jangan trade item yang di-Favorite.",Value=false,Callback=function(s)tradeHoldFavorite=s end})
 Trade:Input({Title="Stop at Coin Value",Placeholder="0 (Unlimited)",Callback=function(v)tradeStopAtCoins=tonumber(v)or 0 isTradeByCoinActive=tradeStopAtCoins>0 end})
