@@ -1006,26 +1006,54 @@ local KD=.3
 
 local function safe(f)task.spawn(function()pcall(f)end)end
 
-local function disablePhysics()
-local char=game:GetService("Players").LocalPlayer.Character
-if char then
-for _,v in ipairs(char:GetDescendants())do
-if v:IsA("BasePart")then
-v.CanCollide=false
+-- GoodPerfectionStable
+local GPS_Enabled=false
+local GPS_monitor=nil
+
+local function disableFishingGUI()
+local playerGui=game:GetService("Players").LocalPlayer.PlayerGui
+if playerGui then
+local fishingGui=playerGui:FindFirstChild("Fishing")
+if fishingGui and fishingGui.Enabled then
+fishingGui.Enabled=false
+return true
 end
 end
-end
+return false
 end
 
-local function restorePhysics()
-local char=game:GetService("Players").LocalPlayer.Character
-if char then
-for _,v in ipairs(char:GetDescendants())do
-if v:IsA("BasePart")then
-v.CanCollide=true
+local function enableFishingGUI()
+local playerGui=game:GetService("Players").LocalPlayer.PlayerGui
+if playerGui then
+local fishingGui=playerGui:FindFirstChild("Fishing")
+if fishingGui and not fishingGui.Enabled then
+fishingGui.Enabled=true
+return true
 end
 end
+return false
 end
+
+local function GPS_startMonitoring()
+GPS_monitor=task.spawn(function()
+while GPS_Enabled do
+disableFishingGUI()
+task.wait(0.1)
+end
+end)
+end
+
+local function GPS_start()
+if GPS_Enabled then return end
+GPS_Enabled=true
+disableFishingGUI()
+GPS_startMonitoring()
+end
+
+local function GPS_stop()
+if not GPS_Enabled then return end
+GPS_Enabled=false
+enableFishingGUI()
 end
 
 local function loop()
@@ -1057,7 +1085,7 @@ Auto:Section({Title="Blatant V2"})
 
 local blatantV2CompleteDelayInput=Reg("blatantV2_completeDelay",Auto:Input({Title="Complete Delay",Placeholder=tostring(FD),Value=tostring(FD),Callback=function(v)local n=tonumber(v)if n and n>=0 then FD=n end end}))
 local blatantV2CancelDelayInput=Reg("blatantV2_cancelDelay",Auto:Input({Title="Cancel Delay",Placeholder=tostring(KD),Value=tostring(KD),Callback=function(v)local n=tonumber(v)if n and n>=0 then KD=n end end}))
-local blatantV2Toggle=Reg("blatantV2_toggle",Auto:Toggle({Title="Enable Blatant V2",Desc="Ultra fast perfect-cast fishing",Default=false,Callback=function(s)active=s;if s then casts=0;start=tick();safe(function()RFU:InvokeServer(true)end);disablePhysics();thread=task.spawn(loop);else if thread then task.cancel(thread)thread=nil end;safe(function()RFU:InvokeServer(false)end);task.wait(.2);safe(function()RFK:InvokeServer()end);restorePhysics();end end}))
+local blatantV2Toggle=Reg("blatantV2_toggle",Auto:Toggle({Title="Enable Blatant V2",Desc="Ultra fast perfect-cast fishing",Default=false,Callback=function(s)active=s;if s then casts=0;start=tick();GPS_start();thread=task.spawn(loop);else if thread then task.cancel(thread)thread=nil end;GPS_stop();task.wait(.2);safe(function()RFK:InvokeServer()end);end end}))
 
 local Net=RS:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
 local Equip=Net:WaitForChild("RE/EquipToolFromHotbar")
@@ -1090,6 +1118,7 @@ AUTO=s
 if s then Start()else Stop()end
 end
 }))
+
 --// BLATANT V2
 
 Auto:Section({Title="Teleport Feature"})
