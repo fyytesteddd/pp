@@ -1312,8 +1312,6 @@ Auto:Button({Title="Sell Now",Callback=function()sell()end})
 Auto:Divider()Auto:Space()
 --// Auto Sell Feature
 
-Auto:Section({Title="Auto Favorite Feature"})
-
 local RS=game:GetService("ReplicatedStorage")
 local net=RS.Packages._Index["sleitnick_net@0.2.0"].net
 local REF=net["RE/FavoriteItem"]
@@ -1368,34 +1366,84 @@ end
 local allM={"Shiny","Albino","Sandy","Noob","Moon Fragment","Festive","Disco","1x1x1x1","Bloodmoon","Color Burn","Corrupt","Fairy Dust","Frozen","Galaxy","Gemstone","Ghost","Gold","Holographic","Lightning","Midnight","Radioactive","Stone"}
 local rar={"Common","Uncommon","Rare","Epic","Legendary","Mythic","SECRET"}
 
-local favRarityDropdown = Reg("favRarity",Auto:Dropdown({
- Title="Rarity",
- Values=rar,
- Value={"Legendary","Mythic","SECRET"},
- Multi=true,
- Callback=function(v)tiers=v end
-}))
+Auto:Section({Title="Auto Favorite Feature"})
 
-local favMutationDropdown = Reg("favMutation",Auto:Dropdown({
- Title="Mutation",
- Values=allM,
- Value={},
- Multi=true,
- Callback=function(v)muts=v end
-}))
+local favRarityDropdown=Auto:Dropdown({Title="Rarity",Values=rar,Value={"Legendary","Mythic","SECRET"},Multi=true,Callback=function(v)tiers=v end})
+local favMutationDropdown=Auto:Dropdown({Title="Mutation",Values=allM,Value={},Multi=true,Callback=function(v)muts=v end})
 
-local autoFavoriteToggle = Reg("autoFavorite",Auto:Toggle({
- Title="Enable Auto Favorite",
- Default=false,
- Callback=function(s)
-  if s then
-   if conn then conn:Disconnect()end
-   conn=REN.OnClientEvent:Connect(fav)
-  elseif conn then
-   conn:Disconnect()conn=nil
+local ItemUtility=require(RS:WaitForChild("Shared"):WaitForChild("ItemUtility"))
+local allItemNames={}
+task.spawn(function()
+ local ItemsFolder=RS:FindFirstChild("Items")
+ if ItemsFolder then
+  for _,itemScript in pairs(ItemsFolder:GetDescendants())do
+   if not string.find(itemScript:GetFullName(),"!!!")and itemScript:IsA("ModuleScript")then
+    local success,itemData=pcall(function()return require(itemScript)end)
+    if success and itemData then
+     local data=itemData.Data or itemData
+     if data and data.Id and data.Name then
+      table.insert(allItemNames,data.Name)
+     end
+    end
+   end
+  end
+  table.sort(allItemNames)
+ end
+end)
+
+local selectedItems={}
+local favoriteByNameDropdown=Auto:Dropdown({Title="Favorite by Name",Values=allItemNames,Multi=true,AllowNone=true,SearchBarEnabled=true,ScrollBarEnabled=true,Callback=function(v)selectedItems=v end})
+
+local function favByName()
+ local players=game:GetService("Players")
+ local localPlayer=players.LocalPlayer
+ local ReplionClient=require(RS:WaitForChild("Packages"):WaitForChild("Replion")).Client
+ 
+ local s,r=pcall(function()return ReplionClient:WaitReplion("Data")end)
+ if not s or not r then return end
+ 
+ local s2,i=pcall(function()return r:GetExpect("Inventory")end)
+ if not s2 or not i or not i.Items then return end
+ 
+ for _,item in ipairs(i.Items)do
+  if typeof(item.UUID)=="string"and#item.UUID>=10 then
+   local name="Unknown"
+   local id=item.Id
+   if ItemUtility then
+    local d=ItemUtility:GetItemData(id)
+    if d and d.Data and d.Data.Name then
+     name=d.Data.Name
+    end
+   end
+   if table.find(selectedItems,name)then
+    local fav=item.IsFavorite or item.Favorited
+    if not fav then
+     task.spawn(function()pcall(function()REF:FireServer(item.UUID)end)end)
+     task.wait(0.1)
+    end
+   end
   end
  end
-}))
+end
+
+Auto:Button({Title="Favorite Selected Items",Icon="star",Callback=function()
+ if #selectedItems>0 then
+  WindUI:Notify({Title="Processing",Content="Favoriting "..#selectedItems.." items...",Duration=2})
+  favByName()
+  WindUI:Notify({Title="Complete",Content="Items favorited",Duration=2})
+ else
+  WindUI:Notify({Title="Error",Content="Select items first",Duration=2})
+ end
+end})
+
+local autoFavoriteToggle=Auto:Toggle({Title="Enable Auto Favorite",Default=false,Callback=function(s)
+ if s then
+  if conn then conn:Disconnect()end
+  conn=REN.OnClientEvent:Connect(fav)
+ elseif conn then
+  conn:Disconnect()conn=nil
+ end
+end})
 end
 --// AUTO FAV x END OF TAB MAIN //---------------------------------
 
@@ -4398,13 +4446,21 @@ local function ScanBackpackItems()
 local items=GetInventoryForScan()
 if groupMutationsInDropdown then
 local itemTotals={}
+local favTotals={}
 for _,item in ipairs(items)do
 local name=item.Name
+local isFav=item.IsFavorite
 itemTotals[name]=(itemTotals[name]or 0)+1
+if isFav then favTotals[name]=(favTotals[name]or 0)+1 end
 end
 local itemList={}
 for itemName,total in pairs(itemTotals)do
-local displayName=itemName.." (x"..total..")"
+local favCount=favTotals[itemName]or 0
+local displayName=itemName.." (x"..total
+if favCount>0 then
+displayName=displayName.." ⭐"
+end
+displayName=displayName..")"
 table.insert(itemList,displayName)
 end
 table.sort(itemList)
@@ -4429,10 +4485,8 @@ displayName=displayName.." ("..mutName.." x"..data.total
 else
 displayName=displayName.." (x"..data.total
 end
-if data.fav==data.total then
+if data.fav>0 then
 displayName=displayName.." ⭐"
-elseif data.fav>0 then
-displayName=displayName.." | "..data.fav.."⭐"
 end
 displayName=displayName..")"
 table.insert(itemList,displayName)
