@@ -5406,8 +5406,151 @@ WindUI:Notify({Title="Optimization OFF",Content="Kualitas visual normal",Duratio
 end
 end
 }))
+
+--// FREE cam
+
+local Players=game:GetService("Players")
+local RunService=game:GetService("RunService")
+local UserInputService=game:GetService("UserInputService")
+local StarterGui=game:GetService("StarterGui")
+local Workspace=game:GetService("Workspace")
+local LocalPlayer=Players.LocalPlayer
+local freeCamSpeed=1.5
+local freeCamFov=70
+local isFreeCamActive=false
+local camera=Workspace.CurrentCamera
+local camPos=camera.CFrame.Position
+local camRot=Vector2.new(0,0)
+local lastMousePos=Vector2.new(0,0)
+local renderConn=nil
+local touchConn=nil
+local touchDelta=Vector2.new(0,0)
+local oldWalkSpeed=16
+local oldJumpPower=50
+local FreeCam=Setting:Section({Title="Free Cam",TextSize=16})
+local freeCamToggle=FreeCam:Toggle({
+Title="Enable Free Cam",
+Default=false,
+Callback=function(state)
+isFreeCamActive=state
+local char=LocalPlayer.Character
+local hum=char and char:FindFirstChild("Humanoid")
+local hrp=char and char:FindFirstChild("HumanoidRootPart")
+if state then
+camera.CameraType=Enum.CameraType.Scriptable
+camPos=camera.CFrame.Position
+local rx,ry,_=camera.CFrame:ToEulerAnglesYXZ()
+camRot=Vector2.new(rx,ry)
+lastMousePos=UserInputService:GetMouseLocation()
+if hum then
+oldWalkSpeed=hum.WalkSpeed
+oldJumpPower=hum.JumpPower
+hum.WalkSpeed=0
+hum.JumpPower=0
+hum.PlatformStand=true
 end
---//
+if hrp then hrp.Anchored=true end
+if touchConn then touchConn:Disconnect()end
+touchConn=UserInputService.TouchMoved:Connect(function(input,processed)
+if not processed then touchDelta=input.Delta end
+end)
+local ControlModule=require(LocalPlayer.PlayerScripts:WaitForChild("PlayerModule"):WaitForChild("ControlModule"))
+if renderConn then renderConn:Disconnect()end
+renderConn=RunService.RenderStepped:Connect(function()
+if not isFreeCamActive then return end
+local currentMousePos=UserInputService:GetMouseLocation()
+if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)then
+local deltaX=currentMousePos.X-lastMousePos.X
+local deltaY=currentMousePos.Y-lastMousePos.Y
+local sens=0.003
+camRot=camRot-Vector2.new(deltaY*sens,deltaX*sens)
+camRot=Vector2.new(math.clamp(camRot.X,-1.55,1.55),camRot.Y)
+end
+if UserInputService.TouchEnabled then
+camRot=camRot-Vector2.new(touchDelta.Y*0.005*2.0,touchDelta.X*0.005*2.0)
+camRot=Vector2.new(math.clamp(camRot.X,-1.55,1.55),camRot.Y)
+touchDelta=Vector2.new(0,0)
+end
+lastMousePos=currentMousePos
+local rotCFrame=CFrame.fromEulerAnglesYXZ(camRot.X,camRot.Y,0)
+local moveVector=Vector3.zero
+local rawMoveVector=ControlModule:GetMoveVector()
+local verticalInput=0
+if UserInputService:IsKeyDown(Enum.KeyCode.E)then verticalInput=1 end
+if UserInputService:IsKeyDown(Enum.KeyCode.Q)then verticalInput=-1 end
+if rawMoveVector.Magnitude>0 then
+moveVector=(rotCFrame.RightVector*rawMoveVector.X)+(rotCFrame.LookVector*rawMoveVector.Z*-1)
+end
+moveVector=moveVector+Vector3.new(0,verticalInput,0)
+local speedMultiplier=(UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)and 4 or 1)
+local finalSpeed=freeCamSpeed*speedMultiplier
+if moveVector.Magnitude>0 then
+camPos=camPos+(moveVector*finalSpeed)
+end
+camera.CFrame=CFrame.new(camPos)*rotCFrame
+camera.FieldOfView=freeCamFov
+end)
+else
+if renderConn then renderConn:Disconnect()renderConn=nil end
+if touchConn then touchConn:Disconnect()touchConn=nil end
+camera.CameraType=Enum.CameraType.Custom
+UserInputService.MouseBehavior=Enum.MouseBehavior.Default
+camera.FieldOfView=70
+if hum then
+hum.WalkSpeed=oldWalkSpeed
+hum.JumpPower=oldJumpPower
+hum.PlatformStand=false
+end
+if hrp then hrp.Anchored=false end
+end
+end
+})
+local bb22=FreeCam:Slider({
+Title="Camera Speed",
+Step=0.1,
+Value={Min=0.1,Max=10.0,Default=1.5},
+Callback=function(val)freeCamSpeed=tonumber(val)end
+})
+local bb23=FreeCam:Slider({
+Title="Field of View (FOV)",
+Desc="Zoom In/Out Lens",
+Step=1,
+Value={Min=10,Max=120,Default=70},
+Callback=function(val)
+freeCamFov=tonumber(val)
+if isFreeCamActive then camera.FieldOfView=freeCamFov end
+end
+})
+local bb24=FreeCam:Toggle({
+Title="Hide All UI (Clean Mode)",
+Desc="Hide all UI except WindUI",
+Default=false,
+Callback=function(state)
+local PlayerGui=LocalPlayer:WaitForChild("PlayerGui")
+if state then
+for _,gui in ipairs(PlayerGui:GetChildren())do
+if gui:IsA("ScreenGui")and gui.Name~="WindUI"and gui.Name~="CustomFloatingIcon_RockHub"then
+gui:SetAttribute("OriginalState",gui.Enabled)
+gui.Enabled=false
+end
+end
+pcall(function()StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All,false)end)
+else
+for _,gui in ipairs(PlayerGui:GetChildren())do
+if gui:IsA("ScreenGui")then
+local originalState=gui:GetAttribute("OriginalState")
+if originalState~=nil then
+gui.Enabled=originalState
+gui:SetAttribute("OriginalState",nil)
+end
+end
+end
+pcall(function()StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.All,true)end)
+end
+end
+})
+end
+--// Animation
     local function AnimationTab()
 if not Animation then return end
 local Players=game:GetService("Players")
@@ -5911,7 +6054,7 @@ SettingTab()
 MiscTab()
 ConfigTab()
 AnimationTab()
-task.wait(1)
+task.wait(2)
 TotemTab()
 break
 end
