@@ -1311,7 +1311,6 @@ local autoSellToggle = Reg("autoSell", Auto:Toggle({
 Auto:Button({Title="Sell Now",Callback=function()sell()end})
 Auto:Divider()Auto:Space()
 --// Auto Sell Feature
-
 local RS=game:GetService("ReplicatedStorage")
 local net=RS.Packages._Index["sleitnick_net@0.2.0"].net
 local REF=net["RE/FavoriteItem"]
@@ -1381,7 +1380,7 @@ task.spawn(function()
     local success,itemData=pcall(function()return require(itemScript)end)
     if success and itemData then
      local data=itemData.Data or itemData
-     if data and data.Id and data.Name then
+     if data and data.Id and data.Name and data.Type~="Fishing Rods"then
       table.insert(allItemNames,data.Name)
      end
     end
@@ -1393,48 +1392,6 @@ end)
 
 local selectedItems={}
 local favoriteByNameDropdown=Auto:Dropdown({Title="Favorite by Name",Values=allItemNames,Multi=true,AllowNone=true,SearchBarEnabled=true,ScrollBarEnabled=true,Callback=function(v)selectedItems=v end})
-
-local function favByName()
- local players=game:GetService("Players")
- local localPlayer=players.LocalPlayer
- local ReplionClient=require(RS:WaitForChild("Packages"):WaitForChild("Replion")).Client
- 
- local s,r=pcall(function()return ReplionClient:WaitReplion("Data")end)
- if not s or not r then return end
- 
- local s2,i=pcall(function()return r:GetExpect("Inventory")end)
- if not s2 or not i or not i.Items then return end
- 
- for _,item in ipairs(i.Items)do
-  if typeof(item.UUID)=="string"and#item.UUID>=10 then
-   local name="Unknown"
-   local id=item.Id
-   if ItemUtility then
-    local d=ItemUtility:GetItemData(id)
-    if d and d.Data and d.Data.Name then
-     name=d.Data.Name
-    end
-   end
-   if table.find(selectedItems,name)then
-    local fav=item.IsFavorite or item.Favorited
-    if not fav then
-     task.spawn(function()pcall(function()REF:FireServer(item.UUID)end)end)
-     task.wait(0.1)
-    end
-   end
-  end
- end
-end
-
-Auto:Button({Title="Favorite Selected Items",Icon="star",Callback=function()
- if #selectedItems>0 then
-  WindUI:Notify({Title="Processing",Content="Favoriting "..#selectedItems.." items...",Duration=2})
-  favByName()
-  WindUI:Notify({Title="Complete",Content="Items favorited",Duration=2})
- else
-  WindUI:Notify({Title="Error",Content="Select items first",Duration=2})
- end
-end})
 
 local autoFavoriteToggle=Auto:Toggle({Title="Enable Auto Favorite",Default=false,Callback=function(s)
  if s then
