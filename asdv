@@ -25,10 +25,11 @@ local Window = WindUI:CreateWindow({
     MaxSize = Vector2.new(850, 560),
     Transparent = true,
     Theme = "Dark",
-    Resizable = false,
+    Resizable = true,
     SideBarWidth = 150,
     HideSearchBar = true,
     ScrollBarEnabled = false,
+    Background = "rbxassetid://78893380921225", 
 })
 
 Window:SetToggleKey(Enum.KeyCode.G)
@@ -48,7 +49,7 @@ Window:EditOpenButton({
 
 Window:SetIconSize(35) 
 Window:Tag({
-    Title = "1.0.8",
+    Title = "1.1.0",
     Color = Color3.fromHex("#30ff6a"),
     Radius = 13, 
 })
@@ -163,9 +164,6 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function()
 end)
 I()
 
--- ================================
--- AUTH SYSTEM - UPDATED
--- ================================
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -177,7 +175,7 @@ local FILE_CONFIG = {
 }
 
 local API_CONFIG = {
-    base_url = "http://localhost:3000",
+    base_url = "http://151.240.0.25:3000",
     validate_endpoint = "check"
 }
 
@@ -5036,7 +5034,7 @@ fields = {
 {name = "**Player**", value = "||" .. au .. "||", inline = true}
 },
 thumbnail = {url = at},
-footer = {text = "Fyy Exploit | Private Log"},
+footer = {text = "Fyy Community | Private Log"},
 timestamp = DateTime.now():ToIsoDate()
 }
 a5(b, ay)
