@@ -1,42 +1,56 @@
-function load()
-    print("leave this blank or put anything")
-    warn("made by uerd with ❤")    
-end
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fyywannafly-sudo/FyyCommunity/refs/heads/main/lib_fyy"))()
 
--- Load JunkieProtected FIRST sebelum WindUI
-local JunkieProtected = loadstring(game:HttpGet("https://jnkie.com/sdk/library.lua"))()
-
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
-
--- WindUI.Services.junkiedev already exists inside WindUI library
--- Just create window with KeySystem
+WindUI:AddTheme({
+    Name = "Fyy Community",
+    Accent = WindUI:Gradient({
+        ["0"]   = { Color = Color3.fromHex("#1f1f23"), Transparency = 0 },
+        ["100"] = { Color = Color3.fromHex("#18181b"), Transparency = 0 },
+    }),
+    Dialog = Color3.fromHex("#161616"),
+    Outline = Color3.fromHex("#FFFFFF"),
+    Text = Color3.fromHex("#FFFFFF"),
+    Placeholder = Color3.fromHex("#7a7a7a"),
+    Background = Color3.fromHex("#101010"),
+    Button = Color3.fromHex("#52525b"),
+    Icon = Color3.fromHex("#a1a1aa")
+})
 
 local Window = WindUI:CreateWindow({
-    Title = "My Super Hub",
-    Icon = "door-open",
-    Author = "by .ftgs and .ftgs",
-    Folder = "MySuperHub",
-    Size = UDim2.fromOffset(580, 460),
-    MinSize = Vector2.new(560, 350),
+    Title = "Fyy Community",
+    Icon = "rbxassetid://106899268176689",
+    Author = "Fyy X Fish IT",
+    Folder = "FyyConfig",
+    Size = UDim2.fromOffset(530, 300),
+    MinSize = Vector2.new(320, 300),
     MaxSize = Vector2.new(850, 560),
     Transparent = true,
     Theme = "Dark",
-    Resizable = true,
-    SideBarWidth = 200,
-    BackgroundImageTransparency = 0.42,
+    Resizable = false,
+    SideBarWidth = 150,
     HideSearchBar = true,
     ScrollBarEnabled = false,
-    KeySystem = {                                                               
-        Note = "hi, im uerd.",                     
-        API = {                                                       
-            { 
-                Type = "junkiedev",
-                ServiceId = "FREEMIUM",
-                ApiKey = "712f720c-02a4-4b9f-aa3f-3d3f5c835116",
-                Provider = "prem",
-            }    
-        }
-    }
+})
+
+Window:SetToggleKey(Enum.KeyCode.G)
+
+Window:EditOpenButton({
+    Title = "Fyy Community",
+    Icon = "rbxassetid://106899268176689",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new(
+        Color3.fromHex("AA00FF")
+    ),
+    OnlyMobile = true,
+    Enabled = true,
+    Draggable = true,
+})
+
+Window:SetIconSize(35) 
+Window:Tag({
+    Title = "1.0.8",
+    Color = Color3.fromHex("#30ff6a"),
+    Radius = 13, 
 })
 
 local UIS=game:GetService("UserInputService")
@@ -149,8 +163,306 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function()
 end)
 I()
 
+-- ================================
+-- AUTH SYSTEM - UPDATED
+-- ================================
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
---// cc
+local FILE_CONFIG = {
+    folder = "FyyVerifyyy",
+    subfolder = "auth",
+    filename = "token.dat"
+}
+
+local API_CONFIG = {
+    base_url = "http://localhost:3000",
+    validate_endpoint = "check"
+}
+
+local function getHWID()
+    local hwid
+    local success = pcall(function()
+        hwid = game:GetService("RbxAnalyticsService"):GetClientId()
+    end)
+    if success and hwid and hwid ~= "" then
+        return hwid
+    end
+    pcall(function()
+        hwid = HttpService:GenerateGUID(false)
+    end)
+    return hwid or ("HWID-" .. tostring(tick()))
+end
+
+local MAX_RETRIES = 3
+local RETRY_DELAY = 1
+
+local function secureHttpGet(url)
+    for _ = 1, MAX_RETRIES do
+        local success, response = pcall(function()
+            return game:HttpGet(url, true)
+        end)
+        if success and response and response ~= "" then
+            return response
+        end
+        task.wait(RETRY_DELAY)
+    end
+    return nil
+end
+
+local function getAuthFilePath()
+    return FILE_CONFIG.folder .. "/" .. FILE_CONFIG.subfolder .. "/" .. FILE_CONFIG.filename
+end
+
+local function saveToken(token)
+    pcall(function()
+        if not isfolder(FILE_CONFIG.folder) then
+            makefolder(FILE_CONFIG.folder)
+        end
+        local sub = FILE_CONFIG.folder .. "/" .. FILE_CONFIG.subfolder
+        if not isfolder(sub) then
+            makefolder(sub)
+        end
+        writefile(getAuthFilePath(), tostring(token))
+    end)
+end
+
+local function loadToken()
+    if not isfile(getAuthFilePath()) then
+        return nil
+    end
+    local token = readfile(getAuthFilePath())
+    token = tostring(token):upper():gsub("%s+", "")
+    return token ~= "" and token or nil
+end
+
+local function deleteToken()
+    pcall(function()
+        if isfile(getAuthFilePath()) then
+            delfile(getAuthFilePath())
+        end
+    end)
+end
+
+local function ValidateKey(key)
+    if not key or (not string.match(key, "^FYY%-.+") and not string.match(key, "^TRIAL%-.+")) then
+        return false, "Format key salah"
+    end
+
+    local encKey     = HttpService:UrlEncode(tostring(key))
+    local encHWID    = HttpService:UrlEncode(tostring(getHWID()))
+    local encUserId  = HttpService:UrlEncode(tostring(LocalPlayer.UserId))
+    local encPlaceId = HttpService:UrlEncode(tostring(game.PlaceId))
+    local username   = LocalPlayer.Name
+
+    -- URL sesuai dengan server (endpoint 'check')
+    local url = string.format(
+        "%s/%s?key=%s&hwid=%s&robloxId=%s&placeId=%s&username=%s",
+        API_CONFIG.base_url,
+        API_CONFIG.validate_endpoint,  -- 'check'
+        encKey,
+        encHWID,
+        encUserId,
+        encPlaceId,
+        HttpService:UrlEncode(username)
+    )
+
+    local response = secureHttpGet(url)
+    if not response then
+        return false, "Server tidak merespon"
+    end
+
+    local decoded
+    local ok = pcall(function()
+        decoded = HttpService:JSONDecode(response)
+    end)
+    if not ok or type(decoded) ~= "table" then
+        return false, "Response server tidak valid"
+    end
+
+    -- Handle response sesuai dengan server
+    if decoded.status == "ok" then
+        -- Trial key
+        if decoded.isTrial then
+            saveToken(key)
+            return true, "TRIAL_OK"
+        end
+        -- Premium key (OK atau FIRST_BIND)
+        if decoded.code == "OK" or decoded.code == "FIRST_BIND" then
+            saveToken(key)
+            return true, decoded.code
+        end
+    end
+
+    -- Handle error codes dari server
+    if decoded.code == "HWID_BLACKLISTED" then
+        return false, "HWID kamu di-blacklist"
+    elseif decoded.code == "USERNAME_NOT_FOUND" then
+        return false, "Username tidak terdaftar di key ini"
+    elseif decoded.code == "INVALID_KEY" then
+        return false, "Key tidak valid"
+    elseif decoded.code == "BLACKLISTED" then
+        return false, "Key di-blacklist"
+    elseif decoded.code == "EXPIRED" then
+        return false, "Key sudah expired"
+    elseif decoded.code == "MISSING_PARAMS" then
+        return false, "Parameter tidak lengkap"
+    end
+
+    return false, decoded.code or "AUTH_FAILED"
+end
+
+-- ================================
+-- UI SETUP (TETAP SAMA)
+-- ================================
+local AuthTab = Window:Tab({ Title = "Authentication", Icon = "key" })
+local I="77nEeYeFRp"
+local U="https://discord.com/api/v10/invites/"..I.."?with_counts=true&with_expiration=true"
+local R,E
+xpcall(function()
+    R=game:GetService("HttpService"):JSONDecode(WindUI.Creator.Request({
+        Url=U,
+        Method="GET",
+        Headers={["Accept"]="application/json"}
+    }).Body)
+end,function(e)
+    warn("err fetching discord info:"..tostring(e))
+    E=tostring(e)
+    R=nil
+end)
+
+if R and R.guild then
+    local P={
+        Title=R.guild.name,
+        Desc='<font color="#52525b">•</font>Member Count:'..tostring(R.approximate_member_count)..'\n<font color="#16a34a">•</font>Online Count:'..tostring(R.approximate_presence_count),
+        Image="https://cdn.discordapp.com/icons/"..R.guild.id.."/"..R.guild.icon..".png?size=256",
+        ImageSize=42,
+        Buttons={{
+            Icon="link",
+            Title="Copy Discord Invite",
+            Callback=function()
+                pcall(function()
+                    setclipboard("https://discord.gg/"..I)
+                end)
+            end
+        }}
+    }
+    if R.guild.banner then
+        P.Thumbnail="https://cdn.discordapp.com/banners/"..R.guild.id.."/"..R.guild.banner..".png?size=256"
+        P.ThumbnailSize=80
+    end
+    AuthTab:Paragraph(P)
+else
+    AuthTab:Paragraph({
+        Title="Error when receiving information about the Discord server",
+        Desc=E or"Unknown error occurred",
+        Image="triangle-alert",
+        ImageSize=26,
+        Color="Red"
+    })
+end
+Window:Divider()
+
+-- Tab declarations (sama)
+local Info, Premium, Player, Auto, Shop, Teleport, Totem
+local Quest, Event, Trade, Enchant, Discord, Config, Setting, Misc , Animation
+
+local function SetupTab()
+    if not Info then Info = Window:Tab({ Title = "Info", Icon = "info" }) end
+    if not Premium then Premium = Window:Tab({ Title = "Kaitun VIP", Icon = "crown" }) end
+    if not Player then Player = Window:Tab({ Title = "Player", Icon = "user" }) end
+    if not Auto then Auto = Window:Tab({ Title = "Main", Icon = "play" }) end
+    if not Shop then Shop = Window:Tab({ Title = "Shop", Icon = "shopping-cart" }) end
+    if not Teleport then Teleport = Window:Tab({ Title = "Teleport", Icon = "map-pin" }) end
+    if not Totem then Totem = Window:Tab({ Title = "Totem", Icon = "hexagon" }) end
+    if not Quest then Quest = Window:Tab({ Title = "Quest", Icon = "loader" }) end
+    if not Event then Event = Window:Tab({ Title = "Event", Icon = "gift" }) end
+    if not Trade then Trade = Window:Tab({ Title = "Trade", Icon = "repeat" }) end
+    if not Enchant then Enchant = Window:Tab({ Title = "Enchants", Icon = "star" }) end
+    if not Animation then Animation = Window:Tab({ Title = "Animation", Icon = "gem" }) end
+    if not Discord then Discord = Window:Tab({ Title = "Webhook", Icon = "megaphone" }) end
+    if not Config then Config = Window:Tab({ Title = "Config", Icon = "folder" }) end
+    if not Setting then Setting = Window:Tab({ Title = "Settings", Icon = "settings" }) end
+    if not Misc then Misc = Window:Tab({ Title = "Misc", Icon = "globe" }) end
+end
+
+local enteredKey = ""
+local isAuthenticating = false
+local menuCreated = false
+
+local function DoAuth(key, isAuto)
+    if isAuthenticating or menuCreated then return end
+    if not key or key == "" then return end
+
+    isAuthenticating = true
+    WindUI:Notify({
+        Title = isAuto and "Auto Login" or "Validating",
+        Content = isAuto and "Mencoba login..." or "Memverifikasi key...",
+        Duration = 2,
+        Icon = "loader"
+    })
+
+    local valid, codeOrErr = ValidateKey(key)
+    isAuthenticating = false
+
+    if valid then
+        saveToken(key)
+        getgenv().AuthComplete = true
+        getgenv().UserData = codeOrErr 
+
+        SetupTab()
+        menuCreated = true
+        Info:Select()
+
+        WindUI:Notify({
+            Title = "Success",
+            Content = isAuto and ("Auto login berhasil (" .. tostring(codeOrErr) .. ")") or "Authentication berhasil",
+            Duration = 3,
+            Icon = "check-check"
+        })
+    else
+        if isAuto then
+            deleteToken()
+        end
+        WindUI:Notify({
+            Title = "Failed",
+            Content = tostring(codeOrErr),
+            Duration = 4,
+            Icon = "ban"
+        })
+    end
+end
+
+AuthTab:Input({
+    Title = "License Key",
+    Placeholder = "FYY-000-000-000",
+    InputIcon = "key",
+    Callback = function(v)
+        enteredKey = tostring(v or ""):upper():gsub("%s+", "")
+    end
+})
+
+AuthTab:Select()
+
+AuthTab:Button({
+    Title = "Verify Key",
+    Icon = "shield-check",
+    Callback = function()
+        DoAuth(enteredKey, false)
+    end
+})
+
+task.spawn(function()
+    task.wait(2)
+
+    local saved = loadToken()
+    if saved and not menuCreated then
+        DoAuth(saved, true)
+    end
+end)
+
+--// CONFIG SYSTEM
 
 local Fyy=Window.ConfigManager:CreateConfig("FyyCommunityConfig")
 local ElementRegistry={}
@@ -698,6 +1010,92 @@ local blatantModeToggle = Reg("blatantMode",Auto:Toggle({
  end
 }))
 
+--// BLATANT
+
+local RS=game:GetService("ReplicatedStorage")
+local net=RS:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
+
+local RFC=net:WaitForChild("RF/ChargeFishingRod")
+local RFS=net:WaitForChild("RF/RequestFishingMinigameStarted")
+local RFK=net:WaitForChild("RF/CancelFishingInputs")
+local RFU=net:WaitForChild("RF/UpdateAutoFishingState")
+local REF=net:WaitForChild("RE/FishingCompleted")
+local REM=net:WaitForChild("RE/FishingMinigameChanged")
+
+local active=false
+local thread=nil
+local casts=0
+local start=0
+
+local CD=.002
+local FD=.7
+local KD=.3
+
+local function safe(f)task.spawn(function()pcall(f)end)end
+
+local function loop()
+ while active do
+  local t=tick()
+  safe(function()RFC:InvokeServer({[1]=t})end)
+  task.wait(CD)
+  local r=tick()
+  safe(function()RFS:InvokeServer(1,0,r)end)
+  casts+=1
+  task.wait(FD)
+  safe(function()REF:FireServer()end)
+  task.wait(KD)
+  safe(function()RFK:InvokeServer()end)
+ end
+end
+
+REM.OnClientEvent:Connect(function()
+ if not active then return end
+ task.spawn(function()
+  task.wait(FD)
+  safe(function()REF:FireServer()end)
+  task.wait(KD)
+  safe(function()RFK:InvokeServer()end)
+ end)
+end)
+
+Auto:Section({Title="Blatant V2"})
+
+local blatantV2CompleteDelayInput=Reg("blatantV2_completeDelay",Auto:Input({Title="Complete Delay",Placeholder=tostring(FD),Value=tostring(FD),Callback=function(v)local n=tonumber(v)if n and n>=0 then FD=n end end}))
+local blatantV2CancelDelayInput=Reg("blatantV2_cancelDelay",Auto:Input({Title="Cancel Delay",Placeholder=tostring(KD),Value=tostring(KD),Callback=function(v)local n=tonumber(v)if n and n>=0 then KD=n end end}))
+local blatantV2Toggle=Reg("blatantV2_toggle",Auto:Toggle({Title="Enable Blatant V2",Desc="Ultra fast perfect-cast fishing",Default=false,Callback=function(s)active=s;if s then casts=0;start=tick();thread=task.spawn(loop);else if thread then task.cancel(thread)thread=nil end;safe(function()RFU:InvokeServer(true)end);task.wait(.2);safe(function()RFK:InvokeServer()end);end end}))
+local RS=game:GetService("ReplicatedStorage")
+local Net=RS:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
+local Equip=Net:WaitForChild("RE/EquipToolFromHotbar")
+local Unequip=Net:WaitForChild("RE/UnequipToolFromHotbar")
+
+local ROD_SLOT=1
+local AUTO=false
+local THREAD=nil
+
+local function Start()
+if THREAD then task.cancel(THREAD)end
+THREAD=task.spawn(function()
+while AUTO do
+pcall(function()Equip:FireServer(ROD_SLOT)end)
+task.wait(0.5)
+end
+end)
+end
+
+local function Stop()
+AUTO=false
+if THREAD then task.cancel(THREAD)THREAD=nil end
+pcall(function()Unequip:FireServer()end)
+end
+
+local autoRod=Reg("autoEquipRod",Auto:Toggle({
+Title="Auto Equip Rod",Value=false,
+Callback=function(s)
+AUTO=s
+if s then Start()else Stop()end
+end
+}))
+
 --// ASD
 Auto:Section({Title="Teleport Feature"})
 
@@ -1028,10 +1426,7 @@ local autoFavoriteToggle=Auto:Toggle({Title="Enable Auto Favorite",Default=false
  end
 end})
 end
-
-
---- //////////////////// END OF MAIN
-
+--// AUTO FAV x END OF TAB MAIN //---------------------------------
 
 local function ShopTab()
     if not Shop then return end
@@ -1640,8 +2035,793 @@ local NPCDropdown=Teleport:Dropdown({Title="Teleport to NPC",Values={"Alex","Ali
 local TeleportNPCButton=Teleport:Button({Title="Teleport to NPC",Callback=function()if selectedNPC and selectedNPC~=""then if player.Character and player.Character:FindFirstChild("HumanoidRootPart")then local rootPart=player.Character.HumanoidRootPart;local targetCFrame=npcLocations[selectedNPC]if rootPart and targetCFrame then rootPart.CFrame=targetCFrame end end end end})
 end
 
---// TELEPORT
+--// ATAS END OF TELEPORT TAB
+local function KaitunTab()
+if not Premium then return end
+local function ParseProgressUI(textLabel)
+if not textLabel or not textLabel:IsA("TextLabel") then return "0/0", false end
+local text = textLabel.Text
+local currentStr, maxStr = text:match("([^/]+)/([^/]+)")
+if currentStr and maxStr then
+local cleanCurrent = currentStr:gsub("%D", "")
+local cleanMax = maxStr:gsub("%D", "")
+local currentNum = tonumber(cleanCurrent)
+local maxNum = tonumber(cleanMax)
+if currentNum and maxNum then
+local isDone = currentNum >= maxNum
+return text, isDone
+end
+end
+return text, false
+end
+do
+local KaitunSection = Premium:Section({Title = "Kaitun", TextSize = 20})
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Replion = require(ReplicatedStorage.Packages.Replion)
+local ItemUtility = require(ReplicatedStorage.Shared.ItemUtility)
+local function GetRemoteSmart(name)
+local packages = ReplicatedStorage:WaitForChild("Packages", 5)
+local index = packages and packages:WaitForChild("_Index", 5)
+if index then
+for _, child in ipairs(index:GetChildren()) do
+if child.Name:find("net@") then
+local net = child:FindFirstChild("net")
+if net then
+local remote = net:FindFirstChild(name)
+if remote then return remote end
+end
+end
+end
+end
+return nil
+end
+local RE_EquipToolFromHotbar = GetRemoteSmart("RE/EquipToolFromHotbar")
+local RE_EquipItem = GetRemoteSmart("RE/EquipItem")
+local RE_EquipBait = GetRemoteSmart("RE/EquipBait")
+local RE_UnequipItem = GetRemoteSmart("RE/UnequipItem")
+local RF_PurchaseFishingRod = GetRemoteSmart("RF/PurchaseFishingRod")
+local RF_PurchaseBait = GetRemoteSmart("RF/PurchaseBait")
+local RF_SellAllItems = GetRemoteSmart("RF/SellAllItems")
+local RF_ChargeFishingRod = GetRemoteSmart("RF/ChargeFishingRod")
+local RF_RequestFishingMinigameStarted = GetRemoteSmart("RF/RequestFishingMinigameStarted")
+local RE_FishingCompleted = GetRemoteSmart("RE/FishingCompleted")
+local RF_CancelFishingInputs = GetRemoteSmart("RF/CancelFishingInputs")
+local RE_ObtainedNewFishNotification = GetRemoteSmart("RE/ObtainedNewFishNotification")
+local RF_PlaceLeverItem = GetRemoteSmart("RE/PlaceLeverItem")
+local RE_SpawnTotem = GetRemoteSmart("RE/SpawnTotem")
+local RF_CreateTranscendedStone = GetRemoteSmart("RF/CreateTranscendedStone")
+local RF_UpdateAutoFishingState = GetRemoteSmart("RF/UpdateAutoFishingState")
+local RF_ClaimItem = GetRemoteSmart("RF/ClaimItem")
+local ENCHANT_ROOM_POS = Vector3.new(3255.670, -1301.530, 1371.790)
+local ENCHANT_ROOM_LOOK = Vector3.new(-0.000, -0.000, -1.000)
+local TREASURE_ROOM_POS = Vector3.new(-3598.440, -281.274, -1645.855)
+local TREASURE_ROOM_LOOK = Vector3.new(-0.065, 0.000, -0.998)
+local SISYPHUS_POS = Vector3.new(-3743.745, -135.074, -1007.554)
+local SISYPHUS_LOOK = Vector3.new(0.310, 0.000, 0.951)
+local ANCIENT_JUNGLE_POS = Vector3.new(1535.639, 3.159, -193.352)
+local ANCIENT_JUNGLE_LOOK = Vector3.new(0.505, -0.000, 0.863)
+local SACRED_TEMPLE_POS = Vector3.new(1461.815, -22.125, -670.234)
+local SACRED_TEMPLE_LOOK = Vector3.new(-0.990, -0.000, 0.143)
+local SECOND_ALTAR_POS = Vector3.new(1479.587, 128.295, -604.224)
+local SECOND_ALTAR_LOOK = Vector3.new(-0.298, 0.000, -0.955)
+local CORAL_REEFS_POS = Vector3.new(-3020, 3, 2260)
+local CORAL_REEFS_LOOK = Vector3.new(0, 0, -1)
+local TROPICAL_GROVE_POS = Vector3.new(-2150, 53, 3672)
+local TROPICAL_GROVE_LOOK = Vector3.new(0, 0, -1)
+local RUBY_FARM_POS = Vector3.new(-3595, -279, -1589)
+local RUBY_FARM_LOOK = Vector3.new(0, 0, -1)
+local LOCHNESS_FARM_POS = Vector3.new(-712, 6, 707)
+local LOCHNESS_FARM_LOOK = Vector3.new(0, 0, -1)
+local KAITUN_ACTIVE = false
+local KAITUN_THREAD = nil
+local KAITUN_AUTOSELL_THREAD = nil
+local KAITUN_EQUIP_THREAD = nil
+local KAITUN_OVERLAY = nil
+local KAITUN_CATCH_CONN = nil
+local PlayerDataReplion = nil
+local function GetPlayerDataReplion()
+if PlayerDataReplion then return PlayerDataReplion end
+local ReplionClient = require(ReplicatedStorage.Packages.Replion).Client
+PlayerDataReplion = ReplionClient:WaitReplion("Data", 5)
+return PlayerDataReplion
+end
+local ARTIFACT_IDS = {
+["Arrow Artifact"] = 265,
+["Crescent Artifact"] = 266,
+["Diamond Artifact"] = 267,
+["Hourglass Diamond Artifact"] = 271
+}
+local function HasArtifactItem(artifactName)
+local replion = GetPlayerDataReplion()
+if not replion then return false end
+local success, inventoryData = pcall(function() return replion:GetExpect("Inventory") end)
+if not success or not inventoryData or not inventoryData.Items then return false end
+local targetId = ARTIFACT_IDS[artifactName]
+if not targetId then
+warn("[Kaitun] ID untuk " .. artifactName .. " tidak ditemukan di tabel Hardcode!")
+return false
+end
+for _, item in ipairs(inventoryData.Items) do
+if tonumber(item.Id) == targetId then return true end
+end
+return false
+end
+local ArtifactData = {
+["Hourglass Diamond Artifact"] = {
+ItemName = "Hourglass Diamond Artifact", LeverName = "Hourglass Diamond Lever", ChildReference = 6, CrystalPathSuffix = "Crystal",
+UnlockColor = Color3.fromRGB(255, 248, 49),
+FishingPos = {Pos = Vector3.new(1490.144, 3.312, -843.171), Look = Vector3.new(0.115, 0.000, 0.993)}
+},
+["Diamond Artifact"] = {
+ItemName = "Diamond Artifact", LeverName = "Diamond Lever", ChildReference = "TempleLever", CrystalPathSuffix = "Crystal",
+UnlockColor = Color3.fromRGB(219, 38, 255),
+FishingPos = {Pos = Vector3.new(1844.159, 2.530, -288.755), Look = Vector3.new(0.981, 0.000, -0.193)}
+},
+["Arrow Artifact"] = {
+ItemName = "Arrow Artifact", LeverName = "Arrow Lever", ChildReference = 5, CrystalPathSuffix = "Crystal",
+UnlockColor = Color3.fromRGB(255, 47, 47),
+FishingPos = {Pos = Vector3.new(874.365, 2.530, -358.484), Look = Vector3.new(-0.990, 0.000, 0.144)}
+},
+["Crescent Artifact"] = {
+ItemName = "Crescent Artifact", LeverName = "Crescent Lever", ChildReference = 4, CrystalPathSuffix = "Crystal",
+UnlockColor = Color3.fromRGB(112, 255, 69),
+FishingPos = {Pos = Vector3.new(1401.070, 6.489, 116.738), Look = Vector3.new(-0.500, -0.000, 0.866)}
+}
+}
+local ArtifactOrder = {"Hourglass Diamond Artifact", "Diamond Artifact", "Arrow Artifact", "Crescent Artifact"}
+local ShopItems = {
+["Rods"] = {
+{Name = "Luck Rod", ID = 79, Price = 325}, {Name = "Carbon Rod", ID = 76, Price = 750}, {Name = "Grass Rod", ID = 85, Price = 1500}, {Name = "Demascus Rod", ID = 77, Price = 3000},
+{Name = "Ice Rod", ID = 78, Price = 5000}, {Name = "Lucky Rod", ID = 4, Price = 15000}, {Name = "Midnight Rod", ID = 80, Price = 50000}, {Name = "Steampunk Rod", ID = 6, Price = 215000},
+{Name = "Chrome Rod", ID = 7, Price = 437000}, {Name = "Flourescent Rod", ID = 255, Price = 715000}, {Name = "Astral Rod", ID = 5, Price = 1000000},
+{Name = "Ares Rod", ID = 126, Price = 3000000}, {Name = "Angler Rod", ID = 168, Price = 8000000}, {Name = "Hazmat Rod", ID = 256, Price = 1380000}, {Name = "Bamboo Rod", ID = 258, Price = 12000000}
+},
+["Bobbers"] = {
+{Name = "Starter Bait", ID = 1, Price = 0}, {Name = "Luck Bait", ID = 2, Price = 1000}, {Name = "Midnight Bait", ID = 3, Price = 3000}, {Name = "Royal Bait", ID = 4, Price = 425000},
+{Name = "Chroma Bait", ID = 6, Price = 290000}, {Name = "Dark Matter Bait", ID = 8, Price = 630000}, {Name = "Topwater Bait", ID = 10, Price = 100}, {Name = "Corrupt Bait", ID = 15, Price = 1148484},
+{Name = "Aether Bait", ID = 16, Price = 3700000}, {Name = "Nature Bait", ID = 17, Price = 83500}, {Name = "Floral Bait", ID = 20, Price = 4000000}, {Name = "Singularity Bait", ID = 18, Price = 8200000}
+}
+}
+local ROD_DELAYS = {
+[79] = 4.6, [76] = 4.35, [85] = 4.2, [77] = 4.35, [78] = 3.85, [4] = 3.5, [80] = 2.7,
+[6] = 2.3, [7] = 2.2, [255] = 2.2, [256] = 1.9, [5] = 1.85, [126] = 1.7, [168] = 1.6, [169] = 1.3, [257] = 1, [559] = 0.8
+}
+local DEFAULT_ROD_DELAY = 3.85
+local CURRENT_KAITUN_DELAY = DEFAULT_ROD_DELAY
+local function TeleportToLookAt(position, lookAt)
+if not KAITUN_ACTIVE then return end
+local character = game.Players.LocalPlayer.Character
+if character then
+local hrp = character:FindFirstChild("HumanoidRootPart")
+if hrp then hrp.CFrame = CFrame.new(position, position + lookAt) end
+end
+end
+local function ForceResetAndTeleport(targetPos, targetLook)
+if not KAITUN_ACTIVE then return end
+local plr = game.Players.LocalPlayer
+pcall(function() RF_UpdateAutoFishingState:InvokeServer(false) end)
+pcall(function() RF_CancelFishingInputs:InvokeServer() end)
+if plr.Character and plr.Character:FindFirstChild("Humanoid") then plr.Character.Humanoid.Health = 0 end
+plr.CharacterAdded:Wait()
+local newChar = plr.Character or plr.CharacterAdded:Wait()
+local hrp = newChar:WaitForChild("HumanoidRootPart", 10)
+task.wait(1)
+if hrp and targetPos then TeleportToLookAt(targetPos, targetLook or Vector3.new(0, 0, -1)) end
+task.wait(0.5)
+pcall(function() RE_EquipToolFromHotbar:FireServer(1) end)
+end
+local function GetRodPriceByID(id)
+for _, item in ipairs(ShopItems["Rods"]) do if item.ID == tonumber(id) then return item.Price end end
+return 0
+end
+local function GetBaitInfo(id)
+id = tonumber(id)
+for _, item in ipairs(ShopItems["Bobbers"]) do if item.ID == id then return item.Name, item.Price end end
+return "Unknown Bait (ID:" .. id .. ")", 0
+end
+local function HasItemByID(targetId, category)
+local replion = GetPlayerDataReplion()
+if not replion then return false end
+local success, inventoryData = pcall(function() return replion:GetExpect("Inventory") end)
+if success and inventoryData then
+local list = inventoryData[category] or (category == "Bait" and inventoryData["Baits"])
+if list then for _, item in ipairs(list) do if tonumber(item.Id) == tonumber(targetId) then return true end end end
+end
+return false
+end
+local function EquipBestGear()
+if not KAITUN_ACTIVE then return DEFAULT_ROD_DELAY end
+local replion = GetPlayerDataReplion()
+if not replion then return DEFAULT_ROD_DELAY end
+local s, d = pcall(function() return replion:GetExpect("Inventory") end)
+if not s or not d then return DEFAULT_ROD_DELAY end
+local bestRodUUID, bestRodPrice, bestRodId = nil, -1, nil
+if d["Fishing Rods"] then
+for _, r in ipairs(d["Fishing Rods"]) do
+local p = GetRodPriceByID(r.Id)
+if tonumber(r.Id) == 169 then p = 99999999 end
+if tonumber(r.Id) == 257 then p = 999999999 end
+if tonumber(r.Id) == 559 then p = 9999999999 end
+if p > bestRodPrice then bestRodPrice = p; bestRodUUID = r.UUID; bestRodId = tonumber(r.Id) end
+end
+end
+local bestBaitId, bestBaitPrice = nil, -1
+local baitList = d["Bait"] or d["Baits"]
+if baitList then
+for _, b in ipairs(baitList) do
+local bName, bPrice = GetBaitInfo(b.Id)
+if bPrice >= bestBaitPrice then bestBaitPrice = bPrice; bestBaitId = tonumber(b.Id) end
+end
+end
+if bestRodUUID then pcall(function() RE_EquipItem:FireServer(bestRodUUID, "Fishing Rods") end) end
+if bestBaitId then pcall(function() RE_EquipBait:FireServer(bestBaitId) end) end
+pcall(function() RE_EquipToolFromHotbar:FireServer(1) end)
+CURRENT_KAITUN_DELAY = (bestRodId and ROD_DELAYS[bestRodId]) and ROD_DELAYS[bestRodId] or DEFAULT_ROD_DELAY
+return CURRENT_KAITUN_DELAY
+end
+local function GetCurrentBestGear()
+local replion = GetPlayerDataReplion()
+if not replion then return "Loading...", "Loading...", 0 end
+local s, d = pcall(function() return replion:GetExpect("Inventory") end)
+local bR, hRP = "None", -1
+if d["Fishing Rods"] then
+for _, r in ipairs(d["Fishing Rods"]) do
+local p = GetRodPriceByID(r.Id)
+if tonumber(r.Id) == 169 then p = 99999999 end
+if tonumber(r.Id) == 257 then p = 999999999 end
+if tonumber(r.Id) == 559 then p = 9999999999 end
+if p > hRP then
+hRP = p
+local data = ItemUtility:GetItemData(r.Id)
+bR = data and data.Data.Name or "Unknown"
+end
+end
+end
+local bB, hBP = "None", -1
+local bList = d["Bait"] or d["Baits"]
+if bList then for _, b in ipairs(bList) do local bName, bPrice = GetBaitInfo(b.Id); if bPrice >= hBP then hBP = bPrice; bB = bName end end end
+return bR, bB, hRP
+end
+local function ManageBaitPurchases(currentCoins, currentStep)
+if not RF_PurchaseBait or not KAITUN_ACTIVE then return end
+local hasLuck = HasItemByID(2, "Bait")
+local hasMidnight = HasItemByID(3, "Bait")
+if not hasLuck and not hasMidnight and currentCoins >= 1000 then pcall(function() RF_PurchaseBait:InvokeServer(2) end) return
+elseif not hasMidnight and currentCoins >= 3000 then pcall(function() RF_PurchaseBait:InvokeServer(3) end) return end
+if currentStep == 5 then
+local hasCorrupt = HasItemByID(15, "Bait")
+local hasAether = HasItemByID(16, "Bait")
+if not hasCorrupt then
+if currentCoins >= 1148484 then pcall(function() RF_PurchaseBait:InvokeServer(15) end) WindUI:Notify({Title = "Upgrade Bait", Content = "Membeli Corrupt Bait.", Duration = 3, Icon = "chevrons-up"}) end
+elseif not hasAether then if currentCoins >= 3700000 then pcall(function() RF_PurchaseBait:InvokeServer(16) end) WindUI:Notify({Title = "Upgrade Bait", Content = "Membeli Aether Bait.", Duration = 3, Icon = "chevrons-up"}) end end
+elseif currentStep == 6 then
+local hasFloral = HasItemByID(20, "Bait")
+if not hasFloral and currentCoins >= 4000000 then pcall(function() RF_PurchaseBait:InvokeServer(20) end) WindUI:Notify({Title = "Upgrade Bait", Content = "Membeli Floral Bait.", Duration = 3, Icon = "flower"}) end
+end
+end
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Replion = require(ReplicatedStorage.Packages.Replion)
+local ClientData = Replion.Client:WaitReplion("Data")
+local function GetMainlineData(questName)
+local data = ClientData.Data
+if not data then return nil end
+if data.Quests and data.Quests.Mainline and data.Quests.Mainline[questName] then return data.Quests.Mainline[questName] end
+return nil
+end
+local function GetGhostfinProgress()
+local result = {
+Q1 = {Text = "Rare/Epic: 0/300", Done = false},
+Q2 = {Text = "Mythic: 0/3", Done = false},
+Q3 = {Text = "Secret: 0/1", Done = false},
+Q4 = {Text = "Coins: 0/1M", Done = false},
+AllDone = false,
+HasGhostfin = HasItemByID(169, "Fishing Rods")
+}
+if result.HasGhostfin then
+result.AllDone = true
+result.Q1.Done = true; result.Q2.Done = true; result.Q3.Done = true; result.Q4.Done = true
+result.Q1.Text = "Rare/Epic: ✅"; result.Q2.Text = "Mythic: ✅"; result.Q3.Text = "Secret: ✅"; result.Q4.Text = "Coins: ✅"
+return result
+end
+local qData = GetMainlineData("Deep Sea Quest")
+if qData and qData.Objectives then
+for id, objData in pairs(qData.Objectives) do
+local prog = objData.Progress or 0
+local numId = tonumber(id)
+if numId == 1 then result.Q1.Text = string.format("Rare/Epic: %d/300", prog); result.Q1.Done = prog >= 300
+elseif numId == 2 then result.Q2.Text = string.format("Mythic: %d/3", prog); result.Q2.Done = prog >= 3
+elseif numId == 3 then result.Q3.Text = string.format("Secret: %d/1", prog); result.Q3.Done = prog >= 1
+elseif numId == 4 then result.Q4.Text = string.format("Coins: %s/1M", tostring(prog)); result.Q4.Done = prog >= 1000000 end
+end
+end
+result.AllDone = result.Q1.Done and result.Q2.Done and result.Q3.Done and result.Q4.Done
+return result
+end
+local function GetElementProgress()
+local result = {
+Q1 = {Text = "Ghostfin Rod: ❌", Done = false},
+Q2 = {Text = "Jungle Secret: ❌", Done = false},
+Q3 = {Text = "Temple Secret: ❌", Done = false},
+Q4 = {Text = "Stones: 0/3", Done = false},
+AllDone = false,
+HasElement = HasItemByID(257, "Fishing Rods")
+}
+if result.HasElement then
+result.AllDone = true
+result.Q1.Done = true; result.Q2.Done = true; result.Q3.Done = true; result.Q4.Done = true
+result.Q1.Text = "Ghostfin Rod: ✅"; result.Q4.Text = "Stones: ✅"
+return result
+end
+result.Q1.Done = HasItemByID(169, "Fishing Rods")
+result.Q1.Text = result.Q1.Done and "Ghostfin Rod: ✅" or "Ghostfin Rod: ❌"
+if not result.Q1.Done then
+result.AllDone = false
+return result
+end
+local qData = GetMainlineData("Element Quest")
+if qData and qData.Objectives then
+for id, objData in pairs(qData.Objectives) do
+local prog = objData.Progress or 0
+local numId = tonumber(id)
+if numId == 2 then result.Q2.Done = prog >= 1; result.Q2.Text = result.Q2.Done and "Jungle Secret: ✅" or "Jungle Secret: ❌"
+elseif numId == 3 then result.Q3.Done = prog >= 1; result.Q3.Text = result.Q3.Done and "Temple Secret: ✅" or "Temple Secret: ❌"
+elseif numId == 4 then result.Q4.Text = string.format("Stones: %d/3", prog); result.Q4.Done = prog >= 3 end
+end
+end
+result.AllDone = result.Q1.Done and result.Q2.Done and result.Q3.Done and result.Q4.Done
+return result
+end
+local function GetDiamondProgress()
+local result = {
+Q1 = {Text = "Element Rod: ❌", Done = false},
+Q2 = {Text = "Coral Secret: ❌", Done = false},
+Q3 = {Text = "Tropical Secret: ❌", Done = false},
+Q4 = {Text = "Mutated Ruby: ❌", Done = false},
+Q5 = {Text = "Lochness Monster: ❌", Done = false},
+Q6 = {Text = "Perfect Throws: 0/1000", Done = false},
+AllDone = false,
+HasDiamond = HasItemByID(559, "Fishing Rods")
+}
+if result.HasDiamond then
+result.AllDone = true
+for i=1,6 do result["Q"..i].Done = true end
+result.Q1.Text = "Element Rod: ✅"; result.Q2.Text = "Coral Secret: ✅"; result.Q3.Text = "Tropical Secret: ✅"
+result.Q4.Text = "Mutated Ruby: ✅"; result.Q5.Text = "Lochness Monster: ✅"; result.Q6.Text = "Perfect Throws: ✅"
+return result
+end
+result.Q1.Done = HasItemByID(257, "Fishing Rods")
+result.Q1.Text = result.Q1.Done and "Element Rod: ✅" or "Element Rod: ❌"
+if not result.Q1.Done then
+result.AllDone = false
+return result
+end
+local inventory = ClientData:Get({"Inventory"}) or {}
+local hasRuby = false
+local hasLochness = false
+if inventory.Items then
+for _, item in ipairs(inventory.Items) do
+if tonumber(item.Id) == 243 then
+local metadata = item.Metadata or {}
+if metadata.VariantId == 3 then hasRuby = true end
+elseif tonumber(item.Id) == 228 then
+hasLochness = true
+end
+end
+end
+result.Q4.Done = hasLochness
+result.Q5.Done = hasRuby
+result.Q4.Text = hasLochness and "Lochness Monster: ✅" or "Lochness Monster: ❌"
+result.Q5.Text = hasRuby and "Mutated Ruby: ✅" or "Mutated Ruby: ❌"
+local qData = GetMainlineData("Diamond Rod Quest")
+if qData and qData.Objectives then
+for id, objData in pairs(qData.Objectives) do
+local prog = objData.Progress or 0
+local numId = tonumber(id)
+if numId == 2 then result.Q2.Done = prog >= 1; result.Q2.Text = result.Q2.Done and "Coral Secret: ✅" or string.format("Coral Secret: %d/1", prog)
+elseif numId == 3 then result.Q3.Done = prog >= 1; result.Q3.Text = result.Q3.Done and "Tropical Secret: ✅" or string.format("Tropical Secret: %d/1", prog)
+elseif numId == 6 then result.Q6.Text = string.format("Perfect Throws: %d/1000", prog); result.Q6.Done = prog >= 1000 end
+end
+end
+result.AllDone = result.Q1.Done and result.Q2.Done and result.Q3.Done and result.Q4.Done and result.Q5.Done and result.Q6.Done
+return result
+end
+local function IsLeverUnlocked(artifactName)
+local JUNGLE = workspace:FindFirstChild("JUNGLE INTERACTIONS")
+if not JUNGLE then return false end
+local data = ArtifactData[artifactName]
+if not data then return false end
+local folder = nil
+if type(data.ChildReference) == "string" then folder = JUNGLE:FindFirstChild(data.ChildReference) end
+if not folder and type(data.ChildReference) == "number" then local c = JUNGLE:GetChildren() folder = c[data.ChildReference] end
+if not folder then return false end
+local crystal = folder:FindFirstChild(data.CrystalPathSuffix)
+if not crystal or not crystal:IsA("BasePart") then return false end
+local cC, tC = crystal.Color, data.UnlockColor
+return (math.abs(cC.R * 255 - tC.R * 255) < 1.1 and math.abs(cC.G * 255 - tC.G * 255) < 1.1 and math.abs(cC.B * 255 - tC.B * 255) < 1.1)
+end
+local function GetLowestWeightSecrets(limit)
+local secrets = {}
+local r = GetPlayerDataReplion() if not r then return {} end
+local s, d = pcall(function() return r:GetExpect("Inventory") end)
+if s and d.Items then
+for _, item in ipairs(d.Items) do
+local r = item.Metadata and item.Metadata.Rarity or "Unknown"
+if r:upper() == "SECRET" and item.Metadata and item.Metadata.Weight then
+if not (item.IsFavorite or item.Favorited or item.Locked) then table.insert(secrets, {UUID = item.UUID, Weight = item.Metadata.Weight}) end
+end
+end
+end
+table.sort(secrets, function(a, b) return a.Weight < b.Weight end)
+local result = {}
+for i = 1, math.min(limit, #secrets) do table.insert(result, secrets[i].UUID) end
+return result
+end
+local TierCounts = {Common = 0, Uncommon = 0, Rare = 0, Epic = 0, Legendary = 0, Mythic = 0, Secret = 0}
+local function CreateKaitunUI()
+local old = game.CoreGui:FindFirstChild("Fyy")
+if old then old:Destroy() end
+local sg = Instance.new("ScreenGui")
+sg.Name = "Fyy"
+sg.Parent = game.CoreGui
+sg.IgnoreGuiInset = true
+sg.DisplayOrder = -50
+local mf = Instance.new("Frame")
+mf.Name = "MainFrame"
+mf.Size = UDim2.new(1, 0, 1, 0)
+mf.Position = UDim2.new(0, 0, 0, 0)
+mf.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mf.BackgroundTransparency = 0.25
+mf.BorderSizePixel = 0
+mf.Parent = sg
+local layout = Instance.new("UIListLayout")
+layout.Parent = mf
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Padding = UDim.new(0, 5)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.VerticalAlignment = Enum.VerticalAlignment.Center
+local function makeLabel(text, color, order, font, size)
+local l = Instance.new("TextLabel")
+l.Size = UDim2.new(1, 0, 0, 0)
+l.AutomaticSize = Enum.AutomaticSize.Y
+l.BackgroundTransparency = 1
+l.Text = text
+l.TextColor3 = color or Color3.fromRGB(255, 255, 255)
+l.Font = font or Enum.Font.GothamBold
+l.TextSize = size or 16
+l.LayoutOrder = order
+l.TextWrapped = true
+l.Parent = mf
+return l
+end
+makeLabel("Fyy Kaitun Status", Color3.fromRGB(255, 255, 255), 1, Enum.Font.GothamBlack, 18)
+local lStats1 = makeLabel("Loading...", Color3.fromRGB(255, 255, 255), 2, Enum.Font.GothamSemibold, 11)
+local lStats2 = makeLabel("Loading...", Color3.fromRGB(255, 255, 255), 3, Enum.Font.GothamSemibold, 11)
+makeLabel("", nil, 4, nil, 4)
+makeLabel("Progress Quest Ghostfinn", Color3.fromRGB(255, 100, 100), 5, Enum.Font.GothamBold, 14)
+local lGhost1 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 6, Enum.Font.Gotham, 11)
+local lGhost2 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 7, Enum.Font.Gotham, 11)
+local lGhost3 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 8, Enum.Font.Gotham, 11)
+local lGhost4 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 9, Enum.Font.Gotham, 11)
+makeLabel("", nil, 10, nil, 4)
+makeLabel("Progress Quest Element Rod", Color3.fromRGB(100, 100, 255), 11, Enum.Font.GothamBold, 14)
+local lElem1 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 12, Enum.Font.Gotham, 11)
+local lElem2 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 13, Enum.Font.Gotham, 11)
+local lElem3 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 14, Enum.Font.Gotham, 11)
+local lElem4 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 15, Enum.Font.Gotham, 11)
+makeLabel("Progress Quest Diamond Rod", Color3.fromRGB(255, 215, 0), 16, Enum.Font.GothamBold, 14)
+local lDiamond1 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 17, Enum.Font.Gotham, 11)
+local lDiamond2 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 18, Enum.Font.Gotham, 11)
+local lDiamond3 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 19, Enum.Font.Gotham, 11)
+local lDiamond4 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 20, Enum.Font.Gotham, 11)
+local lDiamond5 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 21, Enum.Font.Gotham, 11)
+local lDiamond6 = makeLabel("Loading...", Color3.fromRGB(180, 180, 180), 22, Enum.Font.Gotham, 11)
+makeLabel("----------------------------------------------------------------------------------------------------", Color3.fromRGB(100, 100, 100), 23, nil, 8)
+makeLabel("CURRENT ACTIVITY", Color3.fromRGB(255, 215, 0), 24, Enum.Font.GothamBold, 13)
+local lStatus = makeLabel("Idle", Color3.fromRGB(0, 255, 127), 25, Enum.Font.GothamBlack, 16)
+return {Gui = sg, Labels = {Stats1 = lStats1, Stats2 = lStats2, Ghost = {lGhost1, lGhost2, lGhost3, lGhost4}, Elem = {lElem1, lElem2, lElem3, lElem4}, Diamond = {lDiamond1, lDiamond2, lDiamond3, lDiamond4, lDiamond5, lDiamond6}, Status = lStatus}}
+end
+local function RunQuestInstantFish(dynamicDelay)
+if not KAITUN_ACTIVE then return end
+if not (RE_EquipToolFromHotbar and RF_ChargeFishingRod and RF_RequestFishingMinigameStarted) then
+WindUI:Notify({Title = "Remote Error", Content = "Restart Game! Remote not found.", Duration = 5, Icon = "x"})
+return
+end
+pcall(function() RE_EquipToolFromHotbar:FireServer(1) end)
+task.wait(0.2)
+local ts = os.time() + os.clock()
+pcall(function() RF_ChargeFishingRod:InvokeServer(ts) end)
+task.wait(0.1)
+pcall(function() RF_RequestFishingMinigameStarted:InvokeServer(-139.630452165, 0.99647927980797) end)
+task.wait(dynamicDelay)
+pcall(function() RE_FishingCompleted:FireServer() end)
+task.wait(0.3)
+pcall(function() RF_CancelFishingInputs:InvokeServer() end)
+end
+local function RunKaitunLogic()
+if KAITUN_THREAD then task.cancel(KAITUN_THREAD) end
+if KAITUN_AUTOSELL_THREAD then task.cancel(KAITUN_AUTOSELL_THREAD) end
+if KAITUN_EQUIP_THREAD then task.cancel(KAITUN_EQUIP_THREAD) end
+if KAITUN_CATCH_CONN then KAITUN_CATCH_CONN:Disconnect() end
+TierCounts = {Common = 0, Uncommon = 0, Rare = 0, Epic = 0, Legendary = 0, Mythic = 0, Secret = 0}
+local uiData = CreateKaitunUI()
+KAITUN_OVERLAY = uiData.Gui
+if RE_ObtainedNewFishNotification then
+KAITUN_CATCH_CONN = RE_ObtainedNewFishNotification.OnClientEvent:Connect(function(id, meta)
+if ItemUtility then
+local d = ItemUtility:GetItemData(id)
+if d and d.Probability and d.Probability.Chance then
+local rarity = meta.Rarity or "Common"
+local rKey = rarity:gsub("^%l", string.upper)
+if rKey == "Legend" then rKey = "Legendary" end
+if TierCounts[rKey] then TierCounts[rKey] = TierCounts[rKey] + 1 end
+end
+end
+end)
+end
+KAITUN_AUTOSELL_THREAD = task.spawn(function()
+while KAITUN_ACTIVE do pcall(function() RF_SellAllItems:InvokeServer() end) task.wait(30) end
+end)
+KAITUN_EQUIP_THREAD = task.spawn(function()
+local lc = 0
+CURRENT_KAITUN_DELAY = EquipBestGear()
+while KAITUN_ACTIVE do
+pcall(function() RE_EquipToolFromHotbar:FireServer(1) end)
+if lc % 20 == 0 then CURRENT_KAITUN_DELAY = EquipBestGear() end
+lc = lc + 1
+task.wait(0.1)
+end
+end)
+KAITUN_THREAD = task.spawn(function()
+local luckPrice = 325
+local midPrice = 50000
+local steamPrice = 215000
+local astralPrice = 1000000
+local ghostfinPrice = 99999999
+local elementPrice = 999999999
+local diamondPrice = 9999999999
+while KAITUN_ACTIVE do
+local r = GetPlayerDataReplion()
+local coins = 0
+if r then
+coins = r:Get("Coins") or 0
+if coins == 0 then
+local s, c = pcall(function() return require(game:GetService("ReplicatedStorage").Modules.CurrencyUtility.Currency) end)
+if s and c then coins = r:Get(c["Coins"].Path) or 0 end
+end
+end
+local bRod, bBait, bRodPrice = GetCurrentBestGear()
+local pGhost = GetGhostfinProgress()
+local pElem = GetElementProgress()
+local pDiamond = GetDiamondProgress()
+uiData.Labels.Stats1.Text = string.format("Best Rod: %s | Coins: %s | Uncommon: %d | Epic: %d | Mythic: %d", bRod, coins, TierCounts.Uncommon, TierCounts.Epic, TierCounts.Mythic)
+uiData.Labels.Stats2.Text = string.format("Best Bait: %s | Common: %d | Rare: %d | Legendary: %d | Secret: %d", bBait, TierCounts.Common, TierCounts.Rare, TierCounts.Legendary, TierCounts.Secret)
+uiData.Labels.Ghost[1].Text = pGhost.Q1.Text; uiData.Labels.Ghost[1].TextColor3 = pGhost.Q1.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Ghost[2].Text = pGhost.Q2.Text; uiData.Labels.Ghost[2].TextColor3 = pGhost.Q2.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Ghost[3].Text = pGhost.Q3.Text; uiData.Labels.Ghost[3].TextColor3 = pGhost.Q3.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Ghost[4].Text = pGhost.Q4.Text; uiData.Labels.Ghost[4].TextColor3 = pGhost.Q4.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Elem[1].Text = pElem.Q1.Text; uiData.Labels.Elem[1].TextColor3 = pElem.Q1.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Elem[2].Text = pElem.Q2.Text; uiData.Labels.Elem[2].TextColor3 = pElem.Q2.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Elem[3].Text = pElem.Q3.Text; uiData.Labels.Elem[3].TextColor3 = pElem.Q3.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Elem[4].Text = pElem.Q4.Text; uiData.Labels.Elem[4].TextColor3 = pElem.Q4.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Diamond[1].Text = pDiamond.Q1.Text; uiData.Labels.Diamond[1].TextColor3 = pDiamond.Q1.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Diamond[2].Text = pDiamond.Q2.Text; uiData.Labels.Diamond[2].TextColor3 = pDiamond.Q2.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Diamond[3].Text = pDiamond.Q3.Text; uiData.Labels.Diamond[3].TextColor3 = pDiamond.Q3.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Diamond[4].Text = pDiamond.Q4.Text; uiData.Labels.Diamond[4].TextColor3 = pDiamond.Q4.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Diamond[5].Text = pDiamond.Q5.Text; uiData.Labels.Diamond[5].TextColor3 = pDiamond.Q5.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+uiData.Labels.Diamond[6].Text = pDiamond.Q6.Text; uiData.Labels.Diamond[6].TextColor3 = pDiamond.Q6.Done and Color3.new(0, 1, 0) or Color3.new(0.7, 0.7, 0.7)
+local step = 0
+local targetPrice = 0
+local currentActivityText = "Idle"
+if bRodPrice < luckPrice then step = 1; targetPrice = luckPrice
+elseif bRodPrice < midPrice then step = 2; targetPrice = midPrice
+elseif bRodPrice < steamPrice then step = 3; targetPrice = steamPrice
+elseif bRodPrice < astralPrice then step = 4; targetPrice = astralPrice
+elseif bRodPrice < ghostfinPrice then step = 5
+elseif bRodPrice < elementPrice then step = 6
+elseif bRodPrice < diamondPrice then step = 7
+else step = 8 end
+ManageBaitPurchases(coins, step)
+if step <= 4 then
+local tName, tId = "Unknown", 0
+if step == 1 then tName = "Luck Rod"; tId = 79 elseif step == 2 then tName = "Midnight Rod"; tId = 80 elseif step == 3 then tName = "Steampunk Rod"; tId = 6 elseif step == 4 then tName = "Astral Rod"; tId = 5 end
+if coins >= targetPrice then
+currentActivityText = "Buying " .. tName
+ForceResetAndTeleport(nil, nil)
+pcall(function() RF_PurchaseFishingRod:InvokeServer(tId) end)
+task.wait(1.5)
+EquipBestGear()
+else
+currentActivityText = string.format("Farming Coins for %s... (%s/%s)", tName, coins, targetPrice)
+local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if hrp and (hrp.Position - ENCHANT_ROOM_POS).Magnitude > 10 then TeleportToLookAt(ENCHANT_ROOM_POS, ENCHANT_ROOM_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+end
+elseif step == 5 then
+if pGhost.AllDone then
+currentActivityText = "Ghostfin Quest Done! Farming for Ares..."
+if HasItemByID(126, "Fishing Rods") then
+currentActivityText = "Already have Ares Rod! Moving to next step..."
+else
+if coins >= 3000000 then
+ForceResetAndTeleport(nil, nil)
+pcall(function() RF_PurchaseFishingRod:InvokeServer(126) end)
+task.wait(1.5)
+EquipBestGear()
+else
+currentActivityText = string.format("Farming Coins for Ares Rod... (%s/3M)", coins)
+local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if (hrp.Position - TREASURE_ROOM_POS).Magnitude > 15 then TeleportToLookAt(TREASURE_ROOM_POS, TREASURE_ROOM_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+end
+end
+else
+if not pGhost.Q1.Done then
+currentActivityText = "Farming 300 Rare/Epic (Treasure Room)"
+local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if (hrp.Position - TREASURE_ROOM_POS).Magnitude > 15 then TeleportToLookAt(TREASURE_ROOM_POS, TREASURE_ROOM_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+else
+currentActivityText = "Farming Mythic/Secret (Sisyphus)"
+local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if (hrp.Position - SISYPHUS_POS).Magnitude > 15 then TeleportToLookAt(SISYPHUS_POS, SISYPHUS_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+end
+end
+elseif step == 6 then
+if pElem.AllDone then
+currentActivityText = "Element Quest Done! Farming for Diamond..."
+if HasItemByID(257, "Fishing Rods") then
+currentActivityText = "Already have Element Rod! Moving to Diamond..."
+EquipBestGear()
+else
+currentActivityText = "Element objectives done but no rod? Teleporting to Altar..."
+TeleportToLookAt(SECOND_ALTAR_POS, SECOND_ALTAR_LOOK)
+task.wait(2)
+end
+else
+local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if not pElem.Q2.Done then
+currentActivityText = "Farming Secret Fish (Jungle)"
+if (hrp.Position - ANCIENT_JUNGLE_POS).Magnitude > 15 then TeleportToLookAt(ANCIENT_JUNGLE_POS, ANCIENT_JUNGLE_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+elseif not pElem.Q3.Done then
+currentActivityText = "Farming Temple Secret"
+local currentLeverIndex = (math.floor(os.clock() / 5) % #ArtifactOrder) + 1
+local leverName = ArtifactOrder[currentLeverIndex]
+pcall(function() RF_PlaceLeverItem:FireServer(leverName) end)
+local missingLever = nil
+for _, n in ipairs(ArtifactOrder) do 
+if not IsLeverUnlocked(n) then 
+missingLever = n 
+break 
+end 
+end
+if missingLever then
+if HasItemByID(ArtifactData[missingLever].ItemName, "Items") then
+TeleportToLookAt(ArtifactData[missingLever].FishingPos.Pos, ArtifactData[missingLever].FishingPos.Look)
+task.wait(0.5)
+pcall(function() RF_PlaceLeverItem:FireServer(missingLever) end)
+task.wait(2.0)
+else
+if (hrp.Position - ArtifactData[missingLever].FishingPos.Pos).Magnitude > 10 then
+TeleportToLookAt(ArtifactData[missingLever].FishingPos.Pos, ArtifactData[missingLever].FishingPos.Look)
+task.wait(0.5)
+else RunQuestInstantFish(CURRENT_KAITUN_DELAY) end
+end
+else
+TeleportToLookAt(SACRED_TEMPLE_POS, SACRED_TEMPLE_LOOK)
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+end
+elseif not pElem.Q4.Done then
+currentActivityText = "Creating Transcended Stones..."
+local trash = GetLowestWeightSecrets(1)
+if #trash > 0 then
+TeleportToLookAt(SECOND_ALTAR_POS, SECOND_ALTAR_LOOK)
+pcall(function() if RE_UnequipItem then RE_UnequipItem:FireServer("all") end end)
+task.wait(0.5)
+pcall(function() RE_EquipItem:FireServer(trash[1], "Fish") end)
+task.wait(0.3)
+pcall(function() RE_EquipToolFromHotbar:FireServer(2) end)
+task.wait(0.5)
+pcall(function() RF_CreateTranscendedStone:InvokeServer() end)
+task.wait(2)
+else
+TeleportToLookAt(SECOND_ALTAR_POS, SECOND_ALTAR_LOOK)
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+end
+end
+end
+elseif step == 7 then
+if pDiamond.AllDone then
+currentActivityText = "Diamond Quest Done! Claiming..."
+local inventory = ClientData:Get({"Inventory"}) or {}
+local hasDiamondKey = false
+if inventory.Items then
+for _, item in ipairs(inventory.Items) do
+local itemData = ItemUtility:GetItemData(item.Id)
+if itemData and itemData.Data and itemData.Data.Name == "Diamond Key" then
+hasDiamondKey = true
+break
+end
+end
+end
+if hasDiamondKey and RF_ClaimItem then
+currentActivityText = "Claiming Diamond Rod..."
+pcall(function() RF_ClaimItem:InvokeServer("Diamond Rod") end)
+task.wait(2)
+else
+currentActivityText = "Need Diamond Key from Lary"
+TeleportToLookAt(SISYPHUS_POS, SISYPHUS_LOOK)
+task.wait(3)
+end
+else
+local hrp = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if not pDiamond.Q2.Done then
+currentActivityText = "Farming Coral Secret..."
+if (hrp.Position - CORAL_REEFS_POS).Magnitude > 15 then TeleportToLookAt(CORAL_REEFS_POS, CORAL_REEFS_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+elseif not pDiamond.Q3.Done then
+currentActivityText = "Farming Tropical Secret..."
+if (hrp.Position - TROPICAL_GROVE_POS).Magnitude > 15 then TeleportToLookAt(TROPICAL_GROVE_POS, TROPICAL_GROVE_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+elseif not pDiamond.Q4.Done then
+currentActivityText = "Farming Lochness Monster..."
+if (hrp.Position - LOCHNESS_FARM_POS).Magnitude > 15 then TeleportToLookAt(LOCHNESS_FARM_POS, LOCHNESS_FARM_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+elseif not pDiamond.Q5.Done then  
+currentActivityText = "Farming Mutated Ruby..."
+if (hrp.Position - RUBY_FARM_POS).Magnitude > 15 then TeleportToLookAt(RUBY_FARM_POS, RUBY_FARM_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+elseif not pDiamond.Q6.Done then
+currentActivityText = "Farming Perfect Throws..."
+if (hrp.Position - TROPICAL_GROVE_POS).Magnitude > 15 then TeleportToLookAt(TROPICAL_GROVE_POS, TROPICAL_GROVE_LOOK) task.wait(0.5) end
+RunQuestInstantFish(CURRENT_KAITUN_DELAY)
+else
+currentActivityText = "Diamond objectives done, waiting..."
+task.wait(1)
+end
+end
+elseif step == 8 then
+currentActivityText = "KAITUN COMPLETED! DIAMOND ROD OBTAINED."
+task.wait(3)
+if KAITUN_ACTIVE then
+KAITUN_ACTIVE = false
+WindUI:Notify({Title = "Kaitun Selesai", Content = "Diamond Rod Acquired!", Duration = 5, Icon = "check"})
+local toggle = Premium:GetElementByTitle("Start Auto Kaitun (Full AFK)")
+if toggle and toggle.Set then toggle:Set(false) end
+end
+end
+uiData.Labels.Status.Text = currentActivityText
+task.wait(0.1)
+end
+end)
+end
+local tkaitun = Reg("kaitunt", Premium:Toggle({
+Title = "Start Auto Kaitun (Full AFK)",
+Desc = "Auto Farm -> Buy Rods -> Auto Buy Bait -> Auto Quests.",
+Value = false,
+Callback = function(state)
+KAITUN_ACTIVE = state
+if state then
+WindUI:Notify({Title = "Kaitun Started", Duration = 3, Icon = "play"})
+RunKaitunLogic()
+else
+if KAITUN_THREAD then task.cancel(KAITUN_THREAD) end
+if KAITUN_AUTOSELL_THREAD then task.cancel(KAITUN_AUTOSELL_THREAD) end
+if KAITUN_EQUIP_THREAD then task.cancel(KAITUN_EQUIP_THREAD) end
+if KAITUN_OVERLAY then KAITUN_OVERLAY:Destroy() end
+pcall(function() RE_EquipToolFromHotbar:FireServer(0) end)
+WindUI:Notify({Title = "Kaitun Stopped", Duration = 2, Icon = "square"})
+end
+end
+}))
+end
+end
 
+--// [END OF KAITUNNNNNNNNNNNNNNNNNN]
 local function TotemTab()
     if not Totem then return end
 local totem=Totem:Section({Title="Auto Spawn Totem",TextSize=20})
@@ -1889,9 +3069,22 @@ local togtot=Reg("toggletotem",Totem:Toggle({
 Title="Enable Auto Totem (Single)",Desc="Mode Normal",Value=false,
 Callback=function(s)AUTO_TOTEM_ACTIVE=s if s then RunAutoTotemLoop()else if AUTO_TOTEM_THREAD then task.cancel(AUTO_TOTEM_THREAD)end end end
 }))
-end
--- totem
 
+local tog9tot=Reg("toggle9totem",Totem:Toggle({
+Title="Auto Spawn 9 Totem",Value=false,
+Callback=function(s)
+AUTO_9_TOTEM_ACTIVE=s
+if s then Run9TotemLoop()
+else
+if AUTO_9_TOTEM_THREAD then task.cancel(AUTO_9_TOTEM_THREAD)end
+DisableV3Physics()
+WindUI:Notify({Title="Stopped",Content="Berhenti.",Duration=2,Icon="x"})
+end
+end
+}))
+
+end
+--// TOTEM ATAS JIR
 
 local function QuestTab()
     if not Quest then return end
@@ -2498,8 +3691,827 @@ DiamondParagraph:SetDesc("⏹️ Stopped")
 end
 end
 }))
+
+--// LEVER
+Quest:Divider()
+
+local leverxixi=Quest:Section({Title="Auto Lever",textsize=16})
+local AUTO_LEVER_THREAD=nil
+local AUTO_LEVER_EQUIP_THREAD=nil
+local LEVER_FARMING_MODE=false
+local AUTO_LEVER_ACTIVE=false
+local LEVER_INSTANT_DELAY=1.7
+local ARTIFACT_IDS={["Arrow Artifact"]=265,["Crescent Artifact"]=266,["Diamond Artifact"]=267,["Hourglass Diamond Artifact"]=271}
+local function GetRemote(p,n,t)local c=game:GetService("ReplicatedStorage")for _,k in ipairs(p)do c=c:WaitForChild(k,t or 0.5)if not c then return nil end end return c:FindFirstChild(n)end
+local RPath={"Packages","_Index","sleitnick_net@0.2.0","net"}
+local RE_EquipToolFromHotbar=GetRemote(RPath,"RE/EquipToolFromHotbar")
+local RF_PlaceLeverItem=GetRemote(RPath,"RE/PlaceLeverItem")
+local RE_UnequipItem=GetRemote(RPath,"RE/UnequipItem")
+local RE_EquipItem=GetRemote(RPath,"RE/EquipItem")
+local RF_ChargeFishingRod=GetRemote(RPath,"RF/ChargeFishingRod")
+local RF_RequestFishingMinigameStarted=GetRemote(RPath,"RF/RequestFishingMinigameStarted")
+local RE_FishingCompleted=GetRemote(RPath,"RE/FishingCompleted")
+local RF_CancelFishingInputs=GetRemote(RPath,"RF/CancelFishingInputs")
+local ArtifactData={
+["Hourglass Diamond Artifact"]={ItemName="Hourglass Diamond Artifact",LeverName="Hourglass Diamond Lever",ChildReference=6,CrystalPathSuffix="Crystal",UnlockColor=Color3.fromRGB(255,248,49),FishingPos={Pos=Vector3.new(1490.144,3.312,-843.171),Look=Vector3.new(0.115,0,0.993)}},
+["Diamond Artifact"]={ItemName="Diamond Artifact",LeverName="Diamond Lever",ChildReference="TempleLever",CrystalPathSuffix="Crystal",UnlockColor=Color3.fromRGB(219,38,255),FishingPos={Pos=Vector3.new(1844.159,2.53,-288.755),Look=Vector3.new(0.981,0,-0.193)}},
+["Arrow Artifact"]={ItemName="Arrow Artifact",LeverName="Arrow Lever",ChildReference=5,CrystalPathSuffix="Crystal",UnlockColor=Color3.fromRGB(255,47,47),FishingPos={Pos=Vector3.new(874.365,2.53,-358.484),Look=Vector3.new(-0.99,0,0.144)}},
+["Crescent Artifact"]={ItemName="Crescent Artifact",LeverName="Crescent Lever",ChildReference=4,CrystalPathSuffix="Crystal",UnlockColor=Color3.fromRGB(112,255,69),FishingPos={Pos=Vector3.new(1401.07,6.489,116.738),Look=Vector3.new(-0.5,0,0.866)}}
+}
+local ArtifactOrder={"Hourglass Diamond Artifact","Diamond Artifact","Arrow Artifact","Crescent Artifact"}
+local function TeleportToLookAt(p,l)local c=game.Players.LocalPlayer.Character local h=c and c:FindFirstChild("HumanoidRootPart")if h then h.CFrame=CFrame.new(p,p+l)end end
+local function IsLeverUnlocked(a)local J=workspace:FindFirstChild("JUNGLE INTERACTIONS")if not J then return false end local d=ArtifactData[a]if not d then return false end local f=nil if type(d.ChildReference)=="string"then f=J:FindFirstChild(d.ChildReference)end if not f and type(d.ChildReference)=="number"then local c=J:GetChildren()f=c[d.ChildReference]end if not f then return false end local cr=f:FindFirstChild(d.CrystalPathSuffix)if not cr or not cr:IsA("BasePart")then return false end local cC,tC=cr.Color,d.UnlockColor return math.abs(cC.R*255-tC.R*255)<1.1 and math.abs(cC.G*255-tC.G*255)<1.1 and math.abs(cC.B*255-tC.B*255)<1.1 end
+local function HasArtifactItem(a)local r=GetPlayerDataReplion()if not r then return false end local s,i=pcall(function()return r:GetExpect("Inventory")end)if not s or not i or not i.Items then return false end local id=ARTIFACT_IDS[a]if not id then return false end for _,it in ipairs(i.Items)do if tonumber(it.Id)==id then return true end end return false end
+local function RunQuestInstantFish(d)if not(RE_EquipToolFromHotbar and RF_ChargeFishingRod and RF_RequestFishingMinigameStarted and RE_FishingCompleted and RF_CancelFishingInputs)then return end local ts=os.time()+os.clock()pcall(function()RF_ChargeFishingRod:InvokeServer(ts)end)pcall(function()RF_RequestFishingMinigameStarted:InvokeServer(-139.630452165,0.99647927980797)end)task.wait(d and d>0 and d or LEVER_INSTANT_DELAY)pcall(function()RE_FishingCompleted:FireServer()end)task.wait(0.3)pcall(function()RF_CancelFishingInputs:InvokeServer()end)end
+local function EquipBestRod()if RE_EquipToolFromHotbar then pcall(function()RE_EquipToolFromHotbar:FireServer(1)end)end end
+local leverStatus=leverxixi:Paragraph({Title="Lever Status",Content="Status: Inactive\nWaiting for activation...",Icon="wand-2"})
+leverxixi:Slider({Title="Fishing Delay",Desc="Delay untuk farming lever (seconds)",Step=0.1,Value={Min=0.5,Max=4.0,Default=1.7},Callback=function(v)LEVER_INSTANT_DELAY=tonumber(v)or 1.7 end})
+local function RunAutoLeverLoop()
+if AUTO_LEVER_THREAD then task.cancel(AUTO_LEVER_THREAD)end
+if AUTO_LEVER_EQUIP_THREAD then task.cancel(AUTO_LEVER_EQUIP_THREAD)end
+AUTO_LEVER_EQUIP_THREAD=task.spawn(function()local t=0 while AUTO_LEVER_ACTIVE do if LEVER_FARMING_MODE and RE_EquipToolFromHotbar then pcall(function()RE_EquipToolFromHotbar:FireServer(1)end)if t%20==0 then EquipBestRod()end t+=1 end task.wait(0.5)end end)
+AUTO_LEVER_THREAD=task.spawn(function()
+local c=game.Players.LocalPlayer.Character
+local h=c and c:FindFirstChild("HumanoidRootPart")
+while AUTO_LEVER_ACTIVE do
+local all=true
+local target=nil
+local s="Current Status:\n"
+for _,a in ipairs(ArtifactOrder)do local d=ArtifactData[a]if d then local u=IsLeverUnlocked(a)s=s..d.LeverName..": "..(u and"✅"or"🔒").."\n"if not u and not target then target=a end if not u then all=false end end end
+leverStatus:SetDesc(s)
+if all then leverStatus:SetTitle("ALL LEVERS UNLOCKED ✅")leverStatus:SetDesc("All temple levers have been unlocked!\nAuto Lever will stop.")break
+elseif target then
+local d=ArtifactData[target]
+if HasArtifactItem(target)then
+LEVER_FARMING_MODE=false
+leverStatus:SetTitle("Placing: "..d.ItemName)
+if h then TeleportToLookAt(d.FishingPos.Pos,d.FishingPos.Look)h.Anchored=true end
+task.wait(0.5)
+if RE_UnequipItem then pcall(function()RE_UnequipItem:FireServer("all")end)end
+task.wait(0.2)
+if RF_PlaceLeverItem then pcall(function()RF_PlaceLeverItem:FireServer(target)end)end
+task.wait(2)
+if h then h.Anchored=false end
+task.wait(1)
+else
+LEVER_FARMING_MODE=true
+leverStatus:SetTitle("Farming: "..d.ItemName)
+if h and(h.Position-d.FishingPos.Pos).Magnitude>10 then TeleportToLookAt(d.FishingPos.Pos,d.FishingPos.Look)task.wait(0.5)
+else RunQuestInstantFish(LEVER_INSTANT_DELAY)task.wait(0.1)end
 end
--- Quest
+end
+task.wait(0.1)
+end
+AUTO_LEVER_ACTIVE=false
+LEVER_FARMING_MODE=false
+if AUTO_LEVER_EQUIP_THREAD then task.cancel(AUTO_LEVER_EQUIP_THREAD)AUTO_LEVER_EQUIP_THREAD=nil end
+if RE_EquipToolFromHotbar then pcall(function()RE_EquipToolFromHotbar:FireServer(0)end)end
+end)
+end
+local v99 Reg("autoLever",leverxixi:Toggle({Title="Enable Auto Lever",Default=false,Callback=function(s)
+AUTO_LEVER_ACTIVE=s
+if s then leverStatus:SetTitle("Lever Status - ACTIVE")leverStatus:SetDesc("Starting Auto Lever system...")RunAutoLeverLoop()
+else
+leverStatus:SetTitle("Lever Status - INACTIVE")
+leverStatus:SetDesc("Status: Inactive\nToggle to enable Auto Lever")
+if AUTO_LEVER_THREAD then task.cancel(AUTO_LEVER_THREAD)AUTO_LEVER_THREAD=nil end
+if AUTO_LEVER_EQUIP_THREAD then task.cancel(AUTO_LEVER_EQUIP_THREAD)AUTO_LEVER_EQUIP_THREAD=nil end
+LEVER_FARMING_MODE=false
+local c=game.Players.LocalPlayer.Character
+local h=c and c:FindFirstChild("HumanoidRootPart")
+if h then h.Anchored=false end
+if RE_EquipToolFromHotbar then pcall(function()RE_EquipToolFromHotbar:FireServer(0)end)end
+end
+end}))
+end
+--// QUEST
+local function EventTab()
+if not Event then return end
+
+local lastPositionBeforeEvent,autoJoinEventActive=nil,false
+local LOCHNESS_POS,LOCHNESS_LOOK=Vector3.new(6063.347,-585.925,4713.696),Vector3.new(-0.376,0,-0.927)
+local AUTO_UNLOCK_STATE,AUTO_UNLOCK_THREAD,AUTO_UNLOCK_ATTEMPT_THREAD=false,nil,nil
+local ITEM_FISH_NAMES={"Freshwater Piranha","Goliath Tiger","Sacred Guardian Squid","Crocodile"}
+local SACRED_TEMPLE_POS,SACRED_TEMPLE_LOOK=Vector3.new(1461.815,-22.125,-670.234),Vector3.new(-0.99,0,0.143)
+
+local function GetRemote(p,n)local c=game:GetService("ReplicatedStorage")for _,v in ipairs(p)do c=c:WaitForChild(v,0.5)if not c then return end end return c:FindFirstChild(n)end
+local RUIN_DOOR_REMOTE=GetRemote({"Packages","_Index","sleitnick_net@0.2.0","net"},"RE/PlacePressureItem")
+
+local function GetHRP()local c=game.Players.LocalPlayer.Character return c and c:FindFirstChild("HumanoidRootPart")end
+local function TeleportToLookAt(p,l)local c=game.Players.LocalPlayer.Character local h=c and c:FindFirstChild("HumanoidRootPart")if h then h.CFrame=CFrame.new(p,p+l)end end
+
+local function GetEventGUI()
+local ok,g=pcall(function()
+local i=workspace:WaitForChild("!!! DEPENDENCIES",5):WaitForChild("Event Tracker",5).Main.Gui.Content.Items
+local s=i.Stats
+return{Countdown=i.Countdown.Label,Timer=s.Timer.Label,Quantity=s.Quantity,Odds=s.Odds}
+end)
+return ok and g or nil
+end
+
+local ItemUtility=require(game:GetService("ReplicatedStorage").Shared.ItemUtility)
+local TierUtility=require(game:GetService("ReplicatedStorage").Shared.TierUtility)
+
+local function GetFishNameAndRarity(it)
+if not it or not it.ItemId then return"Unknown","Common"end
+local d=ItemUtility:GetItemData(it.ItemId)if not d then return"Unknown","Common"end
+local t=TierUtility:GetTierData(it.Tier or 1)
+return d.Data.Name or"Unknown",(t and t.Name)or"Common"
+end
+
+local function IsItemAvailable(n)
+local r=GetPlayerDataReplion()if not r then return false end
+local ok,i=pcall(function()return r:GetExpect("Inventory")end)
+if not ok or not i or not i.Items then return false end
+for _,v in ipairs(i.Items)do
+if v.Identifier==n then return true end
+local name=GetFishNameAndRarity(v)
+if name==n and(v.Count or 1)>=1 then return true end
+end
+return false
+end
+
+local function GetMissingItem()for _,n in ipairs(ITEM_FISH_NAMES)do if not IsItemAvailable(n)then return n end end end
+
+local function GetRuinDoorStatus()
+local d=workspace["RUIN INTERACTIONS"]and workspace["RUIN INTERACTIONS"]:FindFirstChild("Door")
+local s="LOCKED 🔒"
+if d and d:FindFirstChild("RuinDoor")then
+local l=d.RuinDoor:FindFirstChild("LDoor")if l then
+local x
+if l:IsA("BasePart")then x=l.Position.X
+elseif l:IsA("Model")then local ok,p=pcall(function()return l:GetPivot()end)if ok and p then x=p.Position.X end end
+if x and x>6075 then s="UNLOCKED ✅"end
+end
+end
+return s
+end
+
+local function RunRuinDoorUnlockAttemptLoop()
+if AUTO_UNLOCK_ATTEMPT_THREAD then task.cancel(AUTO_UNLOCK_ATTEMPT_THREAD)end
+if not RUIN_DOOR_REMOTE then return end
+AUTO_UNLOCK_ATTEMPT_THREAD=task.spawn(function()
+while AUTO_UNLOCK_STATE and GetRuinDoorStatus()=="LOCKED 🔒"do
+for _,n in ipairs(ITEM_FISH_NAMES)do task.wait(7)pcall(function()RUIN_DOOR_REMOTE:FireServer(n)end)end
+task.wait(5)
+end
+end)
+end
+
+local function RunAutoUnlockLoop()
+if AUTO_UNLOCK_THREAD then task.cancel(AUTO_UNLOCK_THREAD)end
+if AUTO_UNLOCK_ATTEMPT_THREAD then task.cancel(AUTO_UNLOCK_ATTEMPT_THREAD)end
+AUTO_UNLOCK_THREAD=task.spawn(function()
+local farm,last=false,nil
+RunRuinDoorUnlockAttemptLoop()
+while AUTO_UNLOCK_STATE do
+local st,miss=GetRuinDoorStatus(),GetMissingItem()
+if st=="LOCKED 🔒"then
+if miss then
+if not farm then
+local h=GetHRP()
+if h then last={Pos=h.Position,Look=h.CFrame.LookVector}end
+TeleportToLookAt(SACRED_TEMPLE_POS,SACRED_TEMPLE_LOOK)
+task.wait(1.5)farm=true
+if autoFishingToggle and autoFishingToggle.Set then autoFishingToggle:Set(true)end
+end
+ruinDoorStatus:SetDesc("Farming: "..miss.."\nAuto Fishing: ON")
+else
+if farm then
+if last then TeleportToLookAt(last.Pos,last.Look)last=nil end
+farm=false
+if autoFishingToggle and autoFishingToggle.Set then autoFishingToggle:Set(false)end
+end
+ruinDoorStatus:SetDesc("All items collected!\nAttempting unlock...")
+end
+task.wait(5)
+elseif st=="UNLOCKED ✅"then
+if farm and last then TeleportToLookAt(last.Pos,last.Look)end
+if autoFishingToggle and autoFishingToggle.Set then autoFishingToggle:Set(false)end
+ruinDoorStatus:SetDesc("Door successfully unlocked!")break
+else task.wait(5)end
+end
+AUTO_UNLOCK_STATE=false
+if AUTO_UNLOCK_ATTEMPT_THREAD then task.cancel(AUTO_UNLOCK_ATTEMPT_THREAD)AUTO_UNLOCK_ATTEMPT_THREAD=nil end
+end)
+end
+
+local loknes=Event:Section({Title="Ancient Lochness Event",TextSize=16})
+local CountdownParagraph=loknes:Paragraph({Title="Event Countdown: Waiting...",Content="Status: Trying to sync event...",Icon="clock"})
+local StatsParagraph=loknes:Paragraph({Title="Event Stats: N/A",Content="Timer: N/A\nCaught: N/A\nChance: N/A",Icon="trending-up"})
+
+local function UpdateEventStats()
+local g=GetEventGUI()
+if not g then
+CountdownParagraph:SetTitle("Event Countdown: GUI Not Found ❌")
+CountdownParagraph:SetDesc("Make sure 'Event Tracker' is loaded in workspace.")
+StatsParagraph:SetTitle("Event Stats: N/A")
+StatsParagraph:SetDesc("Timer: N/A\nCaught: N/A\nChance: N/A")
+return false
+end
+local c=g.Countdown and(g.Countdown.ContentText or g.Countdown.Text)or"N/A"
+local t=g.Timer and(g.Timer.ContentText or g.Timer.Text)or"N/A"
+local q=g.Quantity and(g.Quantity.ContentText or g.Quantity.Text)or"N/A"
+local o=g.Odds and(g.Odds.ContentText or g.Odds.Text)or"N/A"
+CountdownParagraph:SetTitle("Ancient Lochness Start In:")CountdownParagraph:SetDesc(c)
+StatsParagraph:SetTitle("Ancient Lochness Stats")
+StatsParagraph:SetDesc(string.format("- Timer: %s\n- Caught: %s\n- Chance: %s",t,q,o))
+return t:find("M")and t:find("S")and not t:match("^0M 0S")
+end
+
+local EventSyncThread=nil
+local function RunEventSyncLoop()
+if EventSyncThread then task.cancel(EventSyncThread)end
+EventSyncThread=task.spawn(function()
+local tp=false
+while true do
+local a=UpdateEventStats()
+if autoJoinEventActive then
+if a and not tp then
+if not lastPositionBeforeEvent then
+local h=GetHRP()
+if h then lastPositionBeforeEvent={Pos=h.Position,Look=h.CFrame.LookVector}end
+end
+TeleportToLookAt(LOCHNESS_POS,LOCHNESS_LOOK)tp=true
+elseif tp and not a and lastPositionBeforeEvent then
+task.wait(15)
+TeleportToLookAt(lastPositionBeforeEvent.Pos,lastPositionBeforeEvent.Look)
+lastPositionBeforeEvent,tp=nil,false
+end
+end
+task.wait(0.5)
+end
+end)
+end
+
+RunEventSyncLoop()
+
+local LochnessToggle=Reg("lochnessEvent",loknes:Toggle({
+Title="Auto Join Ancient Lochness Event",Desc="Auto teleport to event when active",Default=false,
+Callback=function(s)
+autoJoinEventActive=s
+if s then
+CountdownParagraph:SetTitle("Event Countdown: Monitoring...")
+CountdownParagraph:SetDesc("Watching for Lochness event...")
+else
+CountdownParagraph:SetTitle("Event Countdown: Stopped")
+CountdownParagraph:SetDesc("Event monitoring stopped")
+end
+end
+}))
+
+Event:Divider()
+
+local ruinDoorSection=Event:Section({Title="Auto Open Ruin Door",TextSize=16})
+local ruinDoorStatus=ruinDoorSection:Paragraph({Title="Ruin Door Status: Checking...",Content="Toggle ON to start checking",Icon="door-open"})
+
+local autoUnlockToggle=Reg("ruinDoor",ruinDoorSection:Toggle({
+Title="Auto Unlock Ruin Door",Desc="Will auto teleport to Sacred Temple and enable fishing first",Default=false,
+Callback=function(s)
+AUTO_UNLOCK_STATE=s
+if s then
+local st,miss=GetRuinDoorStatus(),GetMissingItem()
+ruinDoorStatus:SetTitle("Ruin Door Status: "..st)
+if st=="UNLOCKED ✅"then ruinDoorStatus:SetDesc("Door is already unlocked!")autoUnlockToggle:Set(false)return end
+ruinDoorStatus:SetDesc(miss and("Missing: "..miss.."\nTeleporting to Sacred Temple...")or"All items collected!\nStarting unlock attempts...")
+RunAutoUnlockLoop()
+else
+ruinDoorStatus:SetTitle("Ruin Door Status: Stopped")
+ruinDoorStatus:SetDesc("Auto unlock stopped")
+if AUTO_UNLOCK_THREAD then task.cancel(AUTO_UNLOCK_THREAD)AUTO_UNLOCK_THREAD=nil end
+if AUTO_UNLOCK_ATTEMPT_THREAD then task.cancel(AUTO_UNLOCK_ATTEMPT_THREAD)AUTO_UNLOCK_ATTEMPT_THREAD=nil end
+end
+end
+}))
+
+Event:Divider()
+--// DOWN IS CHRISTMAS
+local xmas=Event:Section({Title="Christmas Event (Cave)",TextSize=16})
+local CHRISTMAS_CAVE_POS,CHRISTMAS_CAVE_LOOK=Vector3.new(744.262,-487.111,8862.532),Vector3.new(0.01,0,1)
+local autoJoinXmasState,xmasEventThread,lastPositionBeforeXmas=false,nil,nil
+local EVENT_CYCLE,EVENT_DURATION=7200,1800
+local XmasStatusParagraph=xmas:Paragraph({Title="Event Status: CALCULATING...",Content="Waiting for server time...",Icon="snowflake"})
+
+local function FormatSeconds(s)
+if s<0 then s=0 end
+return string.format("%02d:%02d:%02d",math.floor(s/3600),math.floor(s%3600/60),math.floor(s%60))
+end
+
+local function SafeTeleport(pos,look)
+local c=game.Players.LocalPlayer.Character
+local h=c and c:FindFirstChild("HumanoidRootPart")
+if not h then return end
+
+local up=h.Position+Vector3.new(0,5,0)
+h.CFrame=CFrame.new(up,up+h.CFrame.LookVector)
+
+local p=Instance.new("Part")
+p.Size=Vector3.new(6,1,6)
+p.Anchored=true
+p.CanCollide=true
+p.Transparency=0.3
+p.Material=Enum.Material.ForceField
+p.CFrame=CFrame.new(h.Position-Vector3.new(0,3,0))
+p.Parent=workspace
+
+task.wait(0.2)
+
+local tpos=pos+Vector3.new(0,5,0)
+h.CFrame=CFrame.new(tpos,tpos+look)
+
+task.delay(5,function()
+if p then p:Destroy()end
+end)
+end
+
+local function RunXmasEventLoop()
+if xmasEventThread then task.cancel(xmasEventThread)end
+xmasEventThread=task.spawn(function()
+local isAtCave=false
+while autoJoinXmasState do
+local t=workspace:GetServerTimeNow()%EVENT_CYCLE
+local active=t<EVENT_DURATION
+
+if active then
+XmasStatusParagraph:SetTitle("Christmas Event: ACTIVE 🟢")
+XmasStatusParagraph:SetDesc("Event Ends in: "..FormatSeconds(EVENT_DURATION-t).."\n(Cave Open)")
+if not isAtCave then
+local c=game.Players.LocalPlayer.Character
+local h=c and c:FindFirstChild("HumanoidRootPart")
+if not lastPositionBeforeXmas and h then
+lastPositionBeforeXmas={Pos=h.Position,Look=h.CFrame.LookVector}
+end
+WindUI:Notify({Title="Event Dimulai!",Content="Menyimpan Last Pos & Teleport ke Cave...",Duration=4,Icon="snowflake"})
+SafeTeleport(CHRISTMAS_CAVE_POS,CHRISTMAS_CAVE_LOOK)
+isAtCave=true
+end
+
+else
+XmasStatusParagraph:SetTitle("Christmas Event: WAITING 🔴")
+XmasStatusParagraph:SetDesc("Next Event in: "..FormatSeconds(EVENT_CYCLE-t).."\n[Tracking Position...]")
+if isAtCave then
+WindUI:Notify({Title="Event Selesai",Content="Waktu habis. Kembali dalam 3 detik...",Duration=3,Icon="clock"})
+task.wait(3)
+if lastPositionBeforeXmas then
+SafeTeleport(lastPositionBeforeXmas.Pos,lastPositionBeforeXmas.Look)
+lastPositionBeforeXmas=nil
+end
+isAtCave=false
+else
+local c=game.Players.LocalPlayer.Character
+local h=c and c:FindFirstChild("HumanoidRootPart")
+if h then lastPositionBeforeXmas={Pos=h.Position,Look=h.CFrame.LookVector}end
+end
+end
+
+task.wait(1)
+end
+end)
+end
+
+local XmasToggle=Reg("autoJoinXmas",xmas:Toggle({Title="Auto Join Christmas Cave",Value=false,Callback=function(s)
+autoJoinXmasState=s
+if s then
+WindUI:Notify({Title="Auto Join Xmas ON",Content="Syncing Server Time & Tracking Position...",Duration=3,Icon="check"})
+RunXmasEventLoop()
+else
+if xmasEventThread then task.cancel(xmasEventThread)xmasEventThread=nil end
+XmasStatusParagraph:SetTitle("Event Status: MONITOR OFF")
+WindUI:Notify({Title="Auto Join Xmas OFF",Duration=3,Icon="x"})
+end
+end}))
+
+xmas:Button({
+Title="Teleport to Christmas Cave (Manual)",
+Icon="map-pin",
+Callback=function()
+SafeTeleport(CHRISTMAS_CAVE_POS,CHRISTMAS_CAVE_LOOK)
+end
+})
+
+Event:Divider()
+
+local autoClaimClassicState,autoClaimClassicThread=false,nil
+local RE_ClaimEventReward=nil
+pcall(function()RE_ClaimEventReward=game:GetService("ReplicatedStorage"):WaitForChild("Packages",10):WaitForChild("_Index",10):WaitForChild("sleitnick_net@0.2.0",10):WaitForChild("net",10):WaitForChild("RE/ClaimEventReward",10)end)
+local sectionclassic=Event:Section({Title="Christmas Event Rewards",TextSize=16})
+sectionclassic:Toggle({Title="Auto Claim Cristmas Event Rewards",Value=false,Icon="gift",Callback=function(s)
+autoClaimClassicState=s
+if s then
+if not RE_ClaimEventReward then RE_ClaimEventReward=game:GetService("ReplicatedStorage").Packages._Index["sleitnick_net@0.2.0"].net:FindFirstChild("RE/ClaimEventReward")end
+if not RE_ClaimEventReward then WindUI:Notify({Title="Error",Content="Remote Claim Reward tidak ditemukan.",Duration=3,Icon="x"})return false end
+WindUI:Notify({Title="Auto Claim ON",Duration=3,Icon="gift"})
+if autoClaimClassicThread then task.cancel(autoClaimClassicThread)end
+autoClaimClassicThread=task.spawn(function()
+while autoClaimClassicState do
+for i=1,15 do if not autoClaimClassicState then break end pcall(function()RE_ClaimEventReward:FireServer(i)end)task.wait(0.1)end
+task.wait(60)
+end
+end)
+else
+if autoClaimClassicThread then task.cancel(autoClaimClassicThread)autoClaimClassicThread=nil end
+WindUI:Notify({Title="Auto Claim OFF",Duration=2,Icon="x"})
+end
+end})
+
+Event:Divider()
+
+local limshop=Event:Section({Title="Limited Shop (Candy Cane)",TextSize=16})
+local RE_LimitedPurchaseRequest=GetRemote(RPath,"RE/LimitedPurchaseRequest")
+local CandyBalanceDisplay=limshop:Paragraph({Title="Current Candy Cane: Loading...",Content="Waiting for data...",Icon="candy"})
+local function FormatCandy(n)n=math.floor(n)return tostring(n):reverse():gsub("%d%d%d","%1."):reverse():gsub("^%.","")end
+local function UpdateCandyBalance()
+local c=0 local r=GetPlayerDataReplion()if r then c=r:Get("CandyCanes")or 0 end
+CandyBalanceDisplay:SetTitle("Your Balance: "..FormatCandy(c).." 🍬")
+CandyBalanceDisplay:SetDesc("Gunakan Candy Cane untuk membeli item limited di bawah.")
+end
+task.spawn(function()while true do UpdateCandyBalance()task.wait(2)end end)
+local function BuyLimitedItem(id,name)
+if not RE_LimitedPurchaseRequest then WindUI:Notify({Title="Error",Content="Remote Purchase tidak ditemukan!",Duration=3,Icon="x"})return end
+WindUI:Notify({Title="Purchasing...",Content="Membeli "..name,Duration=2,Icon="shopping-cart"})
+pcall(function()RE_LimitedPurchaseRequest:FireServer(id)end)
+end
+limshop:Button({Title="Buy Jolly Bait",Desc="Price: 5.000 Candy Cane",Icon="mouse-pointer-click",Callback=function()BuyLimitedItem(1,"Jolly Bait")end})
+limshop:Button({Title="Buy Lit Ornament",Desc="Price: 15.000 Candy Cane",Icon="mouse-pointer-click",Callback=function()BuyLimitedItem(2,"Lit Ornament")end})
+limshop:Button({Title="Buy Festive Present Caster",Desc="Price: 25.000 Candy Cane",Icon="mouse-pointer-click",Callback=function()BuyLimitedItem(3,"Festive Present Caster")end})
+limshop:Button({Title="Buy Christmas Light Lantern",Desc="Price: 35.000 Candy Cane",Icon="mouse-pointer-click",Callback=function()BuyLimitedItem(4,"Christmas Light Lantern")end})
+
+Event:Divider()
+
+local santa=Event:Section({Title="Auto Santa Gift Factory",TextSize=16})
+local SANTA_PRESENTS={{Name="Common Present",Id=996},{Name="Uncommon Present",Id=997},{Name="Rare Present",Id=998},{Name="Epic Present",Id=999}}
+local SANTA_PRESENT_NAMES={"Common Present","Uncommon Present","Rare Present","Epic Present"}
+local selectedPresentID,autoRedeemState,autoRedeemThread=nil,false,nil
+local RF_RedeemGift=GetRemote(RPath,"RF/RedeemGift")
+local RE_EquipItem=GetRemote(RPath,"RE/EquipItem")
+local RE_UnequipItem=GetRemote(RPath,"RE/UnequipItem")
+local RE_EquipToolFromHotbar=GetRemote(RPath,"RE/EquipToolFromHotbar")
+local PresentStockDisplay=santa:Paragraph({Title="Present Stock",Content="Loading data...",Icon="package"})
+local function UpdatePresentStock()
+local c={[996]=0,[997]=0,[998]=0,[999]=0}
+local r=GetPlayerDataReplion()
+if r then
+local ok,i=pcall(function()return r:GetExpect("Inventory")end)
+if ok and i and i.Items then
+for _,v in ipairs(i.Items)do local id=tonumber(v.Id)if c[id]then c[id]=c[id]+(v.Count or 1)end end
+end
+end
+PresentStockDisplay:SetDesc(string.format("⚪ Common: %d\n🟢 Uncommon: %d\n🔵 Rare: %d\n🟣 Epic: %d",c[996],c[997],c[998],c[999]))
+end
+task.spawn(function()while true do UpdatePresentStock()task.wait(2)end end)
+local function GetPresentUUIDs(id)
+local u={}local r=GetPlayerDataReplion()if not r then return u end
+local ok,i=pcall(function()return r:GetExpect("Inventory")end)
+if ok and i and i.Items then for _,v in ipairs(i.Items)do if tonumber(v.Id)==id and v.UUID then table.insert(u,v.UUID)end end end
+return u
+end
+local function SmartUnequipAll()
+local r=GetPlayerDataReplion()if not r then return end
+local e=r:Get("EquippedItems")or{}local s=r:Get("EquippedSkinUUID")
+if s and s~="" then pcall(function()RE_UnequipItem:FireServer(s)end)task.wait(0.1)end
+for _,u in ipairs(e)do pcall(function()RE_UnequipItem:FireServer(u)end)task.wait(0.1)end
+pcall(function()RE_EquipToolFromHotbar:FireServer(0)end)
+end
+local function RunAutoRedeemLoop()
+if autoRedeemThread then task.cancel(autoRedeemThread)end
+autoRedeemThread=task.spawn(function()
+local uuids=GetPresentUUIDs(selectedPresentID)
+if #uuids==0 then WindUI:Notify({Title="Kosong",Content="Stock habis untuk jenis ini.",Duration=3,Icon="x"})autoRedeemState=false local t=Event:GetElementByTitle("Start Auto Gift Factory")if t then t:Set(false)end return end
+WindUI:Notify({Title="Started",Content="Membuka "..#uuids.." kado...",Duration=3,Icon="gift"})
+SmartUnequipAll()task.wait(1)
+for _,u in ipairs(uuids)do
+if not autoRedeemState then break end
+pcall(function()RE_EquipItem:FireServer(u,"Gears")end)task.wait(0.5)
+pcall(function()RE_EquipToolFromHotbar:FireServer(2)end)task.wait(1)
+pcall(function()if RF_RedeemGift then RF_RedeemGift:InvokeServer()end end)
+pcall(function()RE_UnequipItem:FireServer(u)end)
+UpdatePresentStock()task.wait(1)
+end
+if autoRedeemState then WindUI:Notify({Title="Selesai",Content="Semua kado terpilih telah dibuka!",Duration=3,Icon="check"})SmartUnequipAll()end
+autoRedeemState=false local t=Event:GetElementByTitle("Start Auto Gift Factory")if t then t:Set(false)end
+end)
+end
+santa:Dropdown({Title="Select Present Type",Values=SANTA_PRESENT_NAMES,Value=false,Multi=false,Callback=function(n)for _,v in ipairs(SANTA_PRESENTS)do if v.Name==n then selectedPresentID=v.Id break end end end})
+santa:Toggle({Title="Start Auto Gift Factory",Desc="Wajib Stop Mancing!!",Value=false,Callback=function(s)
+autoRedeemState=s
+if s then
+if not selectedPresentID then WindUI:Notify({Title="Error",Content="Pilih jenis Present dulu!",Duration=3,Icon="alert-triangle"})return false end
+if not RF_RedeemGift then WindUI:Notify({Title="Error",Content="Remote RedeemGift tidak ditemukan.",Duration=3,Icon="x"})return false end
+RunAutoRedeemLoop()
+else
+if autoRedeemThread then task.cancel(autoRedeemThread)autoRedeemThread=nil end
+WindUI:Notify({Title="Stopped",Duration=2,Icon="x"})
+end
+end})
+
+Event:Divider()
+
+local sectionknock=Event:Section({Title="Auto Knock Christmas Doors",TextSize=16})
+local autoKnockState,autoKnockThread=false,nil
+local RF_SpecialDialogueEvent=GetRemote(RPath,"RF/SpecialDialogueEvent")
+local function RunAutoKnock()
+if autoKnockThread then task.cancel(autoKnockThread)end
+autoKnockThread=task.spawn(function()
+local doorFolder=workspace:WaitForChild("ChristmasDoors")
+while autoKnockState do
+for _,d in ipairs(doorFolder:GetChildren())do
+if not autoKnockState then break end
+pcall(function()if RF_SpecialDialogueEvent then RF_SpecialDialogueEvent:InvokeServer(d.Name,"PresentChristmasDoor")end end)
+task.wait(0.1)
+end
+WindUI:Notify({Title="Cycle Selesai",Content="Menunggu 1jam sebelum mengetuk ulang...",Duration=3,Icon="check"})
+task.wait(3601)
+end
+end)
+end
+local AutoKnockToggle=Reg("autoKnockChristmas",sectionknock:Toggle({Title="Start Auto Knock",Desc="Nyalain Saat Di Pulau Christmast",Value=false,Callback=function(s)
+autoKnockState=s
+if s then
+if not RF_SpecialDialogueEvent then WindUI:Notify({Title="Error",Content="Remote SpecialDialogueEvent tidak ditemukan.",Duration=3,Icon="x"})return false end
+WindUI:Notify({Title="Auto Knock ON",Content="Mulai mengetuk pintu...",Duration=3,Icon="door-open"})
+RunAutoKnock()
+else
+if autoKnockThread then task.cancel(autoKnockThread)autoKnockThread=nil end
+WindUI:Notify({Title="Auto Knock OFF",Duration=2,Icon="x"})
+end
+end}))
+end
+--// OMAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+local function TradeTab()
+if not Trade then return end
+local RepStorage=game:GetService("ReplicatedStorage")
+local Players=game:GetService("Players")
+local LocalPlayer=Players.LocalPlayer
+local HttpService=game:GetService("HttpService")
+local ItemUtility=require(RepStorage:WaitForChild("Shared"):WaitForChild("ItemUtility"))
+local ReplionClient=require(RepStorage:WaitForChild("Packages"):WaitForChild("Replion")).Client
+local RPath={"Packages","_Index","sleitnick_net@0.2.0","net"}
+local function GetRemote(p,n)local c=RepStorage for _,k in ipairs(p)do c=c:WaitForChild(k,5)if not c then return nil end end return c:FindFirstChild(n)end
+local RF_InitiateTrade=GetRemote(RPath,"RF/InitiateTrade")
+local autoTradeState=false
+local autoTradeThread=nil
+local tradeHoldFavorite=false
+local autoAcceptState=false
+local hideFavoriteInDropdown=false
+local groupMutationsInDropdown=false
+local selectedTradeTargetId=nil
+local selectedTradeItemName=nil
+local selectedTradeRarity=nil
+local tradeDelay=1
+local tradeAmount=0
+local tradeStopAtCoins=0
+local isTradeByCoinActive=false
+local tradeQuantity=1
+local selectedMutation=""
+local allMutations={"Shiny","Albino","Sandy","Noob","Moon Fragment","Festive","Disco","1x1x1x1","Bloodmoon","Color Burn","Corrupt","Fairy Dust","Frozen","Galaxy","Gemstone","Ghost","Gold","Holographic","Lightning","Midnight","Radioactive","Stone"}
+local GlobalItemCache={}
+task.spawn(function()local items=RepStorage:WaitForChild("Items"):GetChildren()for _,v in ipairs(items)do if v.Name:sub(1,3)~="!!!"then table.insert(GlobalItemCache,v.Name)end end table.sort(GlobalItemCache)end)
+task.spawn(function()
+local PromptController,Promise
+pcall(function()PromptController=require(RepStorage:WaitForChild("Controllers").PromptController)Promise=require(RepStorage:WaitForChild("Packages").Promise)end)
+if PromptController and PromptController.FirePrompt then
+local old=PromptController.FirePrompt
+PromptController.FirePrompt=function(self,t,...)
+if autoAcceptState and type(t)=="string"and t:find("Accept")and t:find("from:")then
+return Promise.new(function(r)task.wait(2)r(true)end)
+end
+return old(self,t,...)
+end
+end
+end)
+local function GetFishNameAndRarity(item)
+local name=item.Identifier or"Unknown"
+local rarity=item.Metadata and item.Metadata.Rarity or"COMMON"
+if ItemUtility then local d=ItemUtility:GetItemData(item.Id)if d and d.Data and d.Data.Name then name=d.Data.Name end end
+return name,rarity
+end
+local function GetMutationName(item)
+if not item.Metadata or not item.Metadata.VariantId then return "No Mutation" end
+local mutations={
+Shiny="Shiny",
+Albino="Albino",
+Sandy="Sandy",
+Noob="Noob",
+["Moon Fragment"]="Moon Fragment",
+Festive="Festive",
+Disco="Disco",
+["1x1x1x1"]="1x1x1x1",
+Bloodmoon="Bloodmoon",
+["Color Burn"]="Color Burn",
+Corrupt="Corrupt",
+["Fairy Dust"]="Fairy Dust",
+Frozen="Frozen",
+Galaxy="Galaxy",
+Gemstone="Gemstone",
+Ghost="Ghost",
+Gold="Gold",
+Holographic="Holographic",
+Lightning="Lightning",
+Midnight="Midnight",
+Radioactive="Radioactive",
+Stone="Stone"
+}
+return mutations[item.Metadata.VariantId] or item.Metadata.VariantId
+end
+local function GetPlayerDataReplion()
+local s,r=pcall(function()return ReplionClient:WaitReplion("Data")end)
+return s and r or nil
+end
+local function GetItemsToTrade()
+local r=GetPlayerDataReplion()if not r then return{}end
+local s,i=pcall(function()return r:GetExpect("Inventory")end)
+if not s or not i or not i.Items then return{}end
+local out={}
+for _,item in ipairs(i.Items)do
+local fav=item.IsFavorite or item.Favorited
+if tradeHoldFavorite and fav then continue end
+if typeof(item.UUID)~="string"or#item.UUID<10 then continue end
+local name,rar=GetFishNameAndRarity(item)
+local ir=(rar and rar:upper()~="COMMON")and rar or"Default"
+local pr=not selectedTradeRarity or ir:upper()==selectedTradeRarity:upper()
+local pn=not selectedTradeItemName or name==selectedTradeItemName
+local mutation=GetMutationName(item)
+local pm=not selectedMutation or selectedMutation==""or mutation==selectedMutation
+if pr and pn and pm then table.insert(out,{UUID=item.UUID,Name=name,Id=item.Id,Metadata=item.Metadata or{},IsFavorite=fav,Mutation=mutation})end
+end
+return out
+end
+local function GetInventoryForScan()
+local r=GetPlayerDataReplion()if not r then return{}end
+local s,i=pcall(function()return r:GetExpect("Inventory")end)
+if not s or not i or not i.Items then return{}end
+local out={}
+for _,item in ipairs(i.Items)do
+local fav=item.IsFavorite or item.Favorited
+if hideFavoriteInDropdown and fav then continue end
+if typeof(item.UUID)~="string"or#item.UUID<10 then continue end
+local name,rar=GetFishNameAndRarity(item)
+local ir=(rar and rar:upper()~="COMMON")and rar or"Default"
+local pr=not selectedTradeRarity or ir:upper()==selectedTradeRarity:upper()
+local mutation=GetMutationName(item)
+local pm=not selectedMutation or selectedMutation==""or mutation==selectedMutation
+if pr and pm then table.insert(out,{UUID=item.UUID,Name=name,Id=item.Id,Metadata=item.Metadata or{},IsFavorite=fav,Mutation=mutation})end
+end
+return out
+end
+local function IsItemStillInInventory(u)
+local r=GetPlayerDataReplion()
+local s,i=pcall(function()return r:GetExpect("Inventory")end)
+if s and i.Items then for _,it in ipairs(i.Items)do if it.UUID==u then return true end end end
+return false
+end
+local function TeleportToPlayer(id)
+local tp=Players:GetPlayerByUserId(id)
+if tp and tp.Character then
+local th=tp.Character:FindFirstChild("HumanoidRootPart")
+local mh=LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if th and mh then mh.CFrame=th.CFrame*CFrame.new(0,5,0)return true end
+end
+return false
+end
+local function RunAutoTradeLoop()
+if autoTradeThread then task.cancel(autoTradeThread)end
+autoTradeThread=task.spawn(function()
+local tradeCount=0
+local acc=0
+if not selectedTradeTargetId then WindUI:Notify({Title="Error",Content="Pilih target player dulu.",Duration=3,Icon="user-x"})return end
+WindUI:Notify({Title="Auto Trade Started",Content="Mencari item...",Duration=2,Icon="refresh-cw"})
+local targetQuantity=tradeQuantity>0 and tradeQuantity or 99999
+local tradedCount=0
+while autoTradeState and tradedCount<targetQuantity do
+if isTradeByCoinActive and tradeStopAtCoins>0 and acc>=tradeStopAtCoins then WindUI:Notify({Title="Target Value Tercapai",Content="Total: "..acc,Duration=5,Icon="dollar-sign"})break end
+if tradeAmount>0 and tradeCount>=tradeAmount then WindUI:Notify({Title="Limit Tercapai",Content="Jumlah trade terpenuhi.",Duration=5,Icon="check-circle"})break end
+if not TeleportToPlayer(selectedTradeTargetId)then WindUI:Notify({Title="Target Hilang",Content="Player keluar / tidak ditemukan.",Duration=3,Icon="user-x"})break end
+local items=GetItemsToTrade()
+if #items>0 then
+local item=items[1]
+local base=0
+if ItemUtility then local d=ItemUtility:GetItemData(item.Id)if d then base=d.SellPrice or 0 end end
+local mult=item.Metadata.SellMultiplier or 1
+local val=math.floor(base*mult)
+local ok=pcall(function()RF_InitiateTrade:InvokeServer(selectedTradeTargetId,item.UUID)end)
+if ok then
+local st=os.clock()local traded=false
+repeat task.wait(0.5)if not IsItemStillInInventory(item.UUID)then traded=true end until traded or os.clock()-st>5
+if traded then
+tradeCount+=1
+tradedCount+=1
+acc+=val
+WindUI:Notify({Title="Trade Sent",Content=string.format("%s (%d$)\nProgress: %d/%d",item.Name,val,tradedCount,targetQuantity),Duration=2,Icon="check"})
+task.wait(tradeDelay)
+else
+WindUI:Notify({Title="Lag/Failed",Content="Item tidak terkirim.",Duration=1,Icon="alert-circle"})
+task.wait(1)
+end
+else task.wait(1)end
+else WindUI:Notify({Title="Stok Habis",Content="Tidak ada item sesuai filter.",Duration=5,Icon="box"})break end
+task.wait(0.1)
+end
+autoTradeState=false
+WindUI:Notify({Title="Auto Trade Stopped",Duration=3})
+end)
+end
+Trade:Section({Title="Auto Trade System",TextSize=20})
+Trade:Toggle({Title="Auto Accept Trade",Desc="Otomatis menerima semua trade masuk.",Value=false,Callback=function(s)autoAcceptState=s WindUI:Notify({Title=s and"Auto Accept ON"or"Auto Accept OFF",Content=s and"Siap menerima trade."or nil,Duration=3,Icon=s and"check"or"x"})end})
+Trade:Divider()
+local PlayerDropdown=Trade:Dropdown({Title="Select Target Player",Values={},Multi=false,AllowNone=false,Callback=function(n)local p=Players:FindFirstChild(n)if p then selectedTradeTargetId=p.UserId WindUI:Notify({Title="Target Set",Content=p.Name,Duration=2,Icon="user"})else selectedTradeTargetId=nil end end})
+Trade:Button({Title="Refresh Players",Icon="refresh-ccw",Callback=function()local l={}for _,p in ipairs(Players:GetPlayers())do if p~=LocalPlayer then table.insert(l,p.Name)end end pcall(function()PlayerDropdown:Refresh(l)end)pcall(function()PlayerDropdown:Set(false)end)WindUI:Notify({Title="List Updated",Content=#l.." players found.",Duration=2})end})
+Trade:Dropdown({Title="Filter Rarity (Optional)",Values={"Common","Uncommon","Rare","Epic","Legendary","Mythic","SECRET","Trophy","Collectible","DEV"},AllowNone=true,Callback=function(r)selectedTradeRarity=r end})
+local mutationDropdown=Trade:Dropdown({Title="Filter Mutation (Optional)",Values={"All Mutations","No Mutation","Shiny","Albino","Sandy","Noob","Moon Fragment","Festive","Disco","1x1x1x1","Bloodmoon","Color Burn","Corrupt","Fairy Dust","Frozen","Galaxy","Gemstone","Ghost","Gold","Holographic","Lightning","Midnight","Radioactive","Stone"},AllowNone=true,SearchBarEnabled=true,Callback=function(m)if m=="All Mutations"or m=="No Mutation"then selectedMutation=""else selectedMutation=m end end})
+Trade:Toggle({Title="Hold Favorite Items",Desc="Jangan trade item yang di-Favorite.",Value=false,Callback=function(s)tradeHoldFavorite=s end})
+Trade:Toggle({Title="Hide Favorited in Dropdown",Desc="Sembunyikan item favorit saat scan.",Value=false,Callback=function(s)hideFavoriteInDropdown=s end})
+Trade:Toggle({Title="Group Mutations",Desc="Gabung semua mutasi dalam satu item.",Value=false,Callback=function(s)groupMutationsInDropdown=s end})
+Trade:Divider()
+local tradeDropdown
+local function ScanBackpackItems()
+local items=GetInventoryForScan()
+if groupMutationsInDropdown then
+local itemTotals={}
+local favTotals={}
+for _,item in ipairs(items)do
+local name=item.Name
+local isFav=item.IsFavorite
+itemTotals[name]=(itemTotals[name]or 0)+1
+if isFav then favTotals[name]=(favTotals[name]or 0)+1 end
+end
+local itemList={}
+for itemName,total in pairs(itemTotals)do
+local favCount=favTotals[itemName]or 0
+local displayName=itemName.." (x"..total
+if favCount>0 then
+displayName=displayName.." ⭐"
+end
+displayName=displayName..")"
+table.insert(itemList,displayName)
+end
+table.sort(itemList)
+return itemList
+else
+local itemDetails={}
+for _,item in ipairs(items)do
+local name=item.Name
+local mutation=item.Mutation
+local isFav=item.IsFavorite
+if not itemDetails[name]then itemDetails[name]={}end
+if not itemDetails[name][mutation]then itemDetails[name][mutation]={total=0,fav=0}end
+itemDetails[name][mutation].total=itemDetails[name][mutation].total+1
+if isFav then itemDetails[name][mutation].fav=itemDetails[name][mutation].fav+1 end
+end
+local itemList={}
+for itemName,mutations in pairs(itemDetails)do
+for mutName,data in pairs(mutations)do
+local displayName=itemName
+if mutName~="No Mutation"then
+displayName=displayName.." ("..mutName.." x"..data.total
+else
+displayName=displayName.." (x"..data.total
+end
+if data.fav>0 then
+displayName=displayName.." ⭐"
+end
+displayName=displayName..")"
+table.insert(itemList,displayName)
+end
+end
+table.sort(itemList)
+return itemList
+end
+end
+Trade:Button({Title="Scan Backpack",Icon="package",Callback=function()
+local scanned=ScanBackpackItems()
+if #scanned>0 then
+tradeDropdown:Refresh(scanned)
+WindUI:Notify({Title="Scan Complete",Content=#scanned.." item variations found",Duration=2})
+else
+tradeDropdown:Refresh({"No items found"})
+WindUI:Notify({Title="Empty",Content="No items matching filters",Duration=2})
+end
+end})
+tradeDropdown=Trade:Dropdown({Title="Select Item from Backpack",Values={"Click Scan Backpack first"},Multi=false,AllowNone=true,SearchBarEnabled=true,Callback=function(n)
+if n and n~=""then
+local itemNameOnly=n:match("^(.+) %(")
+if itemNameOnly then
+itemNameOnly=itemNameOnly:gsub(" %s+$","")
+selectedTradeItemName=itemNameOnly
+end
+end
+end})
+Trade:Input({Title="Quantity to Trade",Placeholder="1",Callback=function(v)tradeQuantity=tonumber(v)or 1 end})
+Trade:Input({Title="Stop at Coin Value",Placeholder="0 (Unlimited)",Callback=function(v)tradeStopAtCoins=tonumber(v)or 0 isTradeByCoinActive=tradeStopAtCoins>0 end})
+Trade:Slider({Title="Trade Delay",Step=0.1,Value={Min=0.5,Max=5,Default=1},Callback=function(v)tradeDelay=tonumber(v)end})
+Trade:Toggle({Title="Enable Auto Trade",Value=false,Callback=function(s)
+autoTradeState=s
+if s then
+if not selectedTradeTargetId then WindUI:Notify({Title="Error",Content="Target Player belum dipilih!",Duration=3,Icon="alert-triangle"})return false end
+RunAutoTradeLoop()
+else
+if autoTradeThread then task.cancel(autoTradeThread)end
+WindUI:Notify({Title="Stopped",Duration=2})
+end
+end})
+end
+
+--// ENCHANT_ALTAR_LOOK
 local function EnchantTab()
     if not Enchant then return end
 local RepStorage=game:GetService("ReplicatedStorage")
@@ -4179,15 +6191,18 @@ end
 task.spawn(function()
 while true do
 task.wait(3)
-if menucrate then
+if menuCreated then
 SetupTab()
+KaitunTab()
 EnchantTab()
 InfoTab()
 PlayerTab()
 MainTab()
 ShopTab()
 TeleportTab()
+EventTab()
 QuestTab()
+TradeTab()
 DiscordTab()
 SettingTab()
 MiscTab()
