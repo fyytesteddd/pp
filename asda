@@ -1032,19 +1032,11 @@ local function cast()
     end)
 end
 
--- ATTRIBUTE GUARD (FIX UTAMA)
 local function startAttributeGuard()
-    if attrT then task.cancel(attrT) end
-    attrT=task.spawn(function()
-        while run do
-            pcall(function()
-                if LocalPlayer:GetAttribute("InCutscene")~=true then
-                    LocalPlayer:SetAttribute("InCutscene",true)
-                end
-            end)
-            task.wait(0.2)
-        end
+    pcall(function()
+        LocalPlayer:SetAttribute("InCutscene", true)
     end)
+    attrT = nil  -- Gak perlu loop
 end
 
 local function stopAttributeGuard()
