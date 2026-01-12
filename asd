@@ -4028,7 +4028,7 @@ local function teleport(cf)
     hrp.CFrame=cf+Vector3.new(0,3,0)
 end
 
-local function canInteract(obj)
+local function getInteractable(obj)
     local p=obj:FindFirstChildWhichIsA("ProximityPrompt",true)
     if p and p.Enabled then return p end
     local c=obj:FindFirstChildWhichIsA("ClickDetector",true)
@@ -4036,7 +4036,7 @@ local function canInteract(obj)
 end
 
 local function interactOnce(obj)
-    local i=canInteract(obj)
+    local i=getInteractable(obj)
     if not i then return false end
     if i:IsA("ProximityPrompt") then
         fireproximityprompt(i,1)
@@ -4049,7 +4049,7 @@ end
 local function getRandomChest()
     local valid={}
     for _,v in ipairs(STORAGE:GetChildren()) do
-        if not triedChests[v] and canInteract(v) then
+        if not triedChests[v] and getInteractable(v) then
             table.insert(valid,v)
         end
     end
@@ -4057,58 +4057,73 @@ local function getRandomChest()
     return valid[math.random(#valid)]
 end
 
-local sectionTreasure=Event:Section({Title="Pirate Treasure",TextSize=16})
+-- ===== WIND UI =====
+
+if not Event then return end
+
+local sectionTreasure=Event:Section({
+    Title="Pirate Treasure",
+    TextSize=16
+})
 
 sectionTreasure:Toggle({
-Title="Auto Claim Treasure Chest",
-Value=false,
-Icon="treasure-chest",
-Callback=function(state)
-autoClaimTreasureState=state
+    Title="Auto Claim Treasure Chest",
+    Value=false,
+    Icon="box", -- VALID ICON
+    Callback=function(state)
+        autoClaimTreasureState=state
 
-if state then
-    WindUI:Notify({Title="Auto Claim ON",Duration=3,Icon="treasure-chest"})
-    triedChests={}
+        if state then
+            WindUI:Notify({Title="Auto Claim ON",Duration=2,Icon="box"})
+            triedChests={}
 
-    if autoClaimTreasureThread then task.cancel(autoClaimTreasureThread)end
-
-    autoClaimTreasureThread=task.spawn(function()
-        teleport(START_CFRAME)
-        task.wait(0.6)
-
-        while autoClaimTreasureState do
-            local chest=getRandomChest()
-            if not chest then
-                autoClaimTreasureState=false
-                WindUI:Notify({
-                    Title="Treasure Empty",
-                    Content="Semua treasure sudah di-claim.",
-                    Duration=3,
-                    Icon="check"
-                })
-                break
+            if autoClaimTreasureThread then
+                task.cancel(autoClaimTreasureThread)
+                autoClaimTreasureThread=nil
             end
 
-            triedChests[chest]=true
+            autoClaimTreasureThread=task.spawn(function()
+                teleport(START_CFRAME)
+                task.wait(0.6)
 
-            local part=chest:IsA("Model") and (chest.PrimaryPart or chest:FindFirstChildWhichIsA("BasePart")) or chest
-            if part then
-                teleport(part.CFrame)
-                task.wait(0.4)
-                interactOnce(chest)
+                while autoClaimTreasureState do
+                    local chest=getRandomChest()
+                    if not chest then
+                        autoClaimTreasureState=false
+                        WindUI:Notify({
+                            Title="Treasure Empty",
+                            Content="Semua treasure sudah di-claim.",
+                            Duration=3,
+                            Icon="check"
+                        })
+                        break
+                    end
+
+                    triedChests[chest]=true
+
+                    local part=
+                        chest:IsA("Model")
+                        and (chest.PrimaryPart or chest:FindFirstChildWhichIsA("BasePart"))
+                        or chest
+
+                    if part then
+                        teleport(part.CFrame)
+                        task.wait(0.4)
+                        interactOnce(chest)
+                    end
+
+                    task.wait(LOOP_DELAY)
+                end
+            end)
+        else
+            if autoClaimTreasureThread then
+                task.cancel(autoClaimTreasureThread)
+                autoClaimTreasureThread=nil
             end
-
-            task.wait(LOOP_DELAY)
+            WindUI:Notify({Title="Auto Claim OFF",Duration=2,Icon="x"})
         end
-    end)
-else
-    if autoClaimTreasureThread then
-        task.cancel(autoClaimTreasureThread)
-        autoClaimTreasureThread=nil
     end
-    WindUI:Notify({Title="Auto Claim OFF",Duration=2,Icon="x"})
-end
-end})
+})
 
 
 end
