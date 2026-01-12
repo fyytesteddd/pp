@@ -30,6 +30,16 @@ local Window = WindUI:CreateWindow({
     HideSearchBar = true,
     ScrollBarEnabled = false,
     Background = "rbxassetid://78893380921225", 
+
+        KeySystem = {                                                   
+        Note = "Example Key System. With pandadevelopment.",        
+        API = {                                                     
+            { -- pandadevelopment
+                Type = "pandadevelopment", -- type
+                ServiceId = "fyyhub", -- service id
+            },                                                      
+        },                                                          
+    },                                                              
 })
 
 Window:SetToggleKey(Enum.KeyCode.G)
@@ -46,6 +56,8 @@ Window:EditOpenButton({
     Enabled = true,
     Draggable = true,
 })
+
+
 
 Window:SetIconSize(35) 
 Window:Tag({
@@ -170,7 +182,6 @@ local  Discord, Config, Setting, Misc, Animation
 
 local function SetupTab()
     if not Info then Info = Window:Tab({ Title = "Info", Icon = "info" }) end
-    if not Premium then Premium = Window:Tab({ Title = "Kaitun VIP", Icon = "crown" }) end
     if not Player then Player = Window:Tab({ Title = "Player", Icon = "user" }) end
     if not Auto then Auto = Window:Tab({ Title = "Main", Icon = "play" }) end
     if not Shop then Shop = Window:Tab({ Title = "Shop", Icon = "shopping-cart" }) end
@@ -813,7 +824,8 @@ local T={
  ["Classic Island"]=CFrame.new(1173,4,2839),
  ["Iron Cave"]=CFrame.new(-8640,-548,164),
  ["Iron Cavern"]=CFrame.new(-8775,-585,100),
- ["Christmas Island"]=CFrame.new(1160,23,1533)
+ ["Christmas Island"]=CFrame.new(1160,23,1533),
+ ["Pirate Island"]=CFrame.new(3263, 5, 3686),
 }
 
 local sel=""
@@ -843,7 +855,7 @@ end
 
 local teleportLocationDropdown = Reg("teleportLocation",Auto:Dropdown({
  Title="Teleport Location",
- Values={"Fisherman Island","Kohana Volcano","Kohana","Esotric Islands","Coral Reefs","Crater Island","Sisyphus Statue","Treasure Room","Lost Isle","Tropical Grove","Weater Machine","Enchant Room","Seconds Enchant","Ancient Jungle","Sacred Temple","Underground Cellar","Arrow Artifact","Crescent Artifact","Hourglass Diamond Artifact","Diamond Artifact","Mount Hallow","Crystal Caverns","Ancient Ruin","Classic Island","Iron Cave","Iron Cavern","Christmas Island"},
+ Values={"Fisherman Island","Kohana Volcano","Kohana","Esotric Islands","Coral Reefs","Crater Island","Sisyphus Statue","Treasure Room","Lost Isle","Tropical Grove","Weater Machine","Enchant Room","Seconds Enchant","Ancient Jungle","Sacred Temple","Underground Cellar","Arrow Artifact","Crescent Artifact","Hourglass Diamond Artifact","Diamond Artifact","Mount Hallow","Crystal Caverns","Ancient Ruin","Classic Island","Iron Cave","Iron Cavern","Christmas Island","Pirate Island"},
  AllowNone = true,
  Callback=function(o)if o and o~=""then sel=o end end
 }))
@@ -1535,14 +1547,15 @@ local T={
  ["Classic Island"]=CFrame.new(1173,4,2839),
  ["Iron Cave"]=CFrame.new(-8640,-548,164),
  ["Iron Cavern"]=CFrame.new(-8775,-585,100),
- ["Christmas Island"]=CFrame.new(1160,23,1533)
+ ["Christmas Island"]=CFrame.new(1160,23,1533),
+ ["Pirate Island"]=CFrame.new(3263, 5, 3686)
 }
 
 local sel=""
 
 Teleport:Dropdown({
  Title="Teleport To Island",
- Values={"Fisherman Island","Kohana Volcano","Kohana","Esotric Islands","Coral Reefs","Crater Island","Sisyphus Statue","Treasure Room","Lost Isle","Tropical Grove","Weater Machine","Enchant Room","Seconds Enchant","Ancient Jungle","Sacred Temple","Underground Cellar","Arrow Artifact","Crescent Artifact","Hourglass Diamond Artifact","Diamond Artifact","Mount Hallow","Crystal Caverns","Ancient Ruin","Classic Island","Iron Cave","Iron Cavern","Christmas Island"},
+ Values={"Fisherman Island","Kohana Volcano","Kohana","Esotric Islands","Coral Reefs","Crater Island","Sisyphus Statue","Treasure Room","Lost Isle","Tropical Grove","Weater Machine","Enchant Room","Seconds Enchant","Ancient Jungle","Sacred Temple","Underground Cellar","Arrow Artifact","Crescent Artifact","Hourglass Diamond Artifact","Diamond Artifact","Mount Hallow","Crystal Caverns","Ancient Ruin","Classic Island","Iron Cave","Iron Cavern","Christmas Island","Pirate Island"},
  Value="",
  Callback=function(v)if v~=""then sel=v end end
 })
