@@ -1137,7 +1137,7 @@ REM.OnClientEvent:Connect(function()
  end)
 end)
 
-Auto:Section({Title="Blatant V2"})
+--// v2
 
 local RS=game:GetService("ReplicatedStorage")
 local net=RS:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
@@ -1152,7 +1152,8 @@ local Equip=net:WaitForChild("RE/EquipToolFromHotbar")
 local Unequip=net:WaitForChild("RE/UnequipToolFromHotbar")
 
 local active=false
-local thread=nil
+local fishingThread=nil
+local equipThread=nil
 local casts=0
 local start=0
 
@@ -1165,10 +1166,8 @@ local function safe(f)task.spawn(function()pcall(f)end)end
 local Players=game:GetService("Players")
 local LocalPlayer=Players.LocalPlayer
 
-local function loop()
+local function fishingLoop()
  while active do
-  safe(function()Equip:FireServer(1)end)
-  task.wait(0.1)
   local t=tick()
   safe(function()RFC:InvokeServer({[1]=t})end)
   task.wait(CD)
@@ -1179,8 +1178,15 @@ local function loop()
   safe(function()REF:FireServer()end)
   task.wait(KD)
   safe(function()RFK:InvokeServer()end)
-  safe(function()Unequip:FireServer()end)
  end
+end
+
+local function equipLoop()
+ while active do
+  safe(function()Equip:FireServer(1)end)
+  task.wait(1)  -- Loop equip setiap 1 detik
+ end
+ safe(function()Unequip:FireServer()end)
 end
 
 REM.OnClientEvent:Connect(function()
@@ -1208,10 +1214,12 @@ if s then
  casts=0
  start=tick()
  pcall(function()LocalPlayer:SetAttribute("InCutscene",true)end)
- thread=task.spawn(loop)
  safe(function()RFU:InvokeServer(true)end)
+ fishingThread=task.spawn(fishingLoop)
+ equipThread=task.spawn(equipLoop)
 else 
- if thread then task.cancel(thread)thread=nil end
+ if fishingThread then task.cancel(fishingThread)fishingThread=nil end
+ if equipThread then task.cancel(equipThread)equipThread=nil end
  safe(function()RFU:InvokeServer(false)end)
  safe(function()Unequip:FireServer()end)
  task.wait(.2)
