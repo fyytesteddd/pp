@@ -986,12 +986,36 @@ local function cast()
  end)
 end
 
+-- BYPASS SYSTEM
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local v3 = require(RS.Packages.Net)
+local UpdateAutoFishing = v3:RemoteFunction("UpdateAutoFishingState")
+
+-- Get data object
+local GetData
+if v3.Client then
+    GetData = v3.Client:WaitReplion("Data")
+end
+
+-- Hook GetExpect untuk bypass InCutscene check
+if GetData and GetData.GetExpect then
+    local oldGetExpect = GetData.GetExpect
+    GetData.GetExpect = function(self, key)
+        if key == "InCutscene" then
+            return false  -- Selalu false biar loop auto fishing gak jalan
+        end
+        return oldGetExpect(self, key)
+    end
+end
+
 local blatantModeToggle = Reg("blatantMode",Auto:Toggle({
  Title="Enable Blatant Mode",
  Value=false,
  Callback=function(s)
   run=s
   if s then
+   UpdateAutoFishing:InvokeServer(true)
    if loopT then task.cancel(loopT)end
    loopT=task.spawn(function()
     while run do cast()task.wait(interval)end
@@ -1001,13 +1025,13 @@ local blatantModeToggle = Reg("blatantMode",Auto:Toggle({
     while run do pcall(function()REE:FireServer(1)end)task.wait(1)end
    end)
   else
+   UpdateAutoFishing:InvokeServer(false)
    if loopT then task.cancel(loopT)loopT=nil end
    if eqT then task.cancel(eqT)eqT=nil end
    pcall(function()REE:FireServer(0)end)
   end
  end
 }))
-
 --// BLATANT
 
 local RS=game:GetService("ReplicatedStorage")
@@ -4124,8 +4148,6 @@ sectionTreasure:Toggle({
         end
     end
 })
-
-
 end
 --// OMAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 local function TradeTab()
