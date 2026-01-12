@@ -986,28 +986,19 @@ local function cast()
  end)
 end
 
--- BYPASS SYSTEM
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local v3 = require(RS.Packages.Net)
 local UpdateAutoFishing = v3:RemoteFunction("UpdateAutoFishingState")
 
--- Get data object
-local GetData
-if v3.Client then
-    GetData = v3.Client:WaitReplion("Data")
-end
-
--- Hook GetExpect untuk bypass InCutscene check
-if GetData and GetData.GetExpect then
-    local oldGetExpect = GetData.GetExpect
-    GetData.GetExpect = function(self, key)
-        if key == "InCutscene" then
-            return false  -- Selalu false biar loop auto fishing gak jalan
-        end
-        return oldGetExpect(self, key)
+local originalSetAttribute = LocalPlayer.SetAttribute
+LocalPlayer.SetAttribute = function(self, attr, val)
+    if attr == "InCutscene" then
+        return originalSetAttribute(self, attr, true)
     end
+    return originalSetAttribute(self, attr, val)
 end
+LocalPlayer:SetAttribute("InCutscene", true)
 
 local blatantModeToggle = Reg("blatantMode",Auto:Toggle({
  Title="Enable Blatant Mode",
