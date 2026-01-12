@@ -1139,42 +1139,86 @@ end)
 
 Auto:Section({Title="Blatant V2"})
 
+local RS=game:GetService("ReplicatedStorage")
+local net=RS:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
+
+local RFC=net:WaitForChild("RF/ChargeFishingRod")
+local RFS=net:WaitForChild("RF/RequestFishingMinigameStarted")
+local RFK=net:WaitForChild("RF/CancelFishingInputs")
+local RFU=net:WaitForChild("RF/UpdateAutoFishingState")
+local REF=net:WaitForChild("RE/FishingCompleted")
+local REM=net:WaitForChild("RE/FishingMinigameChanged")
+local Equip=net:WaitForChild("RE/EquipToolFromHotbar")
+local Unequip=net:WaitForChild("RE/UnequipToolFromHotbar")
+
+local active=false
+local thread=nil
+local casts=0
+local start=0
+
+local CD=.002
+local FD=.7
+local KD=.3
+
+local function safe(f)task.spawn(function()pcall(f)end)end
+
+local Players=game:GetService("Players")
+local LocalPlayer=Players.LocalPlayer
+
+local function loop()
+ while active do
+  safe(function()Equip:FireServer(1)end)
+  task.wait(0.1)
+  local t=tick()
+  safe(function()RFC:InvokeServer({[1]=t})end)
+  task.wait(CD)
+  local r=tick()
+  safe(function()RFS:InvokeServer(1,0,r)end)
+  casts+=1
+  task.wait(FD)
+  safe(function()REF:FireServer()end)
+  task.wait(KD)
+  safe(function()RFK:InvokeServer()end)
+  safe(function()Unequip:FireServer()end)
+ end
+end
+
+REM.OnClientEvent:Connect(function()
+ if not active then return end
+ task.spawn(function()
+  task.wait(FD)
+  safe(function()REF:FireServer()end)
+  task.wait(KD)
+  safe(function()RFK:InvokeServer()end)
+ end)
+end)
+
+Auto:Section({Title="Blatant V2"})
+
 local blatantV2CompleteDelayInput=Reg("blatantV2_completeDelay",Auto:Input({Title="Complete Delay",Placeholder=tostring(FD),Value=tostring(FD),Callback=function(v)local n=tonumber(v)if n and n>=0 then FD=n end end}))
 local blatantV2CancelDelayInput=Reg("blatantV2_cancelDelay",Auto:Input({Title="Cancel Delay",Placeholder=tostring(KD),Value=tostring(KD),Callback=function(v)local n=tonumber(v)if n and n>=0 then KD=n end end}))
-local blatantV2Toggle=Reg("blatantV2_toggle",Auto:Toggle({Title="Enable Blatant V2",Desc="Ultra fast perfect-cast fishing",Default=false,Callback=function(s)active=s;if s then casts=0;start=tick();thread=task.spawn(loop);else if thread then task.cancel(thread)thread=nil end;safe(function()RFU:InvokeServer(true)end);task.wait(.2);safe(function()RFK:InvokeServer()end);end end}))
-local RS=game:GetService("ReplicatedStorage")
-local Net=RS:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
-local Equip=Net:WaitForChild("RE/EquipToolFromHotbar")
-local Unequip=Net:WaitForChild("RE/UnequipToolFromHotbar")
 
-local ROD_SLOT=1
-local AUTO=false
-local THREAD=nil
-
-local function Start()
-if THREAD then task.cancel(THREAD)end
-THREAD=task.spawn(function()
-while AUTO do
-pcall(function()Equip:FireServer(ROD_SLOT)end)
-task.wait(0.5)
-end
-end)
-end
-
-local function Stop()
-AUTO=false
-if THREAD then task.cancel(THREAD)THREAD=nil end
-pcall(function()Unequip:FireServer()end)
-end
-
-local autoRod=Reg("autoEquipRod",Auto:Toggle({
-Title="Auto Equip Rod",Value=false,
+local blatantV2Toggle=Reg("blatantV2_toggle",Auto:Toggle({
+Title="Enable Blatant V2",
+Desc="Ultra fast perfect-cast fishing",
+Default=false,
 Callback=function(s)
-AUTO=s
-if s then Start()else Stop()end
+active=s
+if s then 
+ casts=0
+ start=tick()
+ pcall(function()LocalPlayer:SetAttribute("InCutscene",true)end)
+ thread=task.spawn(loop)
+ safe(function()RFU:InvokeServer(true)end)
+else 
+ if thread then task.cancel(thread)thread=nil end
+ safe(function()RFU:InvokeServer(false)end)
+ safe(function()Unequip:FireServer()end)
+ task.wait(.2)
+ safe(function()RFK:InvokeServer()end)
+end
 end
 }))
-
 --// ASD
 Auto:Section({Title="Teleport Feature"})
 
