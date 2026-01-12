@@ -948,81 +948,155 @@ Auto:Space()Auto:Divider()
 Auto:Section({Title="Blatant Mode"})
 
 local run=false
-local loopT,eqT=nil,nil
+local loopT,eqT,attrT=nil,nil,nil
+
 local cDelay=3.1
 local kDelay=.3
 local interval=1.8
 
-local loopIntervalInput=Reg("loopInterval",Auto:Input({Title="Recast Delay",Value=tostring(interval),Placeholder="1.8",Callback=function(v)local n=tonumber(v)if n and n>=0 then interval=n end end}))
-local completeDelayInput=Reg("completeDelay",Auto:Input({Title="Complete Delay",Value=tostring(cDelay),Placeholder="3.1",Callback=function(v)local n=tonumber(v)if n and n>0 then cDelay=n end end}))
+local loopIntervalInput=Reg("loopInterval",Auto:Input({
+    Title="Recast Delay",
+    Value=tostring(interval),
+    Placeholder="1.8",
+    Callback=function(v)
+        local n=tonumber(v)
+        if n and n>=0 then interval=n end
+    end
+}))
 
+local completeDelayInput=Reg("completeDelay",Auto:Input({
+    Title="Complete Delay",
+    Value=tostring(cDelay),
+    Placeholder="3.1",
+    Callback=function(v)
+        local n=tonumber(v)
+        if n and n>0 then cDelay=n end
+    end
+}))
+
+-- SERVICES
 local RS=game:GetService("ReplicatedStorage")
+local Players=game:GetService("Players")
+local LocalPlayer=Players.LocalPlayer
+
+-- REMOTE FINDER
 local R={"Packages","_Index","sleitnick_net@0.2.0","net"}
 local function GR(n)
- local c=RS
- for _,p in ipairs(R)do c=c:WaitForChild(p,2)end
- return c and c:FindFirstChild(n)
+    local c=RS
+    for _,p in ipairs(R) do
+        c=c:WaitForChild(p,2)
+    end
+    return c and c:FindFirstChild(n)
 end
 
+-- REMOTES
 local RFC=GR("RF/ChargeFishingRod")
 local RFS=GR("RF/RequestFishingMinigameStarted")
 local REF=GR("RE/FishingCompleted")
 local RFK=GR("RF/CancelFishingInputs")
 local REE=GR("RE/EquipToolFromHotbar")
 
+-- AUTO FISH REMOTE
+local Net=require(RS.Packages.Net)
+local UpdateAutoFishing=Net:RemoteFunction("UpdateAutoFishingState")
+
+-- CAST FUNCTION
 local function cast()
- if not run then return end
- task.spawn(function()
-  local st=os.clock()
-  local ts=os.time()+os.clock()
-  pcall(function()RFC:InvokeServer(ts)end)
-  task.wait(.05)
-  pcall(function()RFS:InvokeServer(-139.6379699707,0.99647927980797)end)
-  local w=cDelay-(os.clock()-st)
-  if w>0 then task.wait(w)end
-  pcall(function()REF:FireServer()end)
-  task.wait(kDelay)
-  pcall(function()RFK:InvokeServer()end)
- end)
+    if not run then return end
+    task.spawn(function()
+        local st=os.clock()
+        local ts=os.time()+os.clock()
+
+        pcall(function()
+            RFC:InvokeServer(ts)
+        end)
+
+        task.wait(.05)
+
+        pcall(function()
+            RFS:InvokeServer(-139.6379699707,0.99647927980797)
+        end)
+
+        local w=cDelay-(os.clock()-st)
+        if w>0 then task.wait(w) end
+
+        pcall(function()
+            REF:FireServer()
+        end)
+
+        task.wait(kDelay)
+
+        pcall(function()
+            RFK:InvokeServer()
+        end)
+    end)
 end
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local v3 = require(RS.Packages.Net)
-local UpdateAutoFishing = v3:RemoteFunction("UpdateAutoFishingState")
+-- ATTRIBUTE GUARD (FIX UTAMA)
+local function startAttributeGuard()
+    if attrT then task.cancel(attrT) end
+    attrT=task.spawn(function()
+        while run do
+            pcall(function()
+                if LocalPlayer:GetAttribute("InCutscene")~=true then
+                    LocalPlayer:SetAttribute("InCutscene",true)
+                end
+            end)
+            task.wait(0.2)
+        end
+    end)
+end
 
-local originalSetAttribute = LocalPlayer.SetAttribute
-LocalPlayer.SetAttribute = function(self, attr, val)
-    if attr == "InCutscene" then
-        return originalSetAttribute(self, attr, true)
+local function stopAttributeGuard()
+    if attrT then
+        task.cancel(attrT)
+        attrT=nil
     end
-    return originalSetAttribute(self, attr, val)
 end
-LocalPlayer:SetAttribute("InCutscene", true)
 
-local blatantModeToggle = Reg("blatantMode",Auto:Toggle({
- Title="Enable Blatant Mode",
- Value=false,
- Callback=function(s)
-  run=s
-  if s then
-   UpdateAutoFishing:InvokeServer(true)
-   if loopT then task.cancel(loopT)end
-   loopT=task.spawn(function()
-    while run do cast()task.wait(interval)end
-   end)
-   if eqT then task.cancel(eqT)end
-   eqT=task.spawn(function()
-    while run do pcall(function()REE:FireServer(1)end)task.wait(1)end
-   end)
-  else
-   UpdateAutoFishing:InvokeServer(false)
-   if loopT then task.cancel(loopT)loopT=nil end
-   if eqT then task.cancel(eqT)eqT=nil end
-   pcall(function()REE:FireServer(0)end)
-  end
- end
+-- UI TOGGLE
+local blatantModeToggle=Reg("blatantMode",Auto:Toggle({
+    Title="Enable Blatant Mode",
+    Value=false,
+    Callback=function(s)
+        run=s
+
+        if s then
+            UpdateAutoFishing:InvokeServer(true)
+            startAttributeGuard()
+
+            if loopT then task.cancel(loopT) end
+            loopT=task.spawn(function()
+                while run do
+                    cast()
+                    task.wait(interval)
+                end
+            end)
+
+            if eqT then task.cancel(eqT) end
+            eqT=task.spawn(function()
+                while run do
+                    pcall(function()
+                        REE:FireServer(1)
+                    end)
+                    task.wait(1)
+                end
+            end)
+
+        else
+            UpdateAutoFishing:InvokeServer(false)
+            stopAttributeGuard()
+
+            if loopT then task.cancel(loopT) loopT=nil end
+            if eqT then task.cancel(eqT) eqT=nil end
+
+            pcall(function()
+                REE:FireServer(0)
+            end)
+        end
+    end
 }))
+
 --// BLATANT
 
 local RS=game:GetService("ReplicatedStorage")
