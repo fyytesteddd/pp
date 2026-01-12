@@ -31,12 +31,13 @@ local Window = WindUI:CreateWindow({
     ScrollBarEnabled = false,
     Background = "rbxassetid://78893380921225", 
 
-        KeySystem = {                                                   
-        Note = "Example Key System. With pandadevelopment.",        
+     KeySystem = {                                                   
+        Note = "Example Key System. With platoboost.",              
         API = {                                                     
-            { -- pandadevelopment
-                Type = "pandadevelopment", -- type
-                ServiceId = "fyyhub", -- service id
+            { -- PlatoBoost
+                Type = "platoboost",                                
+                ServiceId = 18126, -- service id
+                Secret = "a4136cf7-8357-4ce0-a1d3-d24d3bd77c54", -- platoboost secret
             },                                                      
         },                                                          
     },                                                              
