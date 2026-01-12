@@ -4015,32 +4015,46 @@ local START_CFRAME=CFrame.new(3263,5,3686)
 local STORAGE=workspace:WaitForChild("PirateChestStorage")
 local LOOP_DELAY=1
 
+local triedChests={}
+
 local function getHRP()
     local char=plr.Character or plr.CharacterAdded:Wait()
     return char:WaitForChild("HumanoidRootPart")
 end
 
 local function teleport(cf)
-    getHRP().CFrame=cf
+    local hrp=getHRP()
+    hrp.AssemblyLinearVelocity=Vector3.zero
+    hrp.CFrame=cf+Vector3.new(0,3,0)
+end
+
+local function canInteract(obj)
+    local p=obj:FindFirstChildWhichIsA("ProximityPrompt",true)
+    if p and p.Enabled then return p end
+    local c=obj:FindFirstChildWhichIsA("ClickDetector",true)
+    if c then return c end
 end
 
 local function interactOnce(obj)
-    local prompt=obj:FindFirstChildWhichIsA("ProximityPrompt",true)
-    if prompt then
-        fireproximityprompt(prompt,1)
-        return true
+    local i=canInteract(obj)
+    if not i then return false end
+    if i:IsA("ProximityPrompt") then
+        fireproximityprompt(i,1)
+    else
+        fireclickdetector(i)
     end
-    local click=obj:FindFirstChildWhichIsA("ClickDetector",true)
-    if click then
-        fireclickdetector(click)
-        return true
-    end
+    return true
 end
 
 local function getRandomChest()
-    local list=STORAGE:GetChildren()
-    if #list==0 then return end
-    return list[math.random(#list)]
+    local valid={}
+    for _,v in ipairs(STORAGE:GetChildren()) do
+        if not triedChests[v] and canInteract(v) then
+            table.insert(valid,v)
+        end
+    end
+    if #valid==0 then return end
+    return valid[math.random(#valid)]
 end
 
 local sectionTreasure=Event:Section({Title="Pirate Treasure",TextSize=16})
@@ -4054,6 +4068,8 @@ autoClaimTreasureState=state
 
 if state then
     WindUI:Notify({Title="Auto Claim ON",Duration=3,Icon="treasure-chest"})
+    triedChests={}
+
     if autoClaimTreasureThread then task.cancel(autoClaimTreasureThread)end
 
     autoClaimTreasureThread=task.spawn(function()
@@ -4073,16 +4089,12 @@ if state then
                 break
             end
 
-            if chest:IsA("Model") then
-                local part=chest.PrimaryPart or chest:FindFirstChildWhichIsA("BasePart")
-                if part then
-                    teleport(part.CFrame)
-                    task.wait(0.3)
-                    interactOnce(chest)
-                end
-            elseif chest:IsA("BasePart") then
-                teleport(chest.CFrame)
-                task.wait(0.3)
+            triedChests[chest]=true
+
+            local part=chest:IsA("Model") and (chest.PrimaryPart or chest:FindFirstChildWhichIsA("BasePart")) or chest
+            if part then
+                teleport(part.CFrame)
+                task.wait(0.4)
                 interactOnce(chest)
             end
 
@@ -4097,6 +4109,7 @@ else
     WindUI:Notify({Title="Auto Claim OFF",Duration=2,Icon="x"})
 end
 end})
+
 
 end
 --// OMAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
