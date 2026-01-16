@@ -1,4 +1,4 @@
-ualocal WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fyywannafly-sudo/FyyCommunity/refs/heads/main/lib_fyy"))()
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/fyywannafly-sudo/FyyCommunity/refs/heads/main/lib_fyy"))()
 
 WindUI:AddTheme({
     Name = "Fyy Community",
