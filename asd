@@ -486,9 +486,9 @@ local resetThread = nil
 local casts = 0
 local start = 0
 
-local CD = .002
-local FD = .7
-local KD = .3
+local CD = .003
+local FD = .14
+local KD = .294
 
 local function safe(f)
     task.spawn(function()
@@ -534,7 +534,7 @@ end
 
 local function resetCycleLoop()
     while active do
-        task.wait(10)
+        task.wait(8)
         if active then
             if fishingThread then 
                 task.cancel(fishingThread)
@@ -542,7 +542,7 @@ local function resetCycleLoop()
             end
             
             safe(function() RFK:InvokeServer() end)
-            task.wait(0.5)
+            task.wait(1.5)
             
             if active then
                 fishingThread = task.spawn(fishingLoop)
