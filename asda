@@ -534,7 +534,7 @@ end
 
 local function resetCycleLoop()
     while active do
-        task.wait(8)
+        task.wait(15)
         if active then
             if fishingThread then 
                 task.cancel(fishingThread)
