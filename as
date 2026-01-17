@@ -2561,42 +2561,51 @@ mf.BackgroundColor3=Color3.fromRGB(0,0,0)
 mf.BackgroundTransparency=0.25
 mf.BorderSizePixel=0
 mf.Parent=sg
-local function makeLabel(text,color,pos,font,size)
+local layout=Instance.new("UIListLayout")
+layout.Parent=mf
+layout.SortOrder=Enum.SortOrder.LayoutOrder
+layout.Padding=UDim.new(0,5)
+layout.HorizontalAlignment=Enum.HorizontalAlignment.Center
+layout.VerticalAlignment=Enum.VerticalAlignment.Center
+local function makeLabel(text,color,order,font,size)
 local l=Instance.new("TextLabel")
-l.Size=UDim2.new(0,0,0,0)
-l.AutomaticSize=Enum.AutomaticSize.XY
+l.Size=UDim2.new(1,0,0,0)
+l.AutomaticSize=Enum.AutomaticSize.Y
 l.BackgroundTransparency=1
 l.Text=text
 l.TextColor3=color or Color3.fromRGB(255,255,255)
 l.Font=font or Enum.Font.GothamBold
 l.TextSize=size or 16
-l.Position=pos
-l.TextWrapped=false
+l.LayoutOrder=order
+l.TextWrapped=true
 l.Parent=mf
 return l
 end
-makeLabel("Fyy Kaitun Status",Color3.fromRGB(255,255,255),UDim2.new(0.5,-75,0.05,0),Enum.Font.GothamBlack,18)
-local lStats1=makeLabel("Loading...",Color3.fromRGB(255,255,255),UDim2.new(0.5,-200,0.1,0),Enum.Font.GothamSemibold,11)
-local lStats2=makeLabel("Loading...",Color3.fromRGB(255,255,255),UDim2.new(0.5,-200,0.13,0),Enum.Font.GothamSemibold,11)
-makeLabel("Ghostfin Quest",Color3.fromRGB(255,100,100),UDim2.new(0.25,-100,0.3,0),Enum.Font.GothamBold,14)
-local lGhost1=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.25,-100,0.33,0),Enum.Font.Gotham,11)
-local lGhost2=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.25,-100,0.36,0),Enum.Font.Gotham,11)
-local lGhost3=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.25,-100,0.39,0),Enum.Font.Gotham,11)
-local lGhost4=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.25,-100,0.42,0),Enum.Font.Gotham,11)
-makeLabel("Element Quest",Color3.fromRGB(100,100,255),UDim2.new(0.75,-100,0.3,0),Enum.Font.GothamBold,14)
-local lElem1=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.75,-100,0.33,0),Enum.Font.Gotham,11)
-local lElem2=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.75,-100,0.36,0),Enum.Font.Gotham,11)
-local lElem3=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.75,-100,0.39,0),Enum.Font.Gotham,11)
-local lElem4=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.75,-100,0.42,0),Enum.Font.Gotham,11)
-makeLabel("Diamond Quest",Color3.fromRGB(255,215,0),UDim2.new(0.5,-100,0.6,0),Enum.Font.GothamBold,14)
-local lDiamond1=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.5,-100,0.63,0),Enum.Font.Gotham,11)
-local lDiamond2=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.5,-100,0.66,0),Enum.Font.Gotham,11)
-local lDiamond3=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.5,-100,0.69,0),Enum.Font.Gotham,11)
-local lDiamond4=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.5,-100,0.72,0),Enum.Font.Gotham,11)
-local lDiamond5=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.5,-100,0.75,0),Enum.Font.Gotham,11)
-local lDiamond6=makeLabel("Loading...",Color3.fromRGB(180,180,180),UDim2.new(0.5,-100,0.78,0),Enum.Font.Gotham,11)
-makeLabel("CURRENT ACTIVITY",Color3.fromRGB(255,215,0),UDim2.new(0.5,-75,0.85,0),Enum.Font.GothamBold,13)
-local lStatus=makeLabel("Idle",Color3.fromRGB(0,255,127),UDim2.new(0.5,-75,0.88,0),Enum.Font.GothamBlack,16)
+makeLabel("Fyy Kaitun Status",Color3.fromRGB(255,255,255),1,Enum.Font.GothamBlack,18)
+local lStats1=makeLabel("Loading...",Color3.fromRGB(255,255,255),2,Enum.Font.GothamSemibold,11)
+local lStats2=makeLabel("Loading...",Color3.fromRGB(255,255,255),3,Enum.Font.GothamSemibold,11)
+makeLabel("",nil,4,nil,4)
+makeLabel("Progress Quest Ghostfinn",Color3.fromRGB(255,100,100),5,Enum.Font.GothamBold,14)
+local lGhost1=makeLabel("Loading...",Color3.fromRGB(180,180,180),6,Enum.Font.Gotham,11)
+local lGhost2=makeLabel("Loading...",Color3.fromRGB(180,180,180),7,Enum.Font.Gotham,11)
+local lGhost3=makeLabel("Loading...",Color3.fromRGB(180,180,180),8,Enum.Font.Gotham,11)
+local lGhost4=makeLabel("Loading...",Color3.fromRGB(180,180,180),9,Enum.Font.Gotham,11)
+makeLabel("",nil,10,nil,4)
+makeLabel("Progress Quest Element Rod",Color3.fromRGB(100,100,255),11,Enum.Font.GothamBold,14)
+local lElem1=makeLabel("Loading...",Color3.fromRGB(180,180,180),12,Enum.Font.Gotham,11)
+local lElem2=makeLabel("Loading...",Color3.fromRGB(180,180,180),13,Enum.Font.Gotham,11)
+local lElem3=makeLabel("Loading...",Color3.fromRGB(180,180,180),14,Enum.Font.Gotham,11)
+local lElem4=makeLabel("Loading...",Color3.fromRGB(180,180,180),15,Enum.Font.Gotham,11)
+makeLabel("Progress Quest Diamond Rod",Color3.fromRGB(255,215,0),16,Enum.Font.GothamBold,14)
+local lDiamond1=makeLabel("Loading...",Color3.fromRGB(180,180,180),17,Enum.Font.Gotham,11)
+local lDiamond2=makeLabel("Loading...",Color3.fromRGB(180,180,180),18,Enum.Font.Gotham,11)
+local lDiamond3=makeLabel("Loading...",Color3.fromRGB(180,180,180),19,Enum.Font.Gotham,11)
+local lDiamond4=makeLabel("Loading...",Color3.fromRGB(180,180,180),20,Enum.Font.Gotham,11)
+local lDiamond5=makeLabel("Loading...",Color3.fromRGB(180,180,180),21,Enum.Font.Gotham,11)
+local lDiamond6=makeLabel("Loading...",Color3.fromRGB(180,180,180),22,Enum.Font.Gotham,11)
+makeLabel("----------------------------------------------------------------------------------------------------",Color3.fromRGB(100,100,100),23,nil,8)
+makeLabel("CURRENT ACTIVITY",Color3.fromRGB(255,215,0),24,Enum.Font.GothamBold,13)
+local lStatus=makeLabel("Idle",Color3.fromRGB(0,255,127),25,Enum.Font.GothamBlack,16)
 return {Gui=sg,Labels={Stats1=lStats1,Stats2=lStats2,Ghost={lGhost1,lGhost2,lGhost3,lGhost4},Elem={lElem1,lElem2,lElem3,lElem4},Diamond={lDiamond1,lDiamond2,lDiamond3,lDiamond4,lDiamond5,lDiamond6},Status=lStatus}}
 end
 local function RunQuestInstantFish(dynamicDelay)
