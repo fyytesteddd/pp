@@ -1,0 +1,517 @@
+local Fluent,SaveManager,InterfaceManager=loadstring(game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/release.lua"))()
+local Window=Fluent:CreateWindow({Title="Fyy X Fish IT | 1.1.1",SubTitle="by Fyy Community",TabWidth=150,Size=UDim2.fromOffset(530,300),Acrylic=true,Theme="Darker",MinimizeKey=Enum.KeyCode.LeftControl})
+local Tabs={Auth=Window:AddTab({Title="Authentication",Icon="key"})}
+local Options=Fluent.Options
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({})
+InterfaceManager:SetFolder("FyyScriptHub")
+SaveManager:SetFolder("FyyScriptHub/FishIT")
+local HttpService=game:GetService("HttpService")
+local Players=game:GetService("Players")
+local LocalPlayer=Players.LocalPlayer
+local FILE_CONFIG={folder="FyyVerifyyy",subfolder="auth",filename="token.dat"}
+local API_CONFIG={base_url="http://151.240.0.25:3000",validate_endpoint="check"}
+local function getHWID()
+local hwid
+local success=pcall(function()
+hwid=game:GetService("RbxAnalyticsService"):GetClientId()
+end)
+if success and hwid and hwid~=""then return hwid end
+pcall(function()
+hwid=HttpService:GenerateGUID(false)
+end)
+return hwid or("HWID-"..tostring(tick()))
+end
+local MAX_RETRIES=3
+local RETRY_DELAY=1
+local function secureHttpGet(url)
+for _=1,MAX_RETRIES do
+local success,response=pcall(function()
+return game:HttpGet(url,true)
+end)
+if success and response and response~=""then return response end
+task.wait(RETRY_DELAY)
+end
+return nil
+end
+local function getAuthFilePath()
+return FILE_CONFIG.folder.."/"..FILE_CONFIG.subfolder.."/"..FILE_CONFIG.filename
+end
+local function saveToken(token)
+pcall(function()
+if not isfolder(FILE_CONFIG.folder)then
+makefolder(FILE_CONFIG.folder)
+end
+local sub=FILE_CONFIG.folder.."/"..FILE_CONFIG.subfolder
+if not isfolder(sub)then
+makefolder(sub)
+end
+writefile(getAuthFilePath(),tostring(token))
+end)
+end
+local function loadToken()
+if not isfile(getAuthFilePath())then return nil end
+local token=readfile(getAuthFilePath())
+token=tostring(token):upper():gsub("%s+","")
+return token~=""and token or nil
+end
+local function deleteToken()
+pcall(function()
+if isfile(getAuthFilePath())then
+delfile(getAuthFilePath())
+end
+end)
+end
+local function ValidateKey(key)
+if not key or(not string.match(key,"^FYY%-.+")and not string.match(key,"^TRIAL%-.+"))then
+return false,"Format key salah"
+end
+local encKey=HttpService:UrlEncode(tostring(key))
+local encHWID=HttpService:UrlEncode(tostring(getHWID()))
+local encUserId=HttpService:UrlEncode(tostring(LocalPlayer.UserId))
+local encPlaceId=HttpService:UrlEncode(tostring(game.PlaceId))
+local username=LocalPlayer.Name
+local url=string.format(
+"%s/%s?key=%s&hwid=%s&robloxId=%s&placeId=%s&username=%s",
+API_CONFIG.base_url,
+API_CONFIG.validate_endpoint,
+encKey,
+encHWID,
+encUserId,
+encPlaceId,
+HttpService:UrlEncode(username)
+)
+local response=secureHttpGet(url)
+if not response then return false,"Server tidak merespon"end
+local decoded
+local ok=pcall(function()
+decoded=HttpService:JSONDecode(response)
+end)
+if not ok or type(decoded)~="table"then
+return false,"Response server tidak valid"
+end
+if decoded.status=="ok"then
+if decoded.isTrial then
+saveToken(key)
+return true,"TRIAL_OK"
+end
+if decoded.code=="OK"or decoded.code=="FIRST_BIND"then
+saveToken(key)
+return true,decoded.code
+end
+end
+if decoded.code=="HWID_BLACKLISTED"then
+return false,"HWID kamu di-blacklist"
+elseif decoded.code=="USERNAME_NOT_FOUND"then
+return false,"Username tidak terdaftar di key ini"
+elseif decoded.code=="INVALID_KEY"then
+return false,"Key tidak valid"
+elseif decoded.code=="BLACKLISTED"then
+return false,"Key di-blacklist"
+elseif decoded.code=="EXPIRED"then
+return false,"Key sudah expired"
+elseif decoded.code=="MISSING_PARAMS"then
+return false,"Parameter tidak lengkap"
+end
+return false,decoded.code or"AUTH_FAILED"
+end
+local I="77nEeYeFRp"
+local U="https://discord.com/api/v10/invites/"..I.."?with_counts=true&with_expiration=true"
+local R,E
+xpcall(function()
+R=game:GetService("HttpService"):JSONDecode(game:HttpGet(U,true))
+end,function(e)
+warn("err fetching discord info:"..tostring(e))
+E=tostring(e)
+R=nil
+end)
+if R and R.guild then
+Tabs.Auth:AddParagraph({
+Title=R.guild.name,
+Content='• Member Count: '..tostring(R.approximate_member_count)..'\n• Online Count: '..tostring(R.approximate_presence_count)
+})
+else
+Tabs.Auth:AddParagraph({
+Title="Error fetching Discord server info",
+Content=E or"Unknown error occurred"
+})
+end
+local Info,Premium,PlayerTab,Auto,Shop,Teleport,Totem,Quest,Event,Trade,Enchant,Animation,DiscordTab,SettingTab,MiscTab
+local function SetupTabsAfterAuth()
+Info=Window:AddTab({Title="Info",Icon="info"})
+Premium=Window:AddTab({Title="Kaitun VIP",Icon="crown"})
+PlayerTab=Window:AddTab({Title="Player",Icon="user"})
+Auto=Window:AddTab({Title="Main",Icon="play"})
+Shop=Window:AddTab({Title="Shop",Icon="shopping-cart"})
+Teleport=Window:AddTab({Title="Teleport",Icon="map-pin"})
+Totem=Window:AddTab({Title="Totem",Icon="hexagon"})
+Quest=Window:AddTab({Title="Quest",Icon="loader"})
+Event=Window:AddTab({Title="Event",Icon="gift"})
+Trade=Window:AddTab({Title="Trade",Icon="repeat"})
+Enchant=Window:AddTab({Title="Enchants",Icon="star"})
+Animation=Window:AddTab({Title="Animation",Icon="gem"})
+DiscordTab=Window:AddTab({Title="Webhook",Icon="megaphone"})
+SettingTab=Window:AddTab({Title="Settings",Icon="settings"})
+MiscTab=Window:AddTab({Title="Misc",Icon="globe"})
+local ConfigTab=Window:AddTab({Title="Config",Icon="folder"})
+InterfaceManager:BuildInterfaceSection(ConfigTab)
+SaveManager:BuildConfigSection(ConfigTab)
+Info:AddParagraph({
+Title="Welcome!",
+Content="Authentication successful!\nScript loaded successfully."
+})
+Info:AddParagraph({
+Title="IMPORTANT!",
+Content="Have Problem / Need Help? Join Server Now."
+})
+Info:AddButton({
+Title="Copy Discord Link",
+Description="Click to copy Discord invite link",
+Callback=function()
+local success=pcall(function()
+setclipboard("https://discord.gg/77nEeYeFRp")
+end)
+if success then
+Fluent:Notify({
+Title="Success",
+Content="Discord link copied to clipboard!\nhttps://discord.gg/77nEeYeFRp",
+Duration=5
+})
+else
+Fluent:Notify({
+Title="Error",
+Content="Failed to copy link to clipboard",
+Duration=3
+})
+end
+end
+})
+local PlayerSection=PlayerTab:AddSection("Player Feature")
+local walkSpeedValue=16
+local walkSpeedToggle=PlayerSection:AddToggle("WalkSpeedToggle",{Title="WalkSpeed",Default=false})
+local walkSpeedInput=PlayerSection:AddInput("WalkSpeedInput",{Title="Set WalkSpeed",Default="16",Placeholder="Enter number (e.g. 50)",Numeric=true,Finished=false,Callback=function(v)
+walkSpeedValue=tonumber(v)or 16
+if Options.WalkSpeedToggle.Value then
+local char=LocalPlayer.Character
+if char and char:FindFirstChild("Humanoid")then
+char.Humanoid.WalkSpeed=walkSpeedValue
+end
+end
+end})
+walkSpeedToggle:OnChanged(function(e)
+local char=LocalPlayer.Character
+if char and char:FindFirstChild("Humanoid")then
+char.Humanoid.WalkSpeed=e and walkSpeedValue or 16
+end
+end)
+local IJC
+local infJumpToggle=PlayerSection:AddToggle("InfiniteJump",{Title="Infinite Jump",Default=false})
+infJumpToggle:OnChanged(function(e)
+local UIS=game:GetService("UserInputService")
+if e then
+IJC=UIS.JumpRequest:Connect(function()
+local char=LocalPlayer.Character
+if char and char:FindFirstChild("Humanoid")then
+char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+end
+end)
+elseif IJC then IJC:Disconnect()IJC=nil end
+end)
+local NCC
+local noClipToggle=PlayerSection:AddToggle("NoClip",{Title="NoClip",Default=false})
+noClipToggle:OnChanged(function(e)
+if e then
+NCC=game:GetService("RunService").Stepped:Connect(function()
+local char=LocalPlayer.Character
+if char then
+for _,p in ipairs(char:GetChildren())do
+if p:IsA("BasePart")then p.CanCollide=false end
+end
+end
+end)
+elseif NCC then
+NCC:Disconnect()NCC=nil
+local char=LocalPlayer.Character
+if char then
+for _,p in ipairs(char:GetChildren())do
+if p:IsA("BasePart")then p.CanCollide=true end
+end
+end
+end
+end)
+local wow=false
+local wp
+local wallWalkToggle=PlayerSection:AddToggle("WalkOnWater",{Title="Walk On Water",Default=false})
+wallWalkToggle:OnChanged(function(e)
+wow=e
+local char=LocalPlayer.Character
+if e and char then
+local hrp=char:FindFirstChild("HumanoidRootPart")
+if hrp then
+if wp then wp:Destroy()end
+wp=Instance.new("Part")
+wp.Anchored=true
+wp.CanCollide=true
+wp.Size=Vector3.new(20,1,20)
+wp.Transparency=1
+wp.Position=Vector3.new(hrp.Position.X,0,hrp.Position.Z)
+wp.Parent=workspace
+end
+elseif wp then wp:Destroy()wp=nil end
+end)
+game:GetService("RunService").Heartbeat:Connect(function()
+if wow and wp then
+local char=LocalPlayer.Character
+if char and char:FindFirstChild("HumanoidRootPart")then
+local p=char.HumanoidRootPart.Position
+wp.Position=Vector3.new(p.X,0,p.Z)
+end
+end
+end)
+local RS=game:GetService("ReplicatedStorage")
+local net=RS.Packages._Index["sleitnick_net@0.2.0"].net
+local RF_E=net["RF/EquipOxygenTank"]
+local RF_U=net["RF/UnequipOxygenTank"]
+local ox=false
+local infOxygenToggle=PlayerSection:AddToggle("EquipOxygenTank",{Title="Equip Oxygen Tank",Default=false})
+infOxygenToggle:OnChanged(function(e)
+ox=e
+if ox then RF_E:InvokeServer(105)else RF_U:InvokeServer()end
+end)
+local RF_R=net["RF/UpdateFishingRadar"]
+local espRadarToggle=PlayerSection:AddToggle("BypassFishingRadar",{Title="Bypass Fishing Radar",Default=false})
+espRadarToggle:OnChanged(function(e)
+RF_R:InvokeServer(e and true or false)
+end)
+local saveCF=nil
+LocalPlayer.CharacterAdded:Connect(function(char)
+if not saveCF then return end
+local hrp=char:WaitForChild("HumanoidRootPart",5)
+if hrp then task.wait(.3)hrp.CFrame=saveCF end
+end)
+PlayerSection:AddButton({Title="Respawn at Current Position",Description="Respawn at your current location",Callback=function()
+local char=LocalPlayer.Character
+if not char then return end
+local hrp=char:FindFirstChild("HumanoidRootPart")
+local hum=char:FindFirstChild("Humanoid")
+if hrp and hum then saveCF=hrp.CFrame hum.Health=0 end
+end})
+local GuiSection=PlayerTab:AddSection("Gui External")
+GuiSection:AddButton({Title="Fly GUI",Description="Load Fly GUI",Callback=function()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+Fluent:Notify({Title="Fly",Content="Fly GUI berhasil dijalankan ✅",Duration=3})
+end})
+local SG,SL=nil,nil
+local statsOverlayToggle=GuiSection:AddToggle("StatsOverlay",{Title="Show Stats Overlay",Description="Menampilkan FPS, CPU(ms), Ping, RAM.",Default=false})
+statsOverlayToggle:OnChanged(function(e)
+if e then
+if SG then SG:Destroy()end
+local g=Instance.new("ScreenGui",game.CoreGui)
+g.Name="RockHub_Stats"g.IgnoreGuiInset=true
+local f=Instance.new("Frame",g)
+f.Size=UDim2.fromOffset(360,40)
+f.AnchorPoint=Vector2.new(.5,0)
+f.Position=UDim2.new(.5,0,.06,0)
+f.BackgroundColor3=Color3.fromRGB(20,20,20)
+f.BackgroundTransparency=.2
+f.BorderSizePixel=0
+Instance.new("UICorner",f).CornerRadius=UDim.new(1,0)
+local s=Instance.new("UIStroke",f)
+s.Color=Color3.fromHex("8B5CF6")
+s.Thickness=2
+s.Transparency=.1
+s.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+local l=Instance.new("UIListLayout",f)
+l.FillDirection=Enum.FillDirection.Horizontal
+l.Padding=UDim.new(0,12)
+l.HorizontalAlignment=Enum.HorizontalAlignment.Center
+l.VerticalAlignment=Enum.VerticalAlignment.Center
+local function L()
+local t=Instance.new("TextLabel",f)
+t.AutomaticSize=Enum.AutomaticSize.X
+t.Size=UDim2.new(0,0,1,0)
+t.BackgroundTransparency=1
+t.Font=Enum.Font.GothamBold
+t.TextSize=13
+t.TextColor3=Color3.fromRGB(255,255,255)
+t.Text="..."
+return t
+end
+local fps,cpu,ping,ram=L(),L(),L(),L()
+local RSv=game:GetService("RunService")
+local ST=game:GetService("Stats")
+SL=RSv.RenderStepped:Connect(function(dt)
+if not g then return end
+local f=math.floor(workspace:GetRealPhysicsFPS())
+local c=math.floor(dt*1000)
+local p=math.floor(ST.Network.ServerStatsItem["Data Ping"]:GetValue())
+local m=math.floor(ST:GetTotalMemoryUsageMb())
+fps.Text="FPS: "..f
+fps.TextColor3=f>=50 and Color3.fromRGB(0,255,127)or Color3.fromRGB(255,65,65)
+cpu.Text="CPU: "..c.."ms"
+cpu.TextColor3=c<=20 and Color3.fromRGB(0,255,127)or(c<=50 and Color3.fromRGB(255,215,0)or Color3.fromRGB(255,65,65))
+ping.Text="Ping: "..p.."ms"
+ping.TextColor3=p<100 and Color3.fromRGB(0,255,127)or Color3.fromRGB(255,65,65)
+ram.Text="Mem: "..m.."MB"
+end)
+SG=g
+else
+if SL then SL:Disconnect()SL=nil end
+if SG then SG:Destroy()SG=nil end
+end
+end)
+-- TIDAK PERLU Window:SelectTab(1) DI SINI
+end
+local enteredKey=""
+local isAuthenticating=false
+local menuCreated=false
+local function DoAuth(key,isAuto)
+if isAuthenticating or menuCreated then return end
+if not key or key==""then return end
+isAuthenticating=true
+Fluent:Notify({
+Title=isAuto and"Auto Login"or"Validating",
+Content=isAuto and"Mencoba login..."or"Memverifikasi key...",
+Duration=2
+})
+local valid,codeOrErr=ValidateKey(key)
+isAuthenticating=false
+if valid then
+saveToken(key)
+getgenv().AuthComplete=true
+getgenv().UserData=codeOrErr
+SetupTabsAfterAuth()
+menuCreated=true
+-- TAB URUTAN SETELAH AUTH: Auth jadi tab 1, Info jadi tab 2, dst
+Window:SelectTab(2) -- Pilih tab ke-2 (Info)
+Fluent:Notify({
+Title="Success",
+Content=isAuto and("Auto login berhasil ("..tostring(codeOrErr)..")")or"Authentication berhasil",
+Duration=3
+})
+else
+if isAuto then
+deleteToken()
+end
+Fluent:Notify({
+Title="Failed",
+Content=tostring(codeOrErr),
+Duration=4
+})
+end
+end
+local KeyInput=Tabs.Auth:AddInput("KeyInput",{
+Title="License Key",
+Default="",
+Placeholder="FYY-000-000-000",
+Numeric=false,
+Finished=false,
+Callback=function(Value)
+enteredKey=tostring(Value or""):upper():gsub("%s+","")
+end
+})
+Tabs.Auth:AddButton({
+Title="Verify Key",
+Description="Click to verify your license key",
+Callback=function()
+DoAuth(enteredKey,false)
+end
+})
+Tabs.Auth:AddParagraph({
+Title="How to Use",
+Content="1. Enter your license key\n2. Click Verify Key\n3. If valid, other tabs will appear"
+})
+task.spawn(function()
+task.wait(2)
+local saved=loadToken()
+if saved and not menuCreated then
+DoAuth(saved,true)
+end
+end)
+Window:SelectTab(1) -- Tab pertama = Auth
+Fluent:Notify({
+Title="Fyy X Fish IT",
+Content="Script loaded. Please authenticate first.",
+Duration=5
+})
+SaveManager:LoadAutoloadConfig()
+local UIS=game:GetService("UserInputService")
+local PG=LocalPlayer:WaitForChild("PlayerGui")
+local function CreateFloatingIcon()
+local existing=PG:FindFirstChild("CustomFloatingIcon_FyyHub")
+if existing then existing:Destroy()end
+local g=Instance.new("ScreenGui")
+g.Name="CustomFloatingIcon_FyyHub"
+g.DisplayOrder=999
+g.ResetOnSpawn=false
+local f=Instance.new("Frame")
+f.Size=UDim2.fromOffset(45,45)
+f.Position=UDim2.new(0,50,0.4,0)
+f.AnchorPoint=Vector2.new(.5,.5)
+f.BackgroundColor3=Color3.fromRGB(20,20,20)
+f.BorderSizePixel=0
+f.Parent=g
+local s=Instance.new("UIStroke")
+s.Color=Color3.fromRGB(138,43,226)
+s.Thickness=2
+s.Parent=f
+Instance.new("UICorner",f).CornerRadius=UDim.new(0,12)
+local i=Instance.new("ImageLabel")
+i.Image="rbxassetid://106899268176689"
+i.BackgroundTransparency=1
+i.Size=UDim2.new(1,-4,1,-4)
+i.Position=UDim2.fromScale(.5,.5)
+i.AnchorPoint=Vector2.new(.5,.5)
+i.Parent=f
+Instance.new("UICorner",i).CornerRadius=UDim.new(0,10)
+g.Parent=PG
+local dragging=false
+local dragInput,dragStart,startPos
+f.InputBegan:Connect(function(input)
+if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+dragging=true
+dragStart=input.Position
+startPos=f.Position
+end
+end)
+f.InputChanged:Connect(function(input)
+if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then
+dragInput=input
+end
+end)
+UIS.InputChanged:Connect(function(input)
+if dragging and input==dragInput then
+local delta=input.Position-dragStart
+f.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
+end
+end)
+f.InputEnded:Connect(function(input)
+if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+dragging=false
+if(input.Position-dragStart).Magnitude<5 then
+if Window.Visible then
+Window:Hide()
+else
+Window:Show()
+end
+end
+end
+end)
+Window:OnShow(function()
+g.Enabled=false
+end)
+Window:OnHide(function()
+g.Enabled=true
+end)
+g.Enabled=not Window.Visible
+return g
+end
+if LocalPlayer.Character then
+CreateFloatingIcon()
+end
+LocalPlayer.CharacterAdded:Connect(function()
+task.wait(1)
+CreateFloatingIcon()
+end)
