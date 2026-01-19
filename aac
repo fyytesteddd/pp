@@ -3388,8 +3388,13 @@ task.spawn(function()
 end)
 
 ----------- // new code, sesuaikan aja nanti mau di taro dimana mana nya \\ -----------
+local blatant = Window:Tab({
+    Title = "Tab Title",
+    Icon = "bird", -- optional
+    Locked = false,
+})
 
-blatantv3 = Tab0:Section({ 
+blatantv3 = blatant:Section({ 
     Title = "Blantant V3",
     Icon = "fish",
     TextXAlignment = "Left",
@@ -3469,11 +3474,11 @@ REM.OnClientEvent:Connect(function()
  end)
 end)
 
-blatantv3:Input({Title="Cast Delay",Placeholder=tostring(CD),Value=tostring(CD),Callback=function(v)local n=tonumber(v)if n and n>=0 then CD=n end end})
-blatantv3:Input({Title="Complete Delay",Placeholder=tostring(FD),Value=tostring(FD),Callback=function(v)local n=tonumber(v)if n and n>=0 then FD=n end end})
-blatantv3:Input({Title="Cancel Delay",Placeholder=tostring(KD),Value=tostring(KD),Callback=function(v)local n=tonumber(v)if n and n>=0 then KD=n end end})
+blatant:Input({Title="Cast Delay",Placeholder=tostring(CD),Value=tostring(CD),Callback=function(v)local n=tonumber(v)if n and n>=0 then CD=n end end})
+blatant:Input({Title="Complete Delay",Placeholder=tostring(FD),Value=tostring(FD),Callback=function(v)local n=tonumber(v)if n and n>=0 then FD=n end end})
+blatant:Input({Title="Cancel Delay",Placeholder=tostring(KD),Value=tostring(KD),Callback=function(v)local n=tonumber(v)if n and n>=0 then KD=n end end})
 
-blatantv3:Toggle({
+blatant:Toggle({
 Title="Enable Blatant V3",
 Desc="Ultra fast perfect",
 Default=false,
