@@ -3387,12 +3387,118 @@ task.spawn(function()
     end
 end)
 
------------ // new code sesuaikan aja nanti mau di taro dimana mana nya \\ -----------
+----------- // new code, sesuaikan aja nanti mau di taro dimana mana nya \\ -----------
+
+blatantv3 = Tab0:Section({ 
+    Title = "Blantant V3",
+    Icon = "fish",
+    TextXAlignment = "Left",
+    TextSize = 17,
+    Box = true,
+    BoxBorder = true,
+    Opened = false,
+})
+
+local RS=game:GetService("ReplicatedStorage")
+local net=RS:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
+
+local RFC=net:WaitForChild("RF/ChargeFishingRod")
+local RFS=net:WaitForChild("RF/RequestFishingMinigameStarted")
+local RFK=net:WaitForChild("RF/CancelFishingInputs")
+local RFU=net:WaitForChild("RF/UpdateAutoFishingState")
+local REF=net:WaitForChild("RE/FishingCompleted")
+local REM=net:WaitForChild("RE/FishingMinigameChanged")
+local Equip=net:WaitForChild("RE/EquipToolFromHotbar")
+local Unequip=net:WaitForChild("RE/UnequipToolFromHotbar")
+
+local active=false
+local fishingThread=nil
+local equipThread=nil
+local casts=0
+local start=0
+
+local CD=.001
+local FD=.68
+local KD=.299
+
+local function safe(f)task.spawn(function()pcall(f)end)end
+
+local Players=game:GetService("Players")
+local LocalPlayer=Players.LocalPlayer
+
+local function fishingLoop()
+ while active do
+  local t=tick()
+  safe(function()RFC:InvokeServer({[1]=t})end)
+  task.wait(CD)
+  local r=tick()
+  safe(function()RFS:InvokeServer(1,0,r)end)
+  casts+=1
+  
+  local t2=tick()
+  safe(function()RFC:InvokeServer({[1]=t2})end)
+  task.wait(CD)
+  local r2=tick()
+  safe(function()RFS:InvokeServer(1,0,r2)end)
+  casts+=1
+  
+  task.wait(FD)
+  safe(function()REF:FireServer()end)
+  safe(function()REF:FireServer()end)
+  
+  task.wait(KD)
+  safe(function()RFK:InvokeServer()end)
+  task.wait(0.001)
+ end
+end
+local function equipLoop()
+ while active do
+  safe(function()Equip:FireServer(1)end)
+  task.wait(100) 
+ end
+ safe(function()Unequip:FireServer()end)
+end
+
+REM.OnClientEvent:Connect(function()
+ if not active then return end
+ task.spawn(function()
+  task.wait(FD)
+  safe(function()REF:FireServer()end)
+  task.wait(KD)
+  safe(function()RFK:InvokeServer()end)
+ end)
+end)
+
+blatantv3:Input({Title="Cast Delay",Placeholder=tostring(CD),Value=tostring(CD),Callback=function(v)local n=tonumber(v)if n and n>=0 then CD=n end end})
+blatantv3:Input({Title="Complete Delay",Placeholder=tostring(FD),Value=tostring(FD),Callback=function(v)local n=tonumber(v)if n and n>=0 then FD=n end end})
+blatantv3:Input({Title="Cancel Delay",Placeholder=tostring(KD),Value=tostring(KD),Callback=function(v)local n=tonumber(v)if n and n>=0 then KD=n end end})
+
+local blatantV3Toggle=Reg("blatantV3_toggle",blatantv3:Toggle({
+Title="Enable Blatant V3",
+Desc="Ultra fast perfect",
+Default=false,
+Callback=function(s)
+active=s
+if s then 
+ casts=0
+ start=tick()
+ pcall(function()LocalPlayer:SetAttribute("InCutscene",true)end)
+ safe(function()RFU:InvokeServer(true)end)
+ fishingThread=task.spawn(fishingLoop)
+ equipThread=task.spawn(equipLoop)
+else 
+ if fishingThread then task.cancel(fishingThread)fishingThread=nil end
+ if equipThread then task.cancel(equipThread)equipThread=nil end
+ safe(function()RFU:InvokeServer(false)end)
+ safe(function()Unequip:FireServer()end)
+ task.wait(.2)
+ safe(function()RFK:InvokeServer()end)
+end
+end
+}))
 
 
-
-
-
+-- // end of new code \\ --
 if not success or not WindUI then
     warn("⚠️ UI failed to load!")
     return
