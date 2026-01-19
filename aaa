@@ -3473,7 +3473,7 @@ blatantv3:Input({Title="Cast Delay",Placeholder=tostring(CD),Value=tostring(CD),
 blatantv3:Input({Title="Complete Delay",Placeholder=tostring(FD),Value=tostring(FD),Callback=function(v)local n=tonumber(v)if n and n>=0 then FD=n end end})
 blatantv3:Input({Title="Cancel Delay",Placeholder=tostring(KD),Value=tostring(KD),Callback=function(v)local n=tonumber(v)if n and n>=0 then KD=n end end})
 
-local blatantV3Toggle=Reg("blatantV3_toggle",blatantv3:Toggle({
+blatantv3:Toggle({
 Title="Enable Blatant V3",
 Desc="Ultra fast perfect",
 Default=false,
@@ -3495,7 +3495,7 @@ else
  safe(function()RFK:InvokeServer()end)
 end
 end
-}))
+})
 
 
 -- // end of new code \\ --
