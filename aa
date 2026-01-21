@@ -1,5 +1,5 @@
 Fluent, SaveManager, InterfaceManager = loadstring(Game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/Beta.lua"))()
-local Window=Fluent:CreateWindow({Title="Fyy X Fish IT | 1.1.2",SubTitle="by Fyy Community",TabWidth=150,Size=UDim2.fromOffset(530,300),Acrylic=true,Theme="AMOLED",MinimizeKey=Enum.KeyCode.LeftControl,BackgroundImage="rbxassetid://78893380921225",BackgroundTransparency=0.5})
+local Window=Fluent:CreateWindow({Title="Fyy X Fish IT | 1.1.2",SubTitle="by Fyy Community",TabWidth=160,Size=UDim2.fromOffset(580,460),Acrylic=true,Theme="Darker",MinimizeKey=Enum.KeyCode.LeftControl,BackgroundImage="rbxassetid://78893380921225",BackgroundTransparency=0.4})
 local Tabs={Auth=Window:AddTab({Title="Authentication",Icon="key"})}
 local Options=Fluent.Options
 -- Ditunda setup SaveManager hingga setelah authentication berhasil
@@ -6112,18 +6112,27 @@ if uisConn then
 uisConn:Disconnect()
 uisConn=nil 
 end 
+local CAS=game:GetService("ContextActionService")
+local dragActionName="IconDragBlocker"
 local function u(i)local d=i.Position-dragStart f.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+d.X,startPos.Y.Scale,startPos.Y.Offset+d.Y)end
 f.InputBegan:Connect(function(i)
 if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then 
 dragging=true 
 dragStart=i.Position 
 startPos=f.Position 
+
+-- Block Camera
+CAS:BindActionAtPriority(dragActionName, function()
+return Enum.ContextActionResult.Sink
+end, false, Enum.ContextActionPriority.High.Value+50, Enum.UserInputType.Touch, Enum.UserInputType.MouseButton1, Enum.UserInputType.MouseMovement)
+
 local m=false 
 local c1,c2 
 c1=i.Changed:Connect(function()
 if i.UserInputState==Enum.UserInputState.End then 
 dragging=false 
 c1:Disconnect()
+CAS:UnbindAction(dragActionName) -- Unblock Camera
 if not m then 
 if Window then
 Window:Minimize()
