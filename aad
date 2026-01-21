@@ -2647,8 +2647,8 @@ end
 
                 -- 2. Validate Quest Started
                 if not IsArchQuestActive() then
-                     ArchStatus:SetDesc("Quest Failed to Start! (Check Pirate Cove Index)")
-                     Fluent:Notify({Title="Archaeologist Quest", Content="Gagal start quest. Belum memenuhi syarat?", Duration=5})
+                     ArchStatus:SetDesc("Gagal Start: Syarat tidak terpenuhi.")
+                     Fluent:Notify({Title="Archaeologist", Content="Syarat Quest tidak terpenuhi!", Duration=5})
                      archRunning = false
                      ArchToggle:SetValue(false)
                      if catchListener then catchListener:Disconnect() end
