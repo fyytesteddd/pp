@@ -2643,12 +2643,21 @@ end
                 -- 1. Try Start Quest
                 ArchStatus:SetDesc("Starting Quest (Archaeologist)...")
                 RE_DialogueEnded:FireServer("Archaeologist", 1, 3)
-                task.wait(1.5)
+                
+                -- Wait for Quest to Appear (Max 5s) with Retry
+                local questActive = false
+                for i = 1, 10 do
+                    if IsArchQuestActive() then
+                        questActive = true
+                        break
+                    end
+                    task.wait(0.5)
+                end
 
                 -- 2. Validate Quest Started
-                if not IsArchQuestActive() then
-                     ArchStatus:SetDesc("Gagal Start: Syarat tidak terpenuhi.")
-                     Fluent:Notify({Title="Archaeologist", Content="Syarat Quest tidak terpenuhi!", Duration=5})
+                if not questActive then
+                     ArchStatus:SetDesc("Gagal Start: Syarat tidak terpenuhi (Timeout).")
+                     Fluent:Notify({Title="Archaeologist", Content="Syarat Quest tidak terpenuhi atau Delay Server!", Duration=5})
                      archRunning = false
                      ArchToggle:SetValue(false)
                      if catchListener then catchListener:Disconnect() end
