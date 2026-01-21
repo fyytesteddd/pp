@@ -1,5 +1,5 @@
 Fluent, SaveManager, InterfaceManager = loadstring(Game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/Beta.lua"))()
-local Window=Fluent:CreateWindow({Title="Fyy X Fish IT | 1.1.2",SubTitle="by Fyy Community",TabWidth=160,Size=UDim2.fromOffset(550,380),Acrylic=true,Theme="Darker",MinimizeKey=Enum.KeyCode.LeftControl,BackgroundImage="rbxassetid://78893380921225",BackgroundTransparency=0.4})
+local Window=Fluent:CreateWindow({Title="Fyy X Fish IT | 1.1.2",SubTitle="by Fyy Community",TabWidth=150,Size=UDim2.fromOffset(530, 300),Acrylic=true,Theme="Darker",MinimizeKey=Enum.KeyCode.G,BackgroundImage="rbxassetid://78893380921225",BackgroundTransparency=0.4})
 local Tabs={Auth=Window:AddTab({Title="Authentication",Icon="key"})}
 local Options=Fluent.Options
 -- Ditunda setup SaveManager hingga setelah authentication berhasil
@@ -1031,16 +1031,39 @@ bobers:AddButton({
 })
 
 local weatherShop=Shop:AddSection(" [ Purchase Weather ] ")
-local sel={"Wind (10000)","Cloudy (20000)","Storm (35000)"}
+local sel={}
 local on=false
 local loop=nil
+
+-- Helper function for Fluent Multi Dropdown
+local function convertFluentTableToArray(fluentTable)
+    local array = {}
+    if not fluentTable then return array end
+    for value, isSelected in pairs(fluentTable) do
+        if isSelected then
+            table.insert(array, value)
+        end
+    end
+    return array
+end
+
+local weatherOptions = {"Wind (10000)","Cloudy (20000)","Snow (15000)","Storm (35000)","Radiant (50000)","Shark Hunt (300000)"}
+local defaultSelection = {"Wind (10000)","Cloudy (20000)","Storm (35000)"}
+
 local selectWeatherDropdown=weatherShop:AddDropdown("weatherSelect",{
  Title="Select Weather",
- Values={"Wind (10000)","Cloudy (20000)","Snow (15000)","Storm (35000)","Radiant (50000)","Shark Hunt (300000)"},
- Default={"Wind (10000)","Cloudy (20000)","Storm (35000)"},
+ Values=weatherOptions,
+ Default=defaultSelection, 
  Multi=true
 })
-selectWeatherDropdown:OnChanged(function(v)sel=v end)
+
+-- Initialize sel with default array
+sel = defaultSelection
+
+selectWeatherDropdown:OnChanged(function(v)
+    sel = convertFluentTableToArray(v)
+end)
+
 local RS=game:GetService("ReplicatedStorage")
 local RF=RS.Packages._Index["sleitnick_net@0.2.0"].net["RF/PurchaseWeatherEvent"]
 local map={
@@ -1051,31 +1074,44 @@ local map={
  ["Radiant (50000)"]="Radiant",
  ["Shark Hunt (300000)"]="Shark Hunt"
 }
+
 local function buy(n)
  local w=map[n]
- if w then RF:InvokeServer(w)end
+ if w then 
+    pcall(function() RF:InvokeServer(w) end)
+ end
 end
+
+local function processPurchase()
+    for _, name in ipairs(sel) do
+        buy(name)
+    end
+end
+
 weatherShop:AddButton({
  Title="Purchase Weather",
  Callback=function()
-  for _,w in pairs(sel)do buy(w)end
+  processPurchase()
  end
 })
+
 local autoBuyWeatherToggle=weatherShop:AddToggle("autoBuyWeather",{
  Title="Auto Buy Weather",
  Default=false
 })
+
 autoBuyWeatherToggle:OnChanged(function(s)
  on=s
  if s then
-  loop=game:GetService("RunService").Heartbeat:Connect(function()
-   task.wait(2)
-   if on then
-    for _,w in pairs(sel)do buy(w)end
+  if loop then task.cancel(loop) end
+  loop=task.spawn(function()
+   while on do
+    processPurchase()
+    task.wait(2)
    end
   end)
  else
-  if loop then loop:Disconnect()loop=nil end
+  if loop then task.cancel(loop) loop=nil end
  end
 end)
 end
@@ -1167,7 +1203,7 @@ local T = {
     ["Hourglass Diamond Artifact"] = CFrame.new(1480.98645, 6.27569771, -847.142029, -0.967326343, -5.985531e-08, 0.253534466, -6.16077926e-08, 1, 1.02735098e-09, -0.253534466, -1.46259147e-08, -0.967326343),
     ["Diamond Artifact"] = CFrame.new(1836.31604, 6.34277105, -298.546265, 0.545851529, -2.36059989e-08, -0.837881923, -4.70848498e-08, 1, -5.8847597e-08, 0.837881923, 7.15735951e-08, 0.545851529),
     ["Pirate Cove"] = CFrame.new(3471, -282, 3470),
-    ["Crystal Cove"] = CFrame.new(5682, -890, 15430),
+    ["Crystal Depths"] = CFrame.new(5682, -890, 15430),
     ["Ancient Ruin"] = CFrame.new(6087, -586, 4701),
     ["Pirate Island"] = CFrame.new(3263, 5, 3686),
     ["Pirate Treasure Room"] = CFrame.new(3333, -299, 3093)
@@ -2366,6 +2402,327 @@ end
         end
     end)
     
+    --// AUTO QUEST HANK
+    local hankSection = Quest:AddSection(" [ Auto Quest Hank (Pickaxe) ] ")
+    local HankStatus = hankSection:AddParagraph({Title="Status", Content="Idle", Icon="book-open"})
+    local hankRunning = false
+    local hankThread = nil
+    
+    local function HasHanksDiary()
+        local r = ClientData 
+        if not r then return false end 
+        local s, i = pcall(function() return r:GetExpect("Inventory") end)
+        if not s or not i or not i.Items then return false end 
+        
+        for _, it in ipairs(i.Items) do 
+            -- ID 20222 based on user decompiled code, checking name too just in case
+            if it.Id == 20222 or (it.Name and string.find(it.Name, "Hank's Diary")) then 
+                return true 
+            end 
+        end 
+        return false 
+    end
+
+    local HankToggle = hankSection:AddToggle("autoHank", {
+        Title = "Auto Complete Hank Quest",
+        Description = "Claim Quest → Fish Diary (Crystal Depths) → Turn In",
+        Default = false
+    })
+    
+    HankToggle:OnChanged(function(s)
+        hankRunning = s
+        if s then
+            hankThread = task.spawn(function()
+                local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                local Net = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
+                local RE_DialogueEnded = Net:WaitForChild("RE/DialogueEnded")
+                local RE_Obtained = Net:FindFirstChild("RE/ObtainedNewFishNotification")
+                
+                -- Instant Fish Remotes
+                local RFC = Net:WaitForChild("RF/ChargeFishingRod")
+                local RFS = Net:WaitForChild("RF/RequestFishingMinigameStarted")
+                local REF = Net:WaitForChild("RE/FishingCompleted")
+                local RFK = Net:WaitForChild("RF/CancelFishingInputs")
+                local RE_Equip = Net:WaitForChild("RE/EquipToolFromHotbar")
+
+                -- Listen for Diary Catch
+                local catchListener
+                if RE_Obtained then
+                    catchListener = RE_Obtained.OnClientEvent:Connect(function(uiData)
+                        if uiData and (uiData.Name == "Hank's Diary" or string.find(tostring(uiData.Name), "Diary")) then
+                            HankStatus:SetDesc("Diary Caught! Stopping fishing...")
+                        end
+                    end)
+                end
+
+                -- Equip Rod Initially
+                HankStatus:SetDesc("Equipping Rod...")
+                RE_Equip:FireServer(1) 
+                task.wait(0.5)
+
+                -- Blatant V3 Logic Setup
+                local CD, FD, KD = 0.45, 0.7, 0.3
+                local function safe(f) task.spawn(function() pcall(f) end) end
+
+                -- Equip/Unequip Remotes
+                local RE_UnequipItem = Net:WaitForChild("RE/UnequipItem")
+                local RE_EquipItem = Net:WaitForChild("RE/EquipItem")
+
+                -- Helper: Unequip All
+                local function UnequipAll()
+                    local s, e = pcall(function() return ClientData:GetExpect("EquippedItems") end)
+                    if s and e then
+                        for _, u in ipairs(e) do
+                            pcall(function() RE_UnequipItem:FireServer(u) end)
+                            task.wait(0.05)
+                        end
+                    end
+                end
+
+                -- Helper: Get Diary UUID
+                local function GetDiaryUUID()
+                    local r = ClientData
+                    if not r then return nil end
+                    local s, i = pcall(function() return r:GetExpect("Inventory") end)
+                    if s and i and i.Items then
+                        for _, it in ipairs(i.Items) do 
+                            if tonumber(it.Id) == 20222 and it.UUID then
+                                return it.UUID 
+                            end 
+                        end
+                    end
+                    return nil
+                end
+
+                while hankRunning do
+                    -- 1. Check if we already have the Diary
+                    if HasHanksDiary() then
+                        HankStatus:SetDesc("Diary Found! Preparing Turn-in...")
+                        
+                        -- Unequip All
+                        UnequipAll()
+                        task.wait(0.5)
+                        
+                        -- Equip Diary
+                        local dUUID = GetDiaryUUID()
+                        if dUUID then
+                            HankStatus:SetDesc("Equipping Diary...")
+                            pcall(function() RE_EquipItem:FireServer(dUUID, "Gears") end)
+                            task.wait(0.5)
+                        end
+                        
+                        -- Unequip Tool Hotbar (Stabilization)
+                        local RE_UnequipHotbar = Net:FindFirstChild("RE/UnequipToolFromHotbar")
+                        if RE_UnequipHotbar then 
+                            pcall(function() RE_UnequipHotbar:FireServer() end) 
+                            task.wait(0.5)
+                        end
+                        
+                        -- Equip Slot 2
+                        pcall(function() RE_Equip:FireServer(2) end)
+                        task.wait(0.5)
+                        
+                        HankStatus:SetDesc("Turning in to Hank...")
+                        RE_DialogueEnded:FireServer("Hank", 1, 3)
+                        task.wait(0.5)
+                        RE_DialogueEnded:FireServer("Hank", 1, 3) 
+                        
+                        if catchListener then catchListener:Disconnect() end
+                        HankStatus:SetDesc("Quest Completed! Pickaxe Received.")
+                        break
+                    end
+                    
+                    -- Start Quest just in case
+                    pcall(function() RE_DialogueEnded:FireServer("Hank", 1, 2) end)
+                    
+                    -- Teleport Check
+                    local targetPos = CFrame.new(5682, -890, 15430)
+                    local char = game.Players.LocalPlayer.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") then
+                        if (char.HumanoidRootPart.Position - targetPos.Position).Magnitude > 20 then
+                            HankStatus:SetDesc("Teleporting to Crystal Depths...")
+                            char.HumanoidRootPart.CFrame = targetPos
+                            task.wait(1)
+                            RE_Equip:FireServer(1) -- Re-equip if teleported (just in case)
+                            task.wait(0.5)
+                        end
+                    end
+                    
+                    if not hankRunning then break end
+
+                    -- Blatant V3 Cycle (100% Match)
+                    HankStatus:SetDesc("Fishing (Blatant V3 Async)...")
+                    
+                    local t = tick()
+                    safe(function() RFC:InvokeServer({[1]=t}) end)
+                    task.wait(CD)
+                    local r = tick()
+                    safe(function() RFS:InvokeServer(1,0,r) end)
+                    
+                    local t2 = tick()
+                    safe(function() RFC:InvokeServer({[1]=t2}) end)
+                    task.wait(CD)
+                    local r2 = tick()
+                    safe(function() RFS:InvokeServer(1,0,r2) end)
+                    
+                    task.wait(FD) 
+                    if not hankRunning then break end
+                    
+                    safe(function() REF:FireServer() end)
+                    safe(function() REF:FireServer() end)
+                    
+                    task.wait(KD)
+                    safe(function() RFK:InvokeServer() end)
+                    task.wait(0.001)
+                end
+                
+                if catchListener then catchListener:Disconnect() end
+                hankRunning = false
+                HankToggle:SetValue(false)
+            end)
+        else
+            if hankThread then task.cancel(hankThread) hankThread = nil end
+            hankRunning = false
+            HankStatus:SetDesc("Stopped")
+        end
+    end)
+
+    --// AUTO QUEST ARCHAEOLOGIST
+    local archSection = Quest:AddSection(" [ Auto Quest Archaeologist ] ")
+    local ArchStatus = archSection:AddParagraph({Title="Status", Content="Idle", Icon="scroll"})
+    local archRunning = false
+    local archThread = nil
+
+    local function IsArchQuestActive()
+        local r = ClientData
+        if not r then return false end
+        local s, q = pcall(function() return r:GetExpect("ActiveQuests") end)
+        if s and q then
+            for _, v in pairs(q) do
+                if v.NPC == "Archaeologist" or v.Name == "Hunt down the ingredients to craft the Leviathan's Scale!" then
+                    return true
+                end
+            end
+        end
+        return false
+    end
+
+    local ArchToggle = archSection:AddToggle("autoArch", {
+        Title = "Auto Archaeologist (Leviathan Scale)",
+        Description = "Start Quest → Farm Objectives (Magma/Ocean/Essence + 200 Fish)",
+        Default = false
+    })
+
+    ArchToggle:OnChanged(function(s)
+        archRunning = s
+        if s then
+            archThread = task.spawn(function()
+                local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                local Net = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
+                local RE_DialogueEnded = Net:WaitForChild("RE/DialogueEnded")
+                local RE_Obtained = Net:FindFirstChild("RE/ObtainedNewFishNotification")
+                
+                -- Instant Fish Remotes
+                local RFC = Net:WaitForChild("RF/ChargeFishingRod")
+                local RFS = Net:WaitForChild("RF/RequestFishingMinigameStarted")
+                local REF = Net:WaitForChild("RE/FishingCompleted")
+                local RFK = Net:WaitForChild("RF/CancelFishingInputs")
+                local RE_Equip = Net:WaitForChild("RE/EquipToolFromHotbar")
+
+                -- Listen for Quest Items
+                local catchListener
+                if RE_Obtained then
+                    catchListener = RE_Obtained.OnClientEvent:Connect(function(uiData)
+                        local n = tostring(uiData.Name)
+                        if n == "Magma Core" or n == "Leviathan Essence" or n == "Ocean Core" then
+                            ArchStatus:SetDesc("Caught Quest Item: " .. n)
+                        end
+                    end)
+                end
+
+                -- 1. Try Start Quest
+                ArchStatus:SetDesc("Starting Quest (Archaeologist)...")
+                RE_DialogueEnded:FireServer("Archaeologist", 1, 3)
+                task.wait(1.5)
+
+                -- 2. Validate Quest Started
+                if not IsArchQuestActive() then
+                     ArchStatus:SetDesc("Quest Failed to Start! (Check Pirate Cove Index)")
+                     Fluent:Notify({Title="Archaeologist Quest", Content="Gagal start quest. Belum memenuhi syarat?", Duration=5})
+                     archRunning = false
+                     ArchToggle:SetValue(false)
+                     if catchListener then catchListener:Disconnect() end
+                     return
+                end
+                
+                ArchStatus:SetDesc("Quest Active! Moving to Farm Spot...")
+
+                -- Equip Rod Initially
+                RE_Equip:FireServer(1) 
+                task.wait(0.5)
+
+                -- Blatant V3 Logic Setup
+                local CD, FD, KD = 0.45, 0.7, 0.3
+                local function safe(f) task.spawn(function() pcall(f) end) end
+
+                while archRunning do
+                    -- Teleport Check
+                    local targetPos = CFrame.new(-645, 30, 113)
+                    local char = game.Players.LocalPlayer.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") then
+                        if (char.HumanoidRootPart.Position - targetPos.Position).Magnitude > 10 then
+                            ArchStatus:SetDesc("Teleporting to Farming Spot...")
+                            char.HumanoidRootPart.CFrame = targetPos
+                            task.wait(1)
+                            RE_Equip:FireServer(1) 
+                            task.wait(0.5)
+                        end
+                    end
+                    
+                    if not IsArchQuestActive() then
+                        ArchStatus:SetDesc("Quest Completed/Gone.")
+                        break
+                    end
+                    
+                    if not archRunning then break end
+
+                    -- Blatant V3 Cycle
+                    ArchStatus:SetDesc("Farming Objectives (Blatant V3)...")
+                    
+                    local t = tick()
+                    safe(function() RFC:InvokeServer({[1]=t}) end)
+                    task.wait(CD)
+                    local r = tick()
+                    safe(function() RFS:InvokeServer(1,0,r) end)
+                    
+                    local t2 = tick()
+                    safe(function() RFC:InvokeServer({[1]=t2}) end)
+                    task.wait(CD)
+                    local r2 = tick()
+                    safe(function() RFS:InvokeServer(1,0,r2) end)
+                    
+                    task.wait(FD) 
+                    if not archRunning then break end
+                    
+                    safe(function() REF:FireServer() end)
+                    safe(function() REF:FireServer() end)
+                    
+                    task.wait(KD)
+                    safe(function() RFK:InvokeServer() end)
+                    task.wait(0.001)
+                end
+                
+                if catchListener then catchListener:Disconnect() end
+                archRunning = false
+                ArchToggle:SetValue(false)
+            end)
+        else
+            if archThread then task.cancel(archThread) archThread = nil end
+            archRunning = false
+            ArchStatus:SetDesc("Stopped")
+        end
+    end)
+
     --// AUTO LEVER
     local leverxixi = Quest:AddSection(" [ Auto Lever ] ")
 local AUTO_LEVER_THREAD=nil
