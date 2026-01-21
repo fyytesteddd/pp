@@ -2688,10 +2688,8 @@ end
                         end
                     end
                     
-                    if not IsArchQuestActive() then
-                        ArchStatus:SetDesc("Quest Completed/Gone.")
-                        break
-                    end
+                    -- Removed Quest Active Check to prevent auto-stop
+                    -- Script will run until manually stopped or objective items found logic added later if needed
                     
                     if not archRunning then break end
 
