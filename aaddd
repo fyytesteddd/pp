@@ -2599,7 +2599,10 @@ end
         local s, q = pcall(function() return r:GetExpect("ActiveQuests") end)
         if s and q then
             for _, v in pairs(q) do
-                if v.NPC == "Archaeologist" or v.Name == "Hunt down the ingredients to craft the Leviathan's Scale!" then
+                -- Broader check
+                local n = tostring(v.Name or "")
+                local d = tostring(v.Description or "")
+                if string.find(n, "Leviathan's Scale") or string.find(d, "Leviathan's Scale") or v.NPC == "Archaeologist" then
                     return true
                 end
             end
@@ -2654,14 +2657,11 @@ end
                     task.wait(0.5)
                 end
 
-                -- 2. Validate Quest Started
+                -- 2. Validate Quest Started (Warning Only)
                 if not questActive then
-                     ArchStatus:SetDesc("Gagal Start: Syarat tidak terpenuhi (Timeout).")
-                     Fluent:Notify({Title="Archaeologist", Content="Syarat Quest tidak terpenuhi atau Delay Server!", Duration=5})
-                     archRunning = false
-                     ArchToggle:SetValue(false)
-                     if catchListener then catchListener:Disconnect() end
-                     return
+                     ArchStatus:SetDesc("Warning: Quest Status Unknown (Continuing...)")
+                     Fluent:Notify({Title="Archaeologist", Content="Quest tidak terdeteksi list, tapi lanjut farming.", Duration=5})
+                     -- Continue anyway
                 end
                 
                 ArchStatus:SetDesc("Quest Active! Moving to Farm Spot...")
