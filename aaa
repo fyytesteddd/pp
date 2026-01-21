@@ -1,5 +1,5 @@
 Fluent, SaveManager, InterfaceManager = loadstring(Game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/Beta.lua"))()
-local Window=Fluent:CreateWindow({Title="Fyy X Fish IT | 1.1.2",SubTitle="by Fyy Community",TabWidth=160,Size=UDim2.fromOffset(580,460),Acrylic=true,Theme="Darker",MinimizeKey=Enum.KeyCode.LeftControl,BackgroundImage="rbxassetid://78893380921225",BackgroundTransparency=0.4})
+local Window=Fluent:CreateWindow({Title="Fyy X Fish IT | 1.1.2",SubTitle="by Fyy Community",TabWidth=160,Size=UDim2.fromOffset(550,380),Acrylic=true,Theme="Darker",MinimizeKey=Enum.KeyCode.LeftControl,BackgroundImage="rbxassetid://78893380921225",BackgroundTransparency=0.4})
 local Tabs={Auth=Window:AddTab({Title="Authentication",Icon="key"})}
 local Options=Fluent.Options
 -- Ditunda setup SaveManager hingga setelah authentication berhasil
@@ -1849,7 +1849,7 @@ end
     end)
     
     local element = Quest:AddSection(" [ Element Quest Beta ] ")
-    local ElementParagraph = element:AddParagraph({Title="Element Quest Monitor", Content="Initializing...", Icon="zap"})
+    local ElementParagraph = element:AddParagraph({Title="Element Quest Monitor", Content="Initializing...", Icon="swords"})
 local runningElement=false
 local elementThread=nil
 local ALTAR_CF=CFrame.new(1479.587,128.295,-604.224)
@@ -2034,7 +2034,7 @@ end
             RunElementQuest()
         else
             if elementThread then task.cancel(elementThread) elementThread = nil end
-            ElementParagraph:SetDesc("⏹Stopped")
+            ElementParagraph:SetDesc("Stopped")
         end
     end)
     
