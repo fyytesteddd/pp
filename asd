@@ -3149,36 +3149,39 @@ local function EventTab()
     local autoUnlockToggle = ruinDoorSection:AddToggle("AutoUnlockRuin", {
         Title = "Auto Unlock Ruin Door",
         Description = "Auto teleport to Sacred Temple and farm items",
-        Default = false
-    })
-    autoUnlockToggle:OnChanged(function(s)
-        AUTO_UNLOCK_STATE = s
-        if s then
-            task.spawn(function()
-                local success, err = pcall(function()
-                    local st, miss = GetRuinDoorStatus(), GetMissingItem()
-                    ruinDoorStatus:SetTitle("Ruin Door Status: " .. st)
-                    if st == "UNLOCKED ✅" then 
-                        ruinDoorStatus:SetDesc("Door is already unlocked!") 
-                        autoUnlockToggle:SetValue(false) 
-                        return 
+        Default = false,
+        Callback = function(s)
+            AUTO_UNLOCK_STATE = s
+            if s then
+                task.spawn(function()
+                    local success, err = pcall(function()
+                        local st, miss = GetRuinDoorStatus(), GetMissingItem()
+                        ruinDoorStatus:SetTitle("Ruin Door Status: " .. st)
+                        
+                        if st == "UNLOCKED ✅" then 
+                            Fluent:Notify({Title="Already Unlocked", Content="The door is already unlocked!", Duration=3})
+                            if autoUnlockToggle.SetValue then autoUnlockToggle:SetValue(false) end
+                            return 
+                        end
+                        
+                        ruinDoorStatus:SetDesc(miss and ("Missing: " .. miss .. "\nTeleporting to Sacred Temple...") or "All items collected!\nStarting unlock attempts...")
+                        RunAutoUnlockLoop()
+                    end)
+                    
+                    if not success then
+                        warn("Auto Unlock Error: " .. tostring(err))
+                        Fluent:Notify({Title="System Error", Content="Check console (F9). Error: " .. tostring(err), Duration=5})
+                        if autoUnlockToggle.SetValue then autoUnlockToggle:SetValue(false) end
                     end
-                    ruinDoorStatus:SetDesc(miss and ("Missing: " .. miss .. "\nTeleporting to Sacred Temple...") or "All items collected!\nStarting unlock attempts...")
-                    RunAutoUnlockLoop()
                 end)
-                if not success then
-                    warn("Auto Unlock Error: " .. tostring(err))
-                    Fluent:Notify({Title="Error", Content="Failed to start Auto Unlock: " .. tostring(err), Duration=5})
-                    autoUnlockToggle:SetValue(false)
-                end
-            end)
-        else
-            ruinDoorStatus:SetTitle("Ruin Door Status: Stopped")
-            ruinDoorStatus:SetDesc("Auto unlock stopped")
-            if AUTO_UNLOCK_THREAD then task.cancel(AUTO_UNLOCK_THREAD) AUTO_UNLOCK_THREAD = nil end
-            if AUTO_UNLOCK_ATTEMPT_THREAD then task.cancel(AUTO_UNLOCK_ATTEMPT_THREAD) AUTO_UNLOCK_ATTEMPT_THREAD = nil end
+            else
+                ruinDoorStatus:SetTitle("Ruin Door Status: Stopped")
+                ruinDoorStatus:SetDesc("Auto unlock stopped")
+                if AUTO_UNLOCK_THREAD then task.cancel(AUTO_UNLOCK_THREAD) AUTO_UNLOCK_THREAD = nil end
+                if AUTO_UNLOCK_ATTEMPT_THREAD then task.cancel(AUTO_UNLOCK_ATTEMPT_THREAD) AUTO_UNLOCK_ATTEMPT_THREAD = nil end
+            end
         end
-    end)
+    })
 
 
     -- // PIRATE EVENT REWARDS //
