@@ -3083,7 +3083,8 @@ local function EventTab()
     local function GetMissingItem() for _, n in ipairs(ITEM_FISH_NAMES) do if not IsItemAvailable(n) then return n end end end
 
     local function GetRuinDoorStatus()
-        local d = workspace:FindFirstChild("RUIN INTERACTIONS") and workspace["RUIN INTERACTIONS"]:FindFirstChild("Door")
+        local ri = workspace:FindFirstChild("RUIN INTERACTIONS")
+        local d = ri and ri:FindFirstChild("Door")
         local s = "LOCKED 🔒"
         if d and d:FindFirstChild("RuinDoor") then
             local l = d.RuinDoor:FindFirstChild("LDoor")
@@ -3153,11 +3154,24 @@ local function EventTab()
     autoUnlockToggle:OnChanged(function(s)
         AUTO_UNLOCK_STATE = s
         if s then
-            local st, miss = GetRuinDoorStatus(), GetMissingItem()
-            ruinDoorStatus:SetTitle("Ruin Door Status: " .. st)
-            if st == "UNLOCKED ✅" then ruinDoorStatus:SetDesc("Door is already unlocked!") autoUnlockToggle:SetValue(false) return end
-            ruinDoorStatus:SetDesc(miss and ("Missing: " .. miss .. "\nTeleporting to Sacred Temple...") or "All items collected!\nStarting unlock attempts...")
-            RunAutoUnlockLoop()
+            task.spawn(function()
+                local success, err = pcall(function()
+                    local st, miss = GetRuinDoorStatus(), GetMissingItem()
+                    ruinDoorStatus:SetTitle("Ruin Door Status: " .. st)
+                    if st == "UNLOCKED ✅" then 
+                        ruinDoorStatus:SetDesc("Door is already unlocked!") 
+                        autoUnlockToggle:SetValue(false) 
+                        return 
+                    end
+                    ruinDoorStatus:SetDesc(miss and ("Missing: " .. miss .. "\nTeleporting to Sacred Temple...") or "All items collected!\nStarting unlock attempts...")
+                    RunAutoUnlockLoop()
+                end)
+                if not success then
+                    warn("Auto Unlock Error: " .. tostring(err))
+                    Fluent:Notify({Title="Error", Content="Failed to start Auto Unlock: " .. tostring(err), Duration=5})
+                    autoUnlockToggle:SetValue(false)
+                end
+            end)
         else
             ruinDoorStatus:SetTitle("Ruin Door Status: Stopped")
             ruinDoorStatus:SetDesc("Auto unlock stopped")
