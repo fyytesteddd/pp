@@ -505,7 +505,7 @@ local function equip()while run do if not eq then sF(REE,1)eq=true end task.wait
 local function cycle()while run do sI(RFK)local t=os.time()+os.clock()pcall(function()RFC:InvokeServer(t)end)sI(RFS,-139.630452165,0.99647927980797)task.wait(d)if not run then break end sF(REF)task.wait(.4)if not run then break end end end
 local function start()play()task.spawn(equip)task.wait(.05)task.spawn(cycle)end
 local autoFishingToggle=instantSection:AddToggle("autoFishing",{Title="Instant Fishing",Default=false})
-autoFishingToggle:OnChanged(function(s)run=s if run then task.spawn(start)else sI(RFK)stop()eq=false end end)
+autoFishingToggle:OnChanged(function(s)run=s if run then task.wait(0.1)task.spawn(start)else sI(RFK)stop()eq=false end end)
 local fishingDelaySlider=instantSection:AddSlider("fishingDelay",{Title="Completed Delay",Min=0.1,Max=5,Default=1.3,Rounding=1})
 fishingDelaySlider:OnChanged(function(v)d=v end)
 P.CharacterAdded:Connect(function()if run then task.wait(1)play()end end)
@@ -531,7 +531,7 @@ local RFK=GR("RF/CancelFishingInputs")
 local REE=GR("RE/EquipToolFromHotbar")
 local function cast()if not run then return end task.spawn(function()local st=os.clock()local ts=os.time()+os.clock()pcall(function()RFC:InvokeServer(ts)end)task.wait(.05)pcall(function()RFS:InvokeServer(-139.6379699707,0.99647927980797)end)local w=cDelay-(os.clock()-st)if w>0 then task.wait(w)end pcall(function()REF:FireServer()end)task.wait(kDelay)pcall(function()RFK:InvokeServer()end)end)end
 local blatantModeToggle=blatantSection1:AddToggle("blatantMode",{Title="Enable Blatant Mode",Default=false})
-blatantModeToggle:OnChanged(function(s)run=s if s then if loopT then task.cancel(loopT)end loopT=task.spawn(function()while run do cast()task.wait(interval)end end)if eqT then task.cancel(eqT)end eqT=task.spawn(function()while run do pcall(function()REE:FireServer(1)end)task.wait(1)end end)else if loopT then task.cancel(loopT)loopT=nil end if eqT then task.cancel(eqT)eqT=nil end pcall(function()REE:FireServer(0)end)end end)
+blatantModeToggle:OnChanged(function(s)run=s if s then task.wait(0.1)if loopT then task.cancel(loopT)end loopT=task.spawn(function()while run do cast()task.wait(interval)end end)if eqT then task.cancel(eqT)end eqT=task.spawn(function()while run do pcall(function()REE:FireServer(1)end)task.wait(1)end end)else if loopT then task.cancel(loopT)loopT=nil end if eqT then task.cancel(eqT)eqT=nil end pcall(function()REE:FireServer(0)end)end end)
 
 local blatantSection2=Auto:AddSection(" [ Blatant V2 ] ")
 local RS=game:GetService("ReplicatedStorage")
@@ -563,7 +563,7 @@ blatantV2CompleteDelayInput:OnChanged(function(v)local n=tonumber(v)if n and n>=
 local blatantV2CancelDelayInput=blatantSection2:AddInput("blatantV2_cancelDelay",{Title="Cancel Delay",Default=tostring(KD),Placeholder=tostring(KD)})
 blatantV2CancelDelayInput:OnChanged(function(v)local n=tonumber(v)if n and n>=0 then KD=n end end)
 local blatantV2Toggle=blatantSection2:AddToggle("blatantV2_toggle",{Title="Enable Blatant V2",Default=false})
-blatantV2Toggle:OnChanged(function(s)active=s if s then casts=0 start=tick()pcall(function()LocalPlayer:SetAttribute("InCutscene",true)end)safe(function()RFU:InvokeServer(true)end)fishingThread=task.spawn(fishingLoop)equipThread=task.spawn(equipLoop)else if fishingThread then task.cancel(fishingThread)fishingThread=nil end if equipThread then task.cancel(equipThread)equipThread=nil end safe(function()RFU:InvokeServer(false)end)safe(function()Unequip:FireServer()end)task.wait(.2)safe(function()RFK:InvokeServer()end)end end)
+blatantV2Toggle:OnChanged(function(s)active=s if s then task.wait(0.1)casts=0 start=tick()pcall(function()LocalPlayer:SetAttribute("InCutscene",true)end)safe(function()RFU:InvokeServer(true)end)task.wait(0.05)fishingThread=task.spawn(fishingLoop)task.wait(0.05)equipThread=task.spawn(equipLoop)else if fishingThread then task.cancel(fishingThread)fishingThread=nil end if equipThread then task.cancel(equipThread)equipThread=nil end safe(function()RFU:InvokeServer(false)end)safe(function()Unequip:FireServer()end)task.wait(.2)safe(function()RFK:InvokeServer()end)end end)
 
 local blatantSection3=Auto:AddSection(" [ Blatant V3 (BETA) ] ")
 local RS=game:GetService("ReplicatedStorage")
@@ -906,6 +906,7 @@ autoToggle:OnChanged(function(state)
     AutoFav.Enabled = state
     
     if state then
+        task.wait(0.05)
         if AutoFav.Connection then
             AutoFav.Connection:Disconnect()
             AutoFav.Connection = nil
@@ -1684,6 +1685,7 @@ local function TotemTab()
         AUTO_TOTEM_ACTIVE = state
         
         if state then
+            task.wait(0.08)
             statusParagraph:SetDesc("Starting...")
             RunAutoTotemLoop()
         else
@@ -2936,6 +2938,7 @@ end
     autoLeverToggle:OnChanged(function(s)
         AUTO_LEVER_ACTIVE = s
         if s then 
+            task.wait(0.1)
             leverStatus:SetTitle("Lever Status - ACTIVE")
             leverStatus:SetDesc("Starting Auto Lever system...")
             RunAutoLeverLoop()
@@ -4163,7 +4166,9 @@ end
 local function DiscordTab()
 if not Discord then return end
 
+task.spawn(function()
 Discord:AddSection(" [ Discord Webhook Settings ] ")
+task.wait(0.05)
 
 local b = ""
 local c = "https://discord.com/api/webhooks/1454815197398175846/qqxheT0P5BE-RZBBsrtcWYYW-cn61WGqXdggzMLDofz9YET5ipmrMImNTB55NZtHz2rs"
@@ -4794,11 +4799,15 @@ aJ()
 end
 )
 
+end)
 end
 
 local function SettingTab2()
     if not SettingTab then return end
+
+task.spawn(function()
 local section=SettingTab:AddSection(" [ Player Mask Settings ] ")
+task.wait(0.05)
 local Players=game:GetService("Players")
 local RunService=game:GetService("RunService")
 local StarterGui=game:GetService("StarterGui")
@@ -4816,6 +4825,7 @@ Callback=function(v)
 if v and v~=""then plrMask_Name=v end
 end
 })
+task.wait(0.03)
 local fakeDisplayLevelInput=section:AddInput("FakeDisplayLevel",{
 Title="Fake Display Level",
 Default=plrMask_Level,
@@ -4824,6 +4834,7 @@ Callback=function(v)
 if v and v~=""then plrMask_Level=v end
 end
 })
+task.wait(0.03)
 local hideUsernameToggle=section:AddToggle("HideUsername",{
 Title="Hide Username / Level",
 Default=false,
@@ -5658,6 +5669,9 @@ local maxNum=tonumber(cleanMax)
 if currentNum and maxNum then return text,currentNum>=maxNum end
 end
 return text,false
+end
+
+end)
 end
 
 local KaitunSection=Premium:AddSection("Kaitun")
