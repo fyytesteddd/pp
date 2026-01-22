@@ -4604,14 +4604,29 @@ ad(c, aB)
 end
 end
 end
+
+local function convertDropdownTable(fluentTable)
+    local array = {}
+    if not fluentTable then return array end
+    
+    for value, isSelected in pairs(fluentTable) do
+        if isSelected then
+            table.insert(array, value)
+        end
+    end
+    return array
+end
+
 local aC = Discord:AddInput("PrivateWebhookURL", {
     Title = "Private Webhook URL",
     Default = "",
     Placeholder = "https://discord.com/api/webhooks/...",
     Numeric = false,
     Finished = true,
-    Callback = function(aD)
-        b = aD
+    Callback = function(v)
+        if v and v ~= "" then
+            b = v
+        end
     end
 })
 
@@ -4622,8 +4637,8 @@ local aE = Discord:AddDropdown("PrivateNotifyTiers", {
     Multi = true,
     Default = {"SECRET"}
 })
-aE:OnChanged(function(aD)
-    f = aD
+aE:OnChanged(function(selectedTable)
+    f = convertDropdownTable(selectedTable)
 end)
 
 local aF = Discord:AddToggle("EnablePrivateWebhook", {
