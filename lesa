@@ -4604,12 +4604,14 @@ ad(c, aB)
 end
 end
 end
+-- Ganti bagian UI controls dengan format yang benar
 local aC = Discord:Input({
     Title = "Private Webhook URL",
     Default = "",
     Placeholder = "https://discord.com/api/webhooks/...",
     Callback = function(aD)
         b = aD
+        print("Webhook URL set to:", b)
     end
 })
 
@@ -4621,6 +4623,7 @@ local aE = Discord:Dropdown({
     Multi = true,
     Callback = function(aD)
         f = aD
+        print("Selected tiers:", table.concat(f, ", "))
     end
 })
 
@@ -4629,22 +4632,35 @@ local aF = Discord:Toggle({
     Default = false,
     Callback = function(aG)
         d = aG
+        print("Private webhook enabled:", d)
     end
 })
 
-Discord:AddButton({
+Discord:Button({
     Title = "Test Private Webhook",
     Description = "Send test message to verify webhook",
     Callback = function()
-        if not d or b == "" then
-            Fluent:Notify({
-                Title = "Failed",
-                Content = "Enable Private Webhook & Set URL first!",
-                Duration = 3
-            })
+        print("Test button clicked")
+        print("d (enabled):", d)
+        print("b (URL):", b)
+        
+        if not d or b == "" or not b:find("discord.com") then
+            -- Coba alternatif notifikasi jika Fluent tidak ada
+            if Fluent and Fluent.Notify then
+                Fluent:Notify({
+                    Title = "Failed",
+                    Content = "Enable Private Webhook & Set URL first!",
+                    Duration = 3
+                })
+            else
+                warn("Enable Private Webhook & Set URL first!")
+            end
             return
         end
+        
         local Q = N()
+        print("Current coins:", Q)
+        
         local aI = {
             title = "🎣 Test Notification",
             description = "Webhook is working correctly!",
@@ -4662,19 +4678,32 @@ Discord:AddButton({
             footer = {text = "Fyy Exploit | Test Message"},
             timestamp = DateTime.now():ToIsoDate()
         }
+        
+        print("Sending test webhook...")
         local y = a5(b, aI)
+        
         if y then
-            Fluent:Notify({
-                Title = "Success!",
-                Content = "Test message sent to your webhook.",
-                Duration = 3
-            })
+            print("Test webhook sent successfully")
+            if Fluent and Fluent.Notify then
+                Fluent:Notify({
+                    Title = "Success!",
+                    Content = "Test message sent to your webhook.",
+                    Duration = 3
+                })
+            else
+                warn("Success! Test message sent to webhook.")
+            end
         else
-            Fluent:Notify({
-                Title = "Failed",
-                Content = "Failed to send test message. Check URL.",
-                Duration = 3
-            })
+            print("Test webhook failed")
+            if Fluent and Fluent.Notify then
+                Fluent:Notify({
+                    Title = "Failed",
+                    Content = "Failed to send test message. Check URL.",
+                    Duration = 3
+                })
+            else
+                warn("Failed to send test message. Check URL.")
+            end
         end
     end
 })
