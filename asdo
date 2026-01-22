@@ -4094,10 +4094,27 @@ local function EnchantTab()
                 Fluent:Notify({Title="Error", Content="Pilih Rod yang valid dulu.", Duration=3})
                 return false
             end
-            if #selectedEnchantNames == 0 then
-                Fluent:Notify({Title="Error", Content="Pilih minimal 1 target enchant.", Duration=3})
-                return false
+            
+            -- Fix: Support both single value (string) or table (multi)
+            local hasEnchant = false
+            if type(selectedEnchantNames) == "table" then
+                for k, v in pairs(selectedEnchantNames) do
+                    if v then hasEnchant = true break end
+                end
+            elseif type(selectedEnchantNames) == "string" and selectedEnchantNames ~= "" then
+                hasEnchant = true
+                -- Convert single string to table for loop compatibility
+                selectedEnchantNames = {selectedEnchantNames} 
             end
+
+            if not hasEnchant then
+                Fluent:Notify({Title="Error", Content="Pilih minimal 1 target enchant.", Duration=3})
+                if Enchant.EnableAutoEnchant and Enchant.EnableAutoEnchant.SetValue then
+                    Enchant.EnableAutoEnchant:SetValue(false)
+                end
+                return
+            end
+            
             RunAutoEnchantLoop(selectedRodUUID, selectedStoneType)
         else
             if autoEnchantThread then
