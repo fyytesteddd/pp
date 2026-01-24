@@ -1,5 +1,4 @@
-Fluent, SaveManager, InterfaceManager = loadstring(Game:HttpGet("https://raw.githubusercontent.com/fyytesteddd/pp/refs/heads/main/lib.lua"))()
-
+Fluent, SaveManager, InterfaceManager = loadstring(Game:HttpGet("https://raw.githubusercontent.com/FyyZED/FyyX/refs/heads/main/Liblarry.lua"))()
 local Window=Fluent:CreateWindow({Title="Fyy X Fish IT | 1.1.2",SubTitle="by Fyy Community",TabWidth=150,Size=UDim2.fromOffset(530, 300),Acrylic=true,Theme="Arctic",MinimizeKey=Enum.KeyCode.G,BackgroundImage="rbxassetid://78893380921225",BackgroundTransparency=0.4})
 local Tabs={Auth=Window:AddTab({Title="Authentication",Icon="key"})}
 local Options=Fluent.Options
@@ -199,284 +198,299 @@ end
 
 local function PlayerTab2()
     if not PlayerTab then return end
-local PlayerSection=PlayerTab:AddSection(" [ Player Feature ] ")
-local walkSpeedValue=16
-local walkSpeedToggle=PlayerSection:AddToggle("WalkSpeedToggle",{Title="WalkSpeed",Default=false})
-local walkSpeedInput=PlayerSection:AddInput("WalkSpeedInput",{Title="Set WalkSpeed",Default="16",Placeholder="Enter number (e.g. 50)",Numeric=true,Finished=false,Callback=function(v)
-walkSpeedValue=tonumber(v)or 16
-if Options.WalkSpeedToggle.Value then
-local char=LocalPlayer.Character
-if char and char:FindFirstChild("Humanoid")then
-char.Humanoid.WalkSpeed=walkSpeedValue
-end
-end
-end})
+    local PlayerSection = PlayerTab:AddSection(" [ Player Feature ] ")
+    local walkSpeedValue = 16
+    local walkSpeedToggle = PlayerSection:AddToggle("WalkSpeedToggle", {Title = "WalkSpeed", Default = false})
+    local walkSpeedInput = PlayerSection:AddInput("WalkSpeedInput", {
+        Title = "Set WalkSpeed",
+        Default = "16",
+        Placeholder = "Enter number (e.g. 50)",
+        Numeric = true,
+        Finished = false,
+        Callback = function(v)
+            walkSpeedValue = tonumber(v) or 16
+            if Options.WalkSpeedToggle.Value then
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("Humanoid") then
+                    char.Humanoid.WalkSpeed = walkSpeedValue
+                end
+            end
+        end
+    })
 
-PlayerSection:AddSpace({ Height = 20 }) -- Contoh penggunaan Space: Memberikan jarak 20px
+ 
 
-walkSpeedToggle:OnChanged(function(e)
-local char=LocalPlayer.Character
-if char and char:FindFirstChild("Humanoid")then
-char.Humanoid.WalkSpeed=e and walkSpeedValue or 16
-end
-end)
-local IJC
-local infJumpToggle=PlayerSection:AddToggle("InfiniteJump",{Title="Infinite Jump",Default=false})
-infJumpToggle:OnChanged(function(e)
-local UIS=game:GetService("UserInputService")
-if e then
-IJC=UIS.JumpRequest:Connect(function()
-local char=LocalPlayer.Character
-if char and char:FindFirstChild("Humanoid")then
-char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-end
-end)
-elseif IJC then IJC:Disconnect()IJC=nil end
-end)
-local NCC
-local noClipToggle=PlayerSection:AddToggle("NoClip",{Title="NoClip",Default=false})
-noClipToggle:OnChanged(function(e)
-if e then
-NCC=game:GetService("RunService").Stepped:Connect(function()
-local char=LocalPlayer.Character
-if char then
-for _,p in ipairs(char:GetChildren())do
-if p:IsA("BasePart")then p.CanCollide=false end
-end
-end
-end)
-elseif NCC then
-NCC:Disconnect()NCC=nil
-local char=LocalPlayer.Character
-if char then
-for _,p in ipairs(char:GetChildren())do
-if p:IsA("BasePart")then p.CanCollide=true end
-end
-end
-end
-end)
-local wow=false
-local wp
-local wallWalkToggle=PlayerSection:AddToggle("WalkOnWater",{Title="Walk On Water",Default=false})
-wallWalkToggle:OnChanged(function(e)
-wow=e
-local char=LocalPlayer.Character
-if e and char then
-local hrp=char:FindFirstChild("HumanoidRootPart")
-if hrp then
-if wp then wp:Destroy()end
-wp=Instance.new("Part")
-wp.Anchored=true
-wp.CanCollide=true
-wp.Size=Vector3.new(20,1,20)
-wp.Transparency=1
-wp.Position=Vector3.new(hrp.Position.X,0,hrp.Position.Z)
-wp.Parent=workspace
-end
-elseif wp then wp:Destroy()wp=nil end
-end)
-game:GetService("RunService").Heartbeat:Connect(function()
-if wow and wp then
-local char=LocalPlayer.Character
-if char and char:FindFirstChild("HumanoidRootPart")then
-local p=char.HumanoidRootPart.Position
-wp.Position=Vector3.new(p.X,0,p.Z)
-end
-end
-end)
-local RS=game:GetService("ReplicatedStorage")
-local net=RS.Packages._Index["sleitnick_net@0.2.0"].net
-local RF_E=net["RF/EquipOxygenTank"]
-local RF_U=net["RF/UnequipOxygenTank"]
-local ox=false
-local infOxygenToggle=PlayerSection:AddToggle("EquipOxygenTank",{Title="Equip Oxygen Tank",Default=false})
-infOxygenToggle:OnChanged(function(e)
-ox=e
-if ox then RF_E:InvokeServer(105)else RF_U:InvokeServer()end
-end)
-local RF_R=net["RF/UpdateFishingRadar"]
-local espRadarToggle=PlayerSection:AddToggle("BypassFishingRadar",{Title="Bypass Fishing Radar",Default=false})
-espRadarToggle:OnChanged(function(e)
-RF_R:InvokeServer(e and true or false)
-end)
-local saveCF=nil
-LocalPlayer.CharacterAdded:Connect(function(char)
-if not saveCF then return end
-local hrp=char:WaitForChild("HumanoidRootPart",5)
-if hrp then task.wait(.3)hrp.CFrame=saveCF end
-end)
-PlayerSection:AddButton({Title="Respawn at Current Position",Description="Respawn at your current location",Callback=function()
-local char=LocalPlayer.Character
-if not char then return end
-local hrp=char:FindFirstChild("HumanoidRootPart")
-local hum=char:FindFirstChild("Humanoid")
-if hrp and hum then saveCF=hrp.CFrame hum.Health=0 end
-end})
-local GuiSection=PlayerTab:AddSection(" [ Gui External ] ")
-GuiSection:AddButton({Title="Fly GUI",Description="Load Fly GUI",Callback=function()
-loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
-Fluent:Notify({Title="Fly",Content="Fly GUI berhasil dijalankan",Duration=3})
-end})
-local SG,SL=nil,nil
-local statsOverlayToggle=GuiSection:AddToggle("StatsOverlay",{Title="Show Stats Overlay",Description="Menampilkan FPS, CPU(ms), Ping, RAM. (Draggable)",Default=false})
-statsOverlayToggle:OnChanged(function(e)
-if e then
-if SG then SG:Destroy()end
-local g=Instance.new("ScreenGui",game.CoreGui)
-g.Name="RockHub_Stats"g.IgnoreGuiInset=true
-local f=Instance.new("Frame",g)
-f.Size=UDim2.fromOffset(360,40)
-f.AnchorPoint=Vector2.new(.5,0)
-f.Position=UDim2.new(.5,0,.06,0)
-f.BackgroundColor3=Color3.fromRGB(20,20,20)
-f.BackgroundTransparency=.2
-f.BorderSizePixel=0
-f.Active=true
-f.Selectable=true
-Instance.new("UICorner",f).CornerRadius=UDim.new(1,0)
-local s=Instance.new("UIStroke",f)
-s.Color=Color3.fromHex("8B5CF6")
-s.Thickness=2
-s.Transparency=.1
-s.ApplyStrokeMode=Enum.ApplyStrokeMode.Border
+    walkSpeedToggle:OnChanged(function(e)
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.WalkSpeed = e and walkSpeedValue or 16
+        end
+    end)
+    local IJC
+    local infJumpToggle = PlayerSection:AddToggle("InfiniteJump", {Title = "Infinite Jump", Default = false})
+    infJumpToggle:OnChanged(function(e)
+        local UIS = game:GetService("UserInputService")
+        if e then
+            IJC = UIS.JumpRequest:Connect(function()
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("Humanoid") then
+                    char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+        elseif IJC then
+            IJC:Disconnect()
+            IJC = nil
+        end
+    end)
+    local NCC
+    local noClipToggle = PlayerSection:AddToggle("NoClip", {Title = "NoClip", Default = false})
+    noClipToggle:OnChanged(function(e)
+        if e then
+            NCC = game:GetService("RunService").Stepped:Connect(function()
+                local char = LocalPlayer.Character
+                if char then
+                    for _, p in ipairs(char:GetChildren()) do
+                        if p:IsA("BasePart") then p.CanCollide = false end
+                    end
+                end
+            end)
+        elseif NCC then
+            NCC:Disconnect()
+            NCC = nil
+            local char = LocalPlayer.Character
+            if char then
+                for _, p in ipairs(char:GetChildren()) do
+                    if p:IsA("BasePart") then p.CanCollide = true end
+                end
+            end
+        end
+    end)
+    local wow = false
+    local wp
+    local wallWalkToggle = PlayerSection:AddToggle("WalkOnWater", {Title = "Walk On Water", Default = false})
+    wallWalkToggle:OnChanged(function(e)
+        wow = e
+        local char = LocalPlayer.Character
+        if e and char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                if wp then wp:Destroy() end
+                wp = Instance.new("Part")
+                wp.Anchored = true
+                wp.CanCollide = true
+                wp.Size = Vector3.new(20, 1, 20)
+                wp.Transparency = 1
+                wp.Position = Vector3.new(hrp.Position.X, 0, hrp.Position.Z)
+                wp.Parent = workspace
+            end
+        elseif wp then
+            wp:Destroy()
+            wp = nil
+        end
+    end)
+    game:GetService("RunService").Heartbeat:Connect(function()
+        if wow and wp then
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                local p = char.HumanoidRootPart.Position
+                wp.Position = Vector3.new(p.X, 0, p.Z)
+            end
+        end
+    end)
+    local RS = game:GetService("ReplicatedStorage")
+    local net = RS.Packages._Index["sleitnick_net@0.2.0"].net
+    local RF_E = net["RF/EquipOxygenTank"]
+    local RF_U = net["RF/UnequipOxygenTank"]
+    local ox = false
+    local infOxygenToggle = PlayerSection:AddToggle("EquipOxygenTank", {Title = "Equip Oxygen Tank", Default = false})
+    infOxygenToggle:OnChanged(function(e)
+        ox = e
+        if ox then RF_E:InvokeServer(105) else RF_U:InvokeServer() end
+    end)
+    local RF_R = net["RF/UpdateFishingRadar"]
+    local espRadarToggle = PlayerSection:AddToggle("BypassFishingRadar", {Title = "Bypass Fishing Radar", Default = false})
+    espRadarToggle:OnChanged(function(e)
+        RF_R:InvokeServer(e and true or false)
+    end)
+    local saveCF = nil
+    LocalPlayer.CharacterAdded:Connect(function(char)
+        if not saveCF then return end
+        local hrp = char:WaitForChild("HumanoidRootPart", 5)
+        if hrp then task.wait(.3) hrp.CFrame = saveCF end
+    end)
+    PlayerSection:AddButton({Title = "Respawn at Current Position", Description = "Respawn at your current location", Callback = function()
+        local char = LocalPlayer.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChild("Humanoid")
+        if hrp and hum then saveCF = hrp.CFrame hum.Health = 0 end
+    end})
+    local GuiSection = PlayerTab:AddSection(" [ Gui External ] ")
+    GuiSection:AddButton({Title = "Fly GUI", Description = "Load Fly GUI", Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/XNEOFF/FlyGuiV3/main/FlyGuiV3.txt"))()
+        Fluent:Notify({Title = "Fly", Content = "Fly GUI berhasil dijalankan", Duration = 3})
+    end})
+    local SG, SL = nil, nil
+    local statsOverlayToggle = GuiSection:AddToggle("StatsOverlay", {Title = "Show Stats Overlay", Description = "Menampilkan FPS, CPU(ms), Ping, RAM. (Draggable)", Default = false})
+    statsOverlayToggle:OnChanged(function(e)
+        if e then
+            if SG then SG:Destroy() end
+            local g = Instance.new("ScreenGui", game.CoreGui)
+            g.Name = "RockHub_Stats"
+            g.IgnoreGuiInset = true
+            local f = Instance.new("Frame", g)
+            f.Size = UDim2.fromOffset(360, 40)
+            f.AnchorPoint = Vector2.new(.5, 0)
+            f.Position = UDim2.new(.5, 0, .06, 0)
+            f.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+            f.BackgroundTransparency = .2
+            f.BorderSizePixel = 0
+            f.Active = true
+            f.Selectable = true
+            Instance.new("UICorner", f).CornerRadius = UDim.new(1, 0)
+            local s = Instance.new("UIStroke", f)
+            s.Color = Color3.fromHex("8B5CF6")
+            s.Thickness = 2
+            s.Transparency = .1
+            s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
--- Drag Bar (below stats frame)
-local dragBar=Instance.new("Frame")
-dragBar.Name="DragBar"
-dragBar.Size=UDim2.new(0.6,0,0,6)
-dragBar.Position=UDim2.new(0.2,0,1,8)
-dragBar.BackgroundColor3=Color3.fromRGB(45,45,50)
-dragBar.BorderSizePixel=0
-dragBar.Active=true
-dragBar.Selectable=true
-dragBar.Parent=f
+            -- Drag Bar (below stats frame)
+            local dragBar = Instance.new("Frame")
+            dragBar.Name = "DragBar"
+            dragBar.Size = UDim2.new(0.6, 0, 0, 6)
+            dragBar.Position = UDim2.new(0.2, 0, 1, 8)
+            dragBar.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            dragBar.BorderSizePixel = 0
+            dragBar.Active = true
+            dragBar.Selectable = true
+            dragBar.Parent = f
 
-local dragCorner=Instance.new("UICorner")
-dragCorner.CornerRadius=UDim.new(1,0)
-dragCorner.Parent=dragBar
+            local dragCorner = Instance.new("UICorner")
+            dragCorner.CornerRadius = UDim.new(1, 0)
+            dragCorner.Parent = dragBar
 
-local dragStroke=Instance.new("UIStroke")
-dragStroke.Color=Color3.fromHex("8B5CF6")
-dragStroke.Thickness=1
-dragStroke.Parent=dragBar
+            local dragStroke = Instance.new("UIStroke")
+            dragStroke.Color = Color3.fromHex("8B5CF6")
+            dragStroke.Thickness = 1
+            dragStroke.Parent = dragBar
 
-dragBar.MouseEnter:Connect(function()
-dragBar.BackgroundColor3=Color3.fromRGB(60,60,65)
-end)
-dragBar.MouseLeave:Connect(function()
-dragBar.BackgroundColor3=Color3.fromRGB(45,45,50)
-end)
+            dragBar.MouseEnter:Connect(function()
+                dragBar.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
+            end)
+            dragBar.MouseLeave:Connect(function()
+                dragBar.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+            end)
 
--- Stats Content Container (to prevent layout affecting drag bar)
-local container=Instance.new("Frame")
-container.Name="StatsContainer"
-container.Size=UDim2.new(1,0,1,0)
-container.BackgroundTransparency=1
-container.Parent=f
+            -- Stats Content Container (to prevent layout affecting drag bar)
+            local container = Instance.new("Frame")
+            container.Name = "StatsContainer"
+            container.Size = UDim2.new(1, 0, 1, 0)
+            container.BackgroundTransparency = 1
+            container.Parent = f
 
--- UIListLayout in container, not in main frame
-local l=Instance.new("UIListLayout",container)
-l.FillDirection=Enum.FillDirection.Horizontal
-l.Padding=UDim.new(0,12)
-l.HorizontalAlignment=Enum.HorizontalAlignment.Center
-l.VerticalAlignment=Enum.VerticalAlignment.Center
+            -- UIListLayout in container, not in main frame
+            local l = Instance.new("UIListLayout", container)
+            l.FillDirection = Enum.FillDirection.Horizontal
+            l.Padding = UDim.new(0, 12)
+            l.HorizontalAlignment = Enum.HorizontalAlignment.Center
+            l.VerticalAlignment = Enum.VerticalAlignment.Center
 
-local function L()
-local t=Instance.new("TextLabel",container)
-t.AutomaticSize=Enum.AutomaticSize.X
-t.Size=UDim2.new(0,0,1,0)
-t.BackgroundTransparency=1
-t.Font=Enum.Font.GothamBold
-t.TextSize=13
-t.TextColor3=Color3.fromRGB(255,255,255)
-t.Text="..."
-return t
-end
+            local function L()
+                local t = Instance.new("TextLabel", container)
+                t.AutomaticSize = Enum.AutomaticSize.X
+                t.Size = UDim2.new(0, 0, 1, 0)
+                t.BackgroundTransparency = 1
+                t.Font = Enum.Font.GothamBold
+                t.TextSize = 13
+                t.TextColor3 = Color3.fromRGB(255, 255, 255)
+                t.Text = "..."
+                return t
+            end
 
--- Drag Functionality
-local UIS=game:GetService("UserInputService")
-local CAS=game:GetService("ContextActionService")
-local dragging=false
-local dragInput,dragStart,startPos
-local dragActionName="StatsDragBlocker"
+            -- Drag Functionality
+            local UIS = game:GetService("UserInputService")
+            local CAS = game:GetService("ContextActionService")
+            local dragging = false
+            local dragInput, dragStart, startPos
+            local dragActionName = "StatsDragBlocker"
 
-local function update(input)
-local delta=input.Position-dragStart
-f.Position=UDim2.new(
-startPos.X.Scale,
-startPos.X.Offset+delta.X,
-startPos.Y.Scale,
-startPos.Y.Offset+delta.Y
-)
-end
+            local function update(input)
+                local delta = input.Position - dragStart
+                f.Position = UDim2.new(
+                    startPos.X.Scale,
+                    startPos.X.Offset + delta.X,
+                    startPos.Y.Scale,
+                    startPos.Y.Offset + delta.Y
+                )
+            end
 
-local function startDrag(input)
-dragging=true
-dragStart=input.Position
-startPos=f.Position
+            local function startDrag(input)
+                dragging = true
+                dragStart = input.Position
+                startPos = f.Position
 
--- Block Camera Movement
-CAS:BindActionAtPriority(dragActionName, function()
-return Enum.ContextActionResult.Sink
-end, false, Enum.ContextActionPriority.High.Value+50, Enum.UserInputType.Touch, Enum.UserInputType.MouseButton1, Enum.UserInputType.MouseMovement)
+                -- Block Camera Movement
+                CAS:BindActionAtPriority(dragActionName, function()
+                    return Enum.ContextActionResult.Sink
+                end, false, Enum.ContextActionPriority.High.Value + 50, Enum.UserInputType.Touch, Enum.UserInputType.MouseButton1, Enum.UserInputType.MouseMovement)
 
-input.Changed:Connect(function()
-if input.UserInputState==Enum.UserInputState.End then
-dragging=false
-CAS:UnbindAction(dragActionName)
-end
-end)
-end
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                        CAS:UnbindAction(dragActionName)
+                    end
+                end)
+            end
 
-local function connectDragArea(guiObject)
-guiObject.InputBegan:Connect(function(input)
-if input.UserInputType==Enum.UserInputType.MouseButton1 or 
-   input.UserInputType==Enum.UserInputType.Touch then
-startDrag(input)
-end
-end)
+            local function connectDragArea(guiObject)
+                guiObject.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or
+                        input.UserInputType == Enum.UserInputType.Touch then
+                        startDrag(input)
+                    end
+                end)
 
-guiObject.InputChanged:Connect(function(input)
-if input.UserInputType==Enum.UserInputType.MouseMovement or
-   input.UserInputType==Enum.UserInputType.Touch then
-dragInput=input
-end
-end)
-end
+                guiObject.InputChanged:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseMovement or
+                        input.UserInputType == Enum.UserInputType.Touch then
+                        dragInput = input
+                    end
+                end)
+            end
 
-connectDragArea(f)
-connectDragArea(dragBar)
+            connectDragArea(f)
+            connectDragArea(dragBar)
 
-UIS.InputChanged:Connect(function(input)
-if dragging and (input.UserInputType==Enum.UserInputType.MouseMovement or 
-                 input.UserInputType==Enum.UserInputType.Touch) then
-update(input)
-end
-end)
+            UIS.InputChanged:Connect(function(input)
+                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or
+                    input.UserInputType == Enum.UserInputType.Touch) then
+                    update(input)
+                end
+            end)
 
-local fps,cpu,ping,ram=L(),L(),L(),L()
-local RSv=game:GetService("RunService")
-local ST=game:GetService("Stats")
-SL=RSv.RenderStepped:Connect(function(dt)
-if not g then return end
-local f=math.floor(workspace:GetRealPhysicsFPS())
-local c=math.floor(dt*1000)
-local p=math.floor(ST.Network.ServerStatsItem["Data Ping"]:GetValue())
-local m=math.floor(ST:GetTotalMemoryUsageMb())
-fps.Text="FPS: "..f
-fps.TextColor3=f>=50 and Color3.fromRGB(0,255,127)or Color3.fromRGB(255,65,65)
-cpu.Text="CPU: "..c.."ms"
-cpu.TextColor3=c<=20 and Color3.fromRGB(0,255,127)or(c<=50 and Color3.fromRGB(255,215,0)or Color3.fromRGB(255,65,65))
-ping.Text="Ping: "..p.."ms"
-ping.TextColor3=p<100 and Color3.fromRGB(0,255,127)or Color3.fromRGB(255,65,65)
-ram.Text="Mem: "..m.."MB"
-end)
-SG=g
-else
-if SL then SL:Disconnect()SL=nil end
-if SG then SG:Destroy()SG=nil end
-end
-end)
+            local fps, cpu, ping, ram = L(), L(), L(), L()
+            local RSv = game:GetService("RunService")
+            local ST = game:GetService("Stats")
+            SL = RSv.RenderStepped:Connect(function(dt)
+                if not g then return end
+                local f = math.floor(workspace:GetRealPhysicsFPS())
+                local c = math.floor(dt * 1000)
+                local p = math.floor(ST.Network.ServerStatsItem["Data Ping"]:GetValue())
+                local m = math.floor(ST:GetTotalMemoryUsageMb())
+                fps.Text = "FPS: " .. f
+                fps.TextColor3 = f >= 50 and Color3.fromRGB(0, 255, 127) or Color3.fromRGB(255, 65, 65)
+                cpu.Text = "CPU: " .. c .. "ms"
+                cpu.TextColor3 = c <= 20 and Color3.fromRGB(0, 255, 127) or (c <= 50 and Color3.fromRGB(255, 215, 0) or Color3.fromRGB(255, 65, 65))
+                ping.Text = "Ping: " .. p .. "ms"
+                ping.TextColor3 = p < 100 and Color3.fromRGB(0, 255, 127) or Color3.fromRGB(255, 65, 65)
+                ram.Text = "Mem: " .. m .. "MB"
+            end)
+            SG = g
+        else
+            if SL then SL:Disconnect() SL = nil end
+            if SG then SG:Destroy() SG = nil end
+        end
+    end)
 end
 
 local function AutoTab()
@@ -573,28 +587,112 @@ local REF=net:WaitForChild("RE/FishingCompleted")
 local REM=net:WaitForChild("RE/FishingMinigameChanged")
 local Equip=net:WaitForChild("RE/EquipToolFromHotbar")
 local Unequip=net:WaitForChild("RE/UnequipToolFromHotbar")
+local RE_Fish=net:WaitForChild("RE/ObtainedNewFishNotification")
+
 local active=false
 local fishingThread=nil
 local equipThread=nil
+local monitorThread=nil
 local casts=0
 local start=0
 local CD=.001
 local FD=.68
 local KD=.299
+local lastFishTime=0
+
 local function safe(f)task.spawn(function()pcall(f)end)end
 local Players=game:GetService("Players")
 local LocalPlayer=Players.LocalPlayer
-local function fishingLoop()while active do local t=tick()safe(function()RFC:InvokeServer({[1]=t})end)task.wait(CD)local r=tick()safe(function()RFS:InvokeServer(1,0,r)end)casts+=1 local t2=tick()safe(function()RFC:InvokeServer({[1]=t2})end)task.wait(CD)local r2=tick()safe(function()RFS:InvokeServer(1,0,r2)end)casts+=1 task.wait(FD)safe(function()REF:FireServer()end)task.wait(KD)safe(function()RFK:InvokeServer()end)task.wait(0.001)end end
-local function equipLoop()while active do safe(function()Equip:FireServer(1)end)task.wait(100)end safe(function()Unequip:FireServer()end)end
-REM.OnClientEvent:Connect(function()if not active then return end task.spawn(function()task.wait(FD)safe(function()REF:FireServer()end)task.wait(KD)safe(function()RFK:InvokeServer()end)end)end)
+
+RE_Fish.OnClientEvent:Connect(function()
+    lastFishTime=tick()
+end)
+
+local function fishingLoop()
+    while active do 
+        local t=tick()
+        safe(function()RFC:InvokeServer({[1]=t})end)
+        task.wait(CD)
+        local r=tick()
+        safe(function()RFS:InvokeServer(1,0,r)end)
+        casts+=1 
+        local t2=tick()
+        safe(function()RFC:InvokeServer({[1]=t2})end)
+        task.wait(CD)
+        local r2=tick()
+        safe(function()RFS:InvokeServer(1,0,r2)end)
+        casts+=1 
+        task.wait(FD)
+        safe(function()REF:FireServer()end)
+        task.wait(KD)
+        safe(function()RFK:InvokeServer()end)
+        task.wait(0.001)
+    end 
+end
+
+local function equipLoop()
+    while active do 
+        safe(function()Equip:FireServer(1)end)
+        task.wait(100)
+    end 
+    safe(function()Unequip:FireServer()end)
+end
+
+local function antiStuckLoop()
+    while active do
+        if tick() - lastFishTime > 3 then
+            -- Reset logic
+            lastFishTime = tick() -- Prevent spam resetting
+            if fishingThread then task.cancel(fishingThread) end
+            safe(function()RFK:InvokeServer()end) -- Cancel inputs
+            task.wait(0.2)
+            safe(function()Equip:FireServer(1)end) -- Equip
+            task.wait(0.2)
+            fishingThread = task.spawn(fishingLoop) -- Restart loop
+        end
+        task.wait(1)
+    end
+end
+
+REM.OnClientEvent:Connect(function()
+    if not active then return end 
+    task.spawn(function()
+        task.wait(FD)
+        safe(function()REF:FireServer()end)
+        task.wait(KD)
+        safe(function()RFK:InvokeServer()end)
+    end)
+end)
+
 local blatantV3CastDelayInput=blatantSection3:AddInput("blatantV3_castDelay",{Title="Cast Delay",Default=tostring(CD),Placeholder=tostring(CD)})
 blatantV3CastDelayInput:OnChanged(function(v)local n=tonumber(v)if n and n>=0 then CD=n end end)
 local blatantV3CompleteDelayInput=blatantSection3:AddInput("blatantV3_completeDelay",{Title="Complete Delay",Default=tostring(FD),Placeholder=tostring(FD)})
 blatantV3CompleteDelayInput:OnChanged(function(v)local n=tonumber(v)if n and n>=0 then FD=n end end)
 local blatantV3CancelDelayInput=blatantSection3:AddInput("blatantV3_cancelDelay",{Title="Cancel Delay",Default=tostring(KD),Placeholder=tostring(KD)})
 blatantV3CancelDelayInput:OnChanged(function(v)local n=tonumber(v)if n and n>=0 then KD=n end end)
+
 local blatantV3Toggle=blatantSection3:AddToggle("blatantV3_toggle",{Title="Enable Blatant V3",Default=false})
-blatantV3Toggle:OnChanged(function(s)active=s if s then casts=0 start=tick()pcall(function()LocalPlayer:SetAttribute("InCutscene",true)end)safe(function()RFU:InvokeServer(true)end)fishingThread=task.spawn(fishingLoop)equipThread=task.spawn(equipLoop)else if fishingThread then task.cancel(fishingThread)fishingThread=nil end if equipThread then task.cancel(equipThread)equipThread=nil end safe(function()RFU:InvokeServer(false)end)safe(function()Unequip:FireServer()end)task.wait(.2)safe(function()RFK:InvokeServer()end)end end)
+blatantV3Toggle:OnChanged(function(s)
+    active=s 
+    if s then 
+        casts=0 
+        start=tick()
+        lastFishTime=tick()
+        pcall(function()LocalPlayer:SetAttribute("InCutscene",true)end)
+        safe(function()RFU:InvokeServer(true)end)
+        fishingThread=task.spawn(fishingLoop)
+        equipThread=task.spawn(equipLoop)
+        monitorThread=task.spawn(antiStuckLoop)
+    else 
+        if fishingThread then task.cancel(fishingThread) fishingThread=nil end 
+        if equipThread then task.cancel(equipThread) equipThread=nil end 
+        if monitorThread then task.cancel(monitorThread) monitorThread=nil end
+        safe(function()RFU:InvokeServer(false)end)
+        safe(function()Unequip:FireServer()end)
+        task.wait(.2)
+        safe(function()RFK:InvokeServer()end)
+    end 
+end)
 
 
 local Autosell=Auto:AddSection(" [ Auto Sell Feature ] ")
