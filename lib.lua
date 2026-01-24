@@ -5080,7 +5080,10 @@ Components.Window = (function()
 			Window.Minimized = not Window.Minimized
 
 			if Window.Minimized then
-				-- OPTIMIZED: Hide UI IMMEDIATELY for instant visual feedback
+				-- INSTANT HIDE - NO ANIMATION, NO LAG!
+				Window.Scale.Scale = 0
+				Window.Root.Visible = false
+				
 				if Window.ContainerCanvas then 
 					Window.ContainerCanvas.Visible = false 
 				end
@@ -5088,10 +5091,7 @@ Components.Window = (function()
 					Window.AcrylicPaint.Model.Transparency = 1
 				end
 				
-				-- OPTIMIZED: Faster animation (0.15s instead of 0.3s)
-				TweenService:Create(Window.Scale, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Scale = 0 }):Play()
-				
-				-- OPTIMIZED: Close dropdowns in background WITHOUT task.wait() (no lag!)
+				-- Close dropdowns in background (non-blocking)
 				task.defer(function()
 					for _, Option in next, Library.Options do
 						if Option and Option.Type == "Dropdown" and Option.Opened then
@@ -5099,28 +5099,18 @@ Components.Window = (function()
 						end
 					end
 				end)
-				
-				-- Hide root after animation completes
-				task.delay(0.15, function()
-					if Window.Minimized then
-						Window.Root.Visible = false
-					end
-				end)
 			else
+				-- INSTANT SHOW - NO ANIMATION, NO LAG!
 				Window.Root.Visible = true
+				Window.Scale.Scale = 1
+				
 				if Window.AcrylicPaint and Window.AcrylicPaint.Model and Library.UseAcrylic then
 					Window:SetBackgroundImageTransparency(Window.BackgroundImageTransparency)
 				end
 				
-				-- OPTIMIZED: Faster restore animation to match minimize speed
-				TweenService:Create(Window.Scale, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Scale = 1 }):Play()
-				
-				-- Restore heavy content later to keep maximize animation smooth
-				task.delay(0.2, function()
-					if not Window.Minimized and Window.ContainerCanvas then 
-						Window.ContainerCanvas.Visible = true 
-					end
-				end)
+				if Window.ContainerCanvas then 
+					Window.ContainerCanvas.Visible = true 
+				end
 			end
 			if not MinimizeNotif then
 				MinimizeNotif = true
@@ -9274,6 +9264,54 @@ local SaveManager = {} do
 
 		end})
 
+	section:AddButton({Title = "Delete config", Callback = function()
+		local name = SaveManager.Options.SaveManager_ConfigList.Value
+		
+		if not name then
+			return self.Library:Notify({
+				Title = "Interface",
+				Content = "Config loader",
+				SubContent = "No config selected to delete",
+				Duration = 5
+			})
+		end
+		
+		self.Library.Window:Dialog({
+			Title = "Delete Config",
+			Content = string.format("Are you sure you want to delete config '%s'? This action cannot be undone!", name),
+			Buttons = {
+				{
+					Title = "Delete",
+					Callback = function()
+						local fullPath = self.Folder .. "/" .. name .. ".json"
+						
+						if isfile(fullPath) then
+							delfile(fullPath)
+							SaveManager.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
+							SaveManager.Options.SaveManager_ConfigList:SetValue(nil)
+							
+							self.Library:Notify({
+								Title = "Interface",
+								Content = "Config loader",
+								SubContent = string.format("Deleted config %q", name),
+								Duration = 5
+							})
+						else
+							self.Library:Notify({
+								Title = "Interface",
+								Content = "Config loader",
+								SubContent = "Config file not found",
+								Duration = 5
+							})
+						end
+					end
+				},
+				{
+					Title = "Cancel"
+				}
+			}
+		})
+	end})
 
 
 
