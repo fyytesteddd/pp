@@ -2831,7 +2831,7 @@ Components.Tab = (function()
 				if not Window.Minimized then
 					self.SubTabHolder.CanvasSize = UDim2.new(0, SubTabListLayout.AbsoluteContentSize.X, 0, 40)
 				end
-
+			end)
 				local SubTabContainerHolder = New("Frame", {
 					Size = UDim2.new(1, -11, 1, -56),
 					Position = UDim2.fromOffset(1, 48),
@@ -4057,10 +4057,10 @@ Components.TitleBar = (function()
 					Text = Config.Title,
 					FontFace = Font.new(
 						"rbxasset://fonts/families/GothamSSm.json",
-						Enum.FontWeight.Regular,
+						Enum.FontWeight.Bold,
 						Enum.FontStyle.Normal
 					),
-					TextSize = 12,
+					TextSize = 14,
 					TextXAlignment = "Left",
 					TextYAlignment = "Center",
 					Size = UDim2.fromScale(0, 1),
@@ -4147,8 +4147,8 @@ Components.Window = (function()
 
 		Library.Window = Window
 
-		local Dragging, DragInput, MousePos, StartPos = false
-		local Resizing, ResizePos = false
+		local Dragging, DragInput, MousePos, StartPos = false, nil, Vector2.new(0, 0), UDim2.new(0, 0, 0, 0)
+		local Resizing, ResizePos = false, Vector2.new(0, 0)
 		local MinimizeNotif = false
 
 		Window.AcrylicPaint = Acrylic.AcrylicPaint()
@@ -6468,7 +6468,6 @@ ElementsTable.Slider = (function()
 			Visible = true,
 			TextWrapped = false,
 			TextTransparency = 1,
-			BackgroundTransparency = 1,
 			ThemeTag = {
 				TextColor3 = "SubText",
 				BackgroundColor3 = "Element",
@@ -11184,7 +11183,7 @@ end)
 
 
 
-AddSignal(MinimizeButton.MouseButton1Click, function()
+Creator.AddSignal(MinimizeButton.MouseButton1Click, function()
 
 
 	task.wait(0.1)
