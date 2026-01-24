@@ -624,6 +624,7 @@ local function fishingLoop()
         casts+=1 
         task.wait(FD)
         safe(function()REF:FireServer()end)
+        safe(function()REF:FireServer()end)
         task.wait(KD)
         safe(function()RFK:InvokeServer()end)
         task.wait(0.001)
@@ -640,17 +641,17 @@ end
 
 local function antiStuckLoop()
     while active do
-        if tick() - lastFishTime > 3 then
+        if tick() - lastFishTime > 3.5 then
             -- Reset logic
             lastFishTime = tick() -- Prevent spam resetting
             if fishingThread then task.cancel(fishingThread) end
             safe(function()RFK:InvokeServer()end) -- Cancel inputs
-            task.wait(0.2)
+            task.wait(0.02)
             safe(function()Equip:FireServer(1)end) -- Equip
-            task.wait(0.2)
+            task.wait(0.02)
             fishingThread = task.spawn(fishingLoop) -- Restart loop
         end
-        task.wait(1)
+        task.wait(0.1)
     end
 end
 
