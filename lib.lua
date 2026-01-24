@@ -4053,7 +4053,7 @@ Components.TitleBar = (function()
 						Enum.FontWeight.Bold,
 						Enum.FontStyle.Normal
 					),
-					TextSize = 18,
+					TextSize = 16,
 					TextXAlignment = "Left",
 					TextYAlignment = "Center",
 					Size = UDim2.fromScale(0, 1),
@@ -7501,6 +7501,32 @@ ElementsTable.Input = (function()
 		return Input
 	end
 
+	return Element
+end)()
+
+ElementsTable.Space = (function()
+	local Element = {}
+	Element.__index = Element
+	Element.__type = "Space"
+	
+	function Element:New(Config)
+		Config = Config or {}
+		local Height = Config.Height or 10
+		
+		local SpaceFrame = New("Frame", {
+			Size = UDim2.new(1, 0, 0, Height),
+			BackgroundTransparency = 1,
+			Parent = self.Container,
+		})
+		
+		return {
+			Frame = SpaceFrame,
+			SetHeight = function(newHeight)
+				SpaceFrame.Size = UDim2.new(1, 0, 0, newHeight)
+			end
+		}
+	end
+	
 	return Element
 end)()
 
