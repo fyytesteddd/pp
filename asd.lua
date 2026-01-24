@@ -3953,8 +3953,10 @@ local function EnchantTab()
         if not trg then return true end
         local eid = trg.Metadata and trg.Metadata.EnchantId
         if not eid then return false end
-        for _, n in ipairs(selectedEnchantNames) do
-            if ENCHANT_MAPPING[n] == eid then return true end
+        -- Robust iteration for Map (Fluent) or Array (WindUI)
+        for k, v in pairs(selectedEnchantNames) do
+            local name = (type(k) == "number") and v or k
+            if ENCHANT_MAPPING[name] == eid then return true end
         end
         return false
     end
@@ -3978,9 +3980,9 @@ local function EnchantTab()
             Fluent:Notify({Title="Enchant Started", Content="Mulai rolling dengan "..stoneType.."...", Duration=2})
             
             while autoEnchantState do
-                if CheckIfEnchantReached(uuid) then 
+                if CheckIfEnchantReached(uuid) then
                     Fluent:Notify({Title="Success!", Content="Target Enchant didapatkan.", Duration=5})
-                    break 
+                    break
                 end
                 
                 local stone, stoneCategory = GetStoneUUID(stoneType)
@@ -4031,7 +4033,6 @@ local function EnchantTab()
                 break
             end
         end
-        end
     end)
     
     -- Stone Type Selection
@@ -4040,9 +4041,8 @@ local function EnchantTab()
         Description = "Pilih jenis stone untuk enchant.",
         Values = {"Enchant Stone", "Evolved Enchant Stone"},
         Multi = false,
-        Default = 1,
-        Callback = function(v) selectedStoneType = v end
-    })
+        Default = 1
+    }):OnChanged(function(v) selectedStoneType = v end)
     
     -- Re-check Button
     Enchant:AddButton({
@@ -4076,15 +4076,14 @@ local function EnchantTab()
         Description = "Berhenti jika mendapatkan salah satu dari ini.",
         Values = GetEnchantNamesList(),
         Multi = true,
-        Default = {},
-        Callback = function(n) selectedEnchantNames = n or {} end
-    })
+        Default = {}
+    }):OnChanged(function(n) selectedEnchantNames = n or {} end)
     
     -- Enable Toggle
     Enchant:AddToggle("EnableAutoEnchant", {
         Title = "Enable Auto Enchant",
-        Default = false,
-        Callback = function(s)
+        Default = false
+    }):OnChanged(function(s)
         autoEnchantState = s
         if s then
             if not selectedRodUUID then
