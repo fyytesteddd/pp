@@ -4050,10 +4050,10 @@ Components.TitleBar = (function()
 					Text = Config.Title,
 					FontFace = Font.new(
 						"rbxasset://fonts/families/GothamSSm.json",
-						Enum.FontWeight.Regular,
+						Enum.FontWeight.Bold,
 						Enum.FontStyle.Normal
 					),
-					TextSize = 12,
+					TextSize = 18,
 					TextXAlignment = "Left",
 					TextYAlignment = "Center",
 					Size = UDim2.fromScale(0, 1),
@@ -5080,32 +5080,28 @@ Components.Window = (function()
 			Window.Minimized = not Window.Minimized
 
 			if Window.Minimized then
-				task.spawn(function()
-					local count = 0
+				-- OPTIMIZED: Hide UI IMMEDIATELY for instant visual feedback
+				if Window.ContainerCanvas then 
+					Window.ContainerCanvas.Visible = false 
+				end
+				if Window.AcrylicPaint and Window.AcrylicPaint.Model then
+					Window.AcrylicPaint.Model.Transparency = 1
+				end
+				
+				-- OPTIMIZED: Faster animation (0.15s instead of 0.3s)
+				TweenService:Create(Window.Scale, TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Scale = 0 }):Play()
+				
+				-- OPTIMIZED: Close dropdowns in background WITHOUT task.wait() (no lag!)
+				task.defer(function()
 					for _, Option in next, Library.Options do
 						if Option and Option.Type == "Dropdown" and Option.Opened then
-							count = count + 1
 							pcall(function() Option:Close(true) end)
-							if count % 10 == 0 then task.wait() end -- Yield every 10 closes to prevent freeze
 						end
 					end
 				end)
 				
-				-- Animate scale first
-				TweenService:Create(Window.Scale, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Scale = 0 }):Play()
-				
-				-- Defer hiding heavy content to avoid stutter at start of animation
-				task.delay(0.05, function()
-					if Window.Minimized then
-						if Window.ContainerCanvas then Window.ContainerCanvas.Visible = false end
-						if Window.AcrylicPaint and Window.AcrylicPaint.Model then
-							Window.AcrylicPaint.Model.Transparency = 1
-						end
-					end
-				end)
-				
-				-- Completely hide root after animation
-				task.delay(0.3, function()
+				-- Hide root after animation completes
+				task.delay(0.15, function()
 					if Window.Minimized then
 						Window.Root.Visible = false
 					end
@@ -5116,7 +5112,8 @@ Components.Window = (function()
 					Window:SetBackgroundImageTransparency(Window.BackgroundImageTransparency)
 				end
 				
-				TweenService:Create(Window.Scale, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+				-- OPTIMIZED: Faster restore animation to match minimize speed
+				TweenService:Create(Window.Scale, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 				
 				-- Restore heavy content later to keep maximize animation smooth
 				task.delay(0.2, function()
