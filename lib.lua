@@ -7510,18 +7510,21 @@ ElementsTable.Space = (function()
 	Element.__type = "Space"
 	
 	function Element:New(Config)
-		Config = Config or {}
+		local Container = self.Container
 		local Height = Config.Height or 10
 		
 		local SpaceFrame = New("Frame", {
 			Size = UDim2.new(1, 0, 0, Height),
 			BackgroundTransparency = 1,
-			Parent = self.Container,
+			Parent = Container,
+			ThemeTag = {
+				BackgroundColor3 = "Background",
+			},
 		})
 		
 		return {
 			Frame = SpaceFrame,
-			SetHeight = function(newHeight)
+			SetHeight = function(self, newHeight)
 				SpaceFrame.Size = UDim2.new(1, 0, 0, newHeight)
 			end
 		}
