@@ -1,4 +1,5 @@
 Fluent, SaveManager, InterfaceManager = loadstring(Game:HttpGet("https://raw.githubusercontent.com/fyytesteddd/pp/refs/heads/main/lib.lua"))()
+
 local Window=Fluent:CreateWindow({Title="Fyy X Fish IT | 1.1.2",SubTitle="by Fyy Community",TabWidth=150,Size=UDim2.fromOffset(530, 300),Acrylic=true,Theme="Arctic",MinimizeKey=Enum.KeyCode.G,BackgroundImage="rbxassetid://78893380921225",BackgroundTransparency=0.4})
 local Tabs={Auth=Window:AddTab({Title="Authentication",Icon="key"})}
 local Options=Fluent.Options
@@ -210,6 +211,9 @@ char.Humanoid.WalkSpeed=walkSpeedValue
 end
 end
 end})
+
+PlayerSection:AddSpace({ Height = 20 }) -- Contoh penggunaan Space: Memberikan jarak 20px
+
 walkSpeedToggle:OnChanged(function(e)
 local char=LocalPlayer.Character
 if char and char:FindFirstChild("Humanoid")then
