@@ -580,7 +580,7 @@ local KD=.299
 local function safe(f)task.spawn(function()pcall(f)end)end
 local Players=game:GetService("Players")
 local LocalPlayer=Players.LocalPlayer
-local function fishingLoop()while active do local t=tick()safe(function()RFC:InvokeServer({[1]=t})end)task.wait(CD)local r=tick()safe(function()RFS:InvokeServer(1,0,r)end)casts+=1 local t2=tick()safe(function()RFC:InvokeServer({[1]=t2})end)task.wait(CD)local r2=tick()safe(function()RFS:InvokeServer(1,0,r2)end)casts+=1 task.wait(FD)safe(function()REF:FireServer()end)safe(function()REF:FireServer()end)task.wait(KD)safe(function()RFK:InvokeServer()end)task.wait(0.001)end end
+local function fishingLoop()while active do local t=tick()safe(function()RFC:InvokeServer({[1]=t})end)task.wait(CD)local r=tick()safe(function()RFS:InvokeServer(1,0,r)end)casts+=1 local t2=tick()safe(function()RFC:InvokeServer({[1]=t2})end)task.wait(CD)local r2=tick()safe(function()RFS:InvokeServer(1,0,r2)end)casts+=1 task.wait(FD)safe(function()REF:FireServer()end)task.wait(KD)safe(function()RFK:InvokeServer()end)task.wait(0.001)end end
 local function equipLoop()while active do safe(function()Equip:FireServer(1)end)task.wait(100)end safe(function()Unequip:FireServer()end)end
 REM.OnClientEvent:Connect(function()if not active then return end task.spawn(function()task.wait(FD)safe(function()REF:FireServer()end)task.wait(KD)safe(function()RFK:InvokeServer()end)end)end)
 local blatantV3CastDelayInput=blatantSection3:AddInput("blatantV3_castDelay",{Title="Cast Delay",Default=tostring(CD),Placeholder=tostring(CD)})
