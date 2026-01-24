@@ -641,15 +641,14 @@ end
 
 local function antiStuckLoop()
     while active do
-        if tick() - lastFishTime > 3.5 then
+        if tick() - lastFishTime > 3 then
             -- Reset logic
             lastFishTime = tick() -- Prevent spam resetting
             if fishingThread then task.cancel(fishingThread) end
             safe(function()RFK:InvokeServer()end) -- Cancel inputs
             task.wait(0.02)
-            safe(function()Unequip:FireServer()end)
-            safe(function()Equip:FireServer(1)end) -- Equip
-            task.wait(0.02)
+            safe(function()Equip:FireServer(1)end) 
+            task.wait(1)
             fishingThread = task.spawn(fishingLoop) -- Restart loop
         end
         task.wait(0.1)
@@ -986,7 +985,7 @@ local favoriteByNameDropdown = favoriteSection:AddDropdown("FavByName", {
     Multi = true,
     AllowNone = true,
     SearchBarEnabled = true,
-    SearchBar = true,
+    Search = true,
     Default = {}
 })
 
