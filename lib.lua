@@ -2587,10 +2587,8 @@ Components.Section = (function()
 		})
 
 		Creator.AddSignal(Section.Layout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-			if not Window.Minimized then
-				Section.Container.Size = UDim2.new(1, 0, 0, Section.Layout.AbsoluteContentSize.Y)
-				Section.Root.Size = UDim2.new(1, 0, 0, Section.Layout.AbsoluteContentSize.Y + 25)
-			end
+			Section.Container.Size = UDim2.new(1, 0, 0, Section.Layout.AbsoluteContentSize.Y)
+			Section.Root.Size = UDim2.new(1, 0, 0, Section.Layout.AbsoluteContentSize.Y + 25)
 		end)
 
 
@@ -2759,9 +2757,7 @@ Components.Tab = (function()
 		end)
 
 		Creator.AddSignal(ContainerLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-			if not Window.Minimized then
-				Tab.ContainerFrame.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y + 2)
-			end
+			Tab.ContainerFrame.CanvasSize = UDim2.new(0, 0, 0, ContainerLayout.AbsoluteContentSize.Y + 2)
 		end)
 
 		Tab.Motor, Tab.SetTransparency = Creator.SpringMotor(0.92, Tab.Frame, "BackgroundTransparency")
@@ -2828,10 +2824,9 @@ Components.Tab = (function()
 				})
 
 				Creator.AddSignal(SubTabListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-				if not Window.Minimized then
 					self.SubTabHolder.CanvasSize = UDim2.new(0, SubTabListLayout.AbsoluteContentSize.X, 0, 40)
-				end
-			end)
+				end)
+
 				local SubTabContainerHolder = New("Frame", {
 					Size = UDim2.new(1, -11, 1, -56),
 					Position = UDim2.fromOffset(1, 48),
@@ -2954,9 +2949,7 @@ Components.Tab = (function()
 
 			local SubTabLayout = SubTabContainer:FindFirstChild("UIListLayout")
 			Creator.AddSignal(SubTabLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-				if not Window.Minimized then
-					SubTabContainer.CanvasSize = UDim2.new(0, 0, 0, SubTabLayout.AbsoluteContentSize.Y + 2)
-				end
+				SubTabContainer.CanvasSize = UDim2.new(0, 0, 0, SubTabLayout.AbsoluteContentSize.Y + 2)
 			end)
 
 			local SubTabXMotor = Flipper.SingleMotor.new(0)
@@ -4057,10 +4050,10 @@ Components.TitleBar = (function()
 					Text = Config.Title,
 					FontFace = Font.new(
 						"rbxasset://fonts/families/GothamSSm.json",
-						Enum.FontWeight.Bold,
+						Enum.FontWeight.Regular,
 						Enum.FontStyle.Normal
 					),
-					TextSize = 14,
+					TextSize = 12,
 					TextXAlignment = "Left",
 					TextYAlignment = "Center",
 					Size = UDim2.fromScale(0, 1),
@@ -4147,8 +4140,8 @@ Components.Window = (function()
 
 		Library.Window = Window
 
-		local Dragging, DragInput, MousePos, StartPos = false, nil, Vector2.new(0, 0), UDim2.new(0, 0, 0, 0)
-		local Resizing, ResizePos = false, Vector2.new(0, 0)
+		local Dragging, DragInput, MousePos, StartPos = false
+		local Resizing, ResizePos = false
 		local MinimizeNotif = false
 
 		Window.AcrylicPaint = Acrylic.AcrylicPaint()
@@ -5042,7 +5035,7 @@ Components.Window = (function()
 		end)
 
 		Creator.AddSignal(Window.TabHolder.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-			if not Window.Minimized and Window.TabHolder and Window.TabHolder.UIListLayout then
+			if Window.TabHolder and Window.TabHolder.UIListLayout then
 				local padding = Window.TabHolder:FindFirstChild("UIPadding")
 				local paddingTop = padding and padding.PaddingTop.Offset or 6
 				local paddingBottom = padding and padding.PaddingBottom.Offset or 6
@@ -5093,22 +5086,26 @@ Components.Window = (function()
 						if Option and Option.Type == "Dropdown" and Option.Opened then
 							count = count + 1
 							pcall(function() Option:Close(true) end)
-							if count % 10 == 0 then task.wait() end
+							if count % 10 == 0 then task.wait() end -- Yield every 10 closes to prevent freeze
 						end
 					end
 				end)
 				
-				-- Pause heavy rendering immediately
-				if Window.ContainerCanvas then Window.ContainerCanvas.Visible = false end
-				if Window.AcrylicPaint and Window.AcrylicPaint.Model then
-					Window.AcrylicPaint.Model.Transparency = 1
-				end
+				-- Animate scale first
+				TweenService:Create(Window.Scale, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Scale = 0 }):Play()
 				
-				-- Animate scale
-				TweenService:Create(Window.Scale, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Scale = 0 }):Play()
+				-- Defer hiding heavy content to avoid stutter at start of animation
+				task.delay(0.05, function()
+					if Window.Minimized then
+						if Window.ContainerCanvas then Window.ContainerCanvas.Visible = false end
+						if Window.AcrylicPaint and Window.AcrylicPaint.Model then
+							Window.AcrylicPaint.Model.Transparency = 1
+						end
+					end
+				end)
 				
-				-- Hide root after quick animation
-				task.delay(0.2, function()
+				-- Completely hide root after animation
+				task.delay(0.3, function()
 					if Window.Minimized then
 						Window.Root.Visible = false
 					end
@@ -5119,12 +5116,14 @@ Components.Window = (function()
 					Window:SetBackgroundImageTransparency(Window.BackgroundImageTransparency)
 				end
 				
-				-- Restore content before animation for smooth appearance
-				if Window.ContainerCanvas then 
-					Window.ContainerCanvas.Visible = true 
-				end
+				TweenService:Create(Window.Scale, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 				
-				TweenService:Create(Window.Scale, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+				-- Restore heavy content later to keep maximize animation smooth
+				task.delay(0.2, function()
+					if not Window.Minimized and Window.ContainerCanvas then 
+						Window.ContainerCanvas.Visible = true 
+					end
+				end)
 			end
 			if not MinimizeNotif then
 				MinimizeNotif = true
@@ -5946,13 +5945,11 @@ ElementsTable.Dropdown = (function()
 			end
 		end
 		Creator.AddSignal(DropdownListLayout:GetPropertyChangedSignal("AbsoluteContentSize"), function()
-			if Dropdown.Opened then
-				RecalculateCanvasSize()
-				task.wait()
-				RecalculateListSize()
-				task.wait()
-				RecalculateListPosition()
-			end
+			RecalculateCanvasSize()
+			task.wait()
+			RecalculateListSize()
+			task.wait()
+			RecalculateListPosition()
 		end)
 
 		Creator.AddSignal(DropdownInner.MouseButton1Click, function()
@@ -6468,6 +6465,7 @@ ElementsTable.Slider = (function()
 			Visible = true,
 			TextWrapped = false,
 			TextTransparency = 1,
+			BackgroundTransparency = 1,
 			ThemeTag = {
 				TextColor3 = "SubText",
 				BackgroundColor3 = "Element",
@@ -11183,7 +11181,7 @@ end)
 
 
 
-Creator.AddSignal(MinimizeButton.MouseButton1Click, function()
+AddSignal(MinimizeButton.MouseButton1Click, function()
 
 
 	task.wait(0.1)
