@@ -624,7 +624,7 @@ local function fishingLoop()
         casts+=1 
         task.wait(FD)
         safe(function()REF:FireServer()end)
-        safe(function()REF:FireServer()end)
+
         task.wait(KD)
         safe(function()RFK:InvokeServer()end)
         task.wait(0.001)
