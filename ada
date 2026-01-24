@@ -1,4 +1,4 @@
-Fluent, SaveManager, InterfaceManager = loadstring(Game:HttpGet("https://raw.githubusercontent.com/FyyZED/FyyX/refs/heads/main/Liblarry.lua"))()
+Fluent, SaveManager, InterfaceManager = loadstring(Game:HttpGet("https://raw.githubusercontent.com/fyytesteddd/pp/refs/heads/main/lib.lua"))()
 local Window=Fluent:CreateWindow({Title="Fyy X Fish IT | 1.1.2",SubTitle="by Fyy Community",TabWidth=150,Size=UDim2.fromOffset(530, 300),Acrylic=true,Theme="Arctic",MinimizeKey=Enum.KeyCode.G,BackgroundImage="rbxassetid://78893380921225",BackgroundTransparency=0.4})
 local Tabs={Auth=Window:AddTab({Title="Authentication",Icon="key"})}
 local Options=Fluent.Options
@@ -647,6 +647,7 @@ local function antiStuckLoop()
             if fishingThread then task.cancel(fishingThread) end
             safe(function()RFK:InvokeServer()end) -- Cancel inputs
             task.wait(0.02)
+            safe(function()Unequip:FireServer()end)
             safe(function()Equip:FireServer(1)end) -- Equip
             task.wait(0.02)
             fishingThread = task.spawn(fishingLoop) -- Restart loop
@@ -985,7 +986,7 @@ local favoriteByNameDropdown = favoriteSection:AddDropdown("FavByName", {
     Multi = true,
     AllowNone = true,
     SearchBarEnabled = true,
-    ScrollBarEnabled = true,
+    SearchBar = true,
     Default = {}
 })
 
