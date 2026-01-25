@@ -1490,6 +1490,23 @@ local function QuestTab()
         ClientData = Replion.Client:WaitReplion("Data")
     end)
 
+    local function TeleportTo(cf)
+        local p = game.Players.LocalPlayer
+        local c = p.Character
+        local h = c and c:FindFirstChild("HumanoidRootPart")
+        if h then
+            task.wait(0.1)
+            h.CFrame = cf
+            task.wait(0.3)
+        end
+    end
+
+    local function IsFar(cf, dist)
+        local c = game.Players.LocalPlayer.Character
+        local h = c and c:FindFirstChild("HumanoidRootPart")
+        return not h or (h.Position - cf.Position).Magnitude > dist
+    end
+
     local function GetDeepSeaStatus()
         local result = {QuestCompleted=false, QuestActive=false, Progress=nil, HasGhostfinRod=false}
         if not ClientData then return result end
