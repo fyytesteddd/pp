@@ -3712,18 +3712,12 @@ local function EventTab()
         
         if s2 and inv and inv.Items then
             for _, item in ipairs(inv.Items) do
-                -- Debug: Print items found
-                -- print("Checking Item:", item.Name, item.Id) 
-                
-                -- Check by Name "Pickaxe" OR ID 20220 (String/Number safe check)
-                if item.Name == "Pickaxe" or tostring(item.Id) == "20220" then
+                -- Pattern: ID + Name Fallback (Robust)
+                if (tonumber(item.Id) == 20220 or item.Name == "Pickaxe") and item.UUID then
                     pickaxeUUID = item.UUID
-                    -- print("FOUND PICKAXE!", pickaxeUUID)
                     break
                 end
             end
-        else
-            -- print("Failed to read inventory or empty")
         end
 
         -- 3. Equip
