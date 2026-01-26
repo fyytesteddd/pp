@@ -3005,16 +3005,27 @@ local function QuestTab()
                      local quest = clientData:Get({"Quests", "Mainline", "Sample Collection"})
                      
                      if not quest then
-                         -- START QUEST
-                         JamesonStatus:SetDesc("Starting Quest (Remote Fire)...")
+                         JamesonStatus:SetDesc("Starting Quest...")
                          if RE_DialogueEnded then
                              pcall(function() RE_DialogueEnded:FireServer("Scientist Jameson", 1, 1) end)
                              task.wait(0.5)
                              pcall(function() RE_DialogueEnded:FireServer("Scientist Jameson", 2, 1) end)
                          end
+                         
                          task.wait(2)
+                         
+                         -- Verification Check
+                         success, clientData = pcall(function() return Replion.Client:WaitReplion("Data") end)
+                         if success and clientData then
+                             local check = clientData:Get({"Quests", "Mainline", "Sample Collection"})
+                             if not check then
+                                 JamesonStatus:SetDesc("Quest Completed!")
+                                 Fluent:Notify({Title="Scientist Jameson", Content="Quest Selesai (Already Completed)!", Duration=5})
+                                 if JamesonToggle.SetValue then JamesonToggle:SetValue(false) end
+                                 break
+                             end
+                         end
                      elseif quest.Objectives and quest.Objectives[1] and quest.Objectives[1].Progress < quest.Objectives[1].Goal then
-                         -- FARM SAMPLES
                          JamesonStatus:SetDesc("Collecting Samples...")
                          for i = 1, 10 do
                              if not autoJamesonState then break end
@@ -3023,8 +3034,7 @@ local function QuestTab()
                          end
                          task.wait(1)
                      elseif quest.Objectives and quest.Objectives[2] and not quest.Completed then
-                         -- FINISH QUEST
-                         JamesonStatus:SetDesc("Finishing Quest (Remote Fire)...")
+                         JamesonStatus:SetDesc("Finishing Quest...")
                          if RE_DialogueEnded then
                              pcall(function() RE_DialogueEnded:FireServer("Scientist Jameson", 1, 1) end)
                              task.wait(0.5)
@@ -3032,7 +3042,6 @@ local function QuestTab()
                          end
                          task.wait(2)
                      elseif quest.Completed then
-                         -- COMPLETED
                          JamesonStatus:SetDesc("Quest Completed!")
                          Fluent:Notify({Title="Scientist Jameson", Content="Quest Selesai!", Duration=5})
                          if JamesonToggle.SetValue then JamesonToggle:SetValue(false) end
@@ -5962,7 +5971,7 @@ local LocalPlayer=game.Players.LocalPlayer
 if state then
 if not _G.BlackScreenGUI then
 _G.BlackScreenGUI=Instance.new("ScreenGui")
-_G.BlackScreenGUI.Name="RockHub_BlackBackground"
+_G.BlackScreenGUI.Name="Fyy"
 _G.BlackScreenGUI.IgnoreGuiInset=true
 _G.BlackScreenGUI.DisplayOrder=-999
 _G.BlackScreenGUI.Parent=PlayerGui
@@ -6207,7 +6216,62 @@ end
 end
 })
 
---// FREE cam
+-- // ANTI STAFF
+local P = game:GetService("Players")
+local T = game:GetService("TeleportService")
+local LP = P.LocalPlayer
+local PID = game.PlaceId
+local AS_ON = true
+
+local BL = {
+    [75974130]=1,[40397833]=1,[187190686]=1,[33372493]=1,[889918695]=1,
+    [33679472]=1,[30944240]=1,[25050357]=1,[8462585751]=1,[8811129148]=1,
+    [192821024]=1,[4509801805]=1,[124505170]=1,[108397209]=1
+}
+
+local antiStaffSection = SettingTab:AddSection(" [ Anti Staff ] ")
+antiStaffSection:AddToggle("AntiStaffState", {
+    Title = "Anti Staff",
+    Description = "Auto Server Hop if Staff Detected",
+    Default = true
+}):OnChanged(function(s)
+    AS_ON = s
+end)
+
+local function hop()
+    task.wait(6)
+    local d = game.HttpService:JSONDecode(
+        game:HttpGet("https://games.roblox.com/v1/games/"..PID.."/servers/Public?sortOrder=Asc&limit=100")
+    ).data
+    for _,v in ipairs(d) do
+        if v.playing < v.maxPlayers and v.id ~= game.JobId then
+            T:TeleportToPlaceInstance(PID, v.id, LP)
+            break
+        end
+    end
+end
+
+P.PlayerAdded:Connect(function(plr)
+    if AS_ON and plr~=LP and BL[plr.UserId] then
+        Fluent:Notify({Title="ANTI STAFF", Content=plr.Name.." detected! Hopping in 6s...", Duration=5})
+        hop()
+    end
+end)
+
+task.spawn(function()
+    while task.wait(2) do
+        if AS_ON then
+            for _,plr in ipairs(P:GetPlayers()) do
+                if plr~=LP and BL[plr.UserId] then
+                    Fluent:Notify({Title="ANTI STAFF", Content=plr.Name.." detected! Hopping in 6s...", Duration=5})
+                    hop()
+                    break
+                end
+            end
+        end
+    end
+end)
+
 
 local Players=game:GetService("Players")
 local RunService=game:GetService("RunService")
