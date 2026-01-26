@@ -1,4 +1,3 @@
-
 Fluent, SaveManager, InterfaceManager = loadstring(Game:HttpGet("https://raw.githubusercontent.com/FyyZED/FyyX/refs/heads/main/Liblarry.lua"))()
 local Window = Fluent:CreateWindow({
     Title = "Fyy X Fish IT | FREE",
@@ -2968,6 +2967,86 @@ local function QuestTab()
             if archThread then task.cancel(archThread) archThread = nil end
             archRunning = false
             ArchStatus:SetDesc("Stopped")
+        end
+    end)
+
+    -- // AUTO QUEST: Scientist Jameson //
+    local jamesonSection = Quest:AddSection(" [ Auto Quest: Scientist Jameson ] ")
+    local JamesonStatus = jamesonSection:AddParagraph({Title="Status", Content="Idle", Icon="flask"})
+    
+    local autoJamesonState = false
+    local jamesonThread = nil
+    
+    local JAMESON_NPC_POS = Vector3.new(2022.373, -29.288, -637.583) -- Position near Scientist Jameson
+    local JAMESON_NPC_LOOK = Vector3.new(0, 0, -1)
+
+    local JamesonToggle = jamesonSection:AddToggle("AutoJameson", {
+        Title = "Auto Quest: Scientist Jameson",
+        Description = "Collect Samples & Finish Quest",
+        Default = false
+    })
+
+    JamesonToggle:OnChanged(function(state)
+        autoJamesonState = state
+        if state then
+            JamesonStatus:SetDesc("Starting Jameson Quest...")
+            
+            if jamesonThread then task.cancel(jamesonThread) end
+            jamesonThread = task.spawn(function()
+                 local Replion = require(game:GetService("ReplicatedStorage").Packages.Replion)
+                 local Net = game:GetService("ReplicatedStorage").Packages._Index["sleitnick_net@0.2.0"].net
+                 local RE_DialogueEnded = Net:FindFirstChild("RE/DialogueEnded")
+                 local RE_SearchItemPickedUp = Net:FindFirstChild("RE/SearchItemPickedUp")
+                 
+                 while autoJamesonState do
+                     local success, clientData = pcall(function() return Replion.Client:WaitReplion("Data") end)
+                     if not success or not clientData then task.wait(1) continue end
+                     
+                     local quest = clientData:Get({"Quests", "Mainline", "Sample Collection"})
+                     
+                     if not quest then
+                         -- START QUEST
+                         JamesonStatus:SetDesc("Starting Quest (Remote Fire)...")
+                         if RE_DialogueEnded then
+                             pcall(function() RE_DialogueEnded:FireServer("Scientist Jameson", 1, 1) end)
+                             task.wait(0.5)
+                             pcall(function() RE_DialogueEnded:FireServer("Scientist Jameson", 2, 1) end)
+                         end
+                         task.wait(2)
+                     elseif quest.Objectives and quest.Objectives[1] and quest.Objectives[1].Progress < quest.Objectives[1].Goal then
+                         -- FARM SAMPLES
+                         JamesonStatus:SetDesc("Collecting Samples...")
+                         for i = 1, 10 do
+                             if not autoJamesonState then break end
+                             pcall(function() RE_SearchItemPickedUp:FireServer("Sample") end)
+                             task.wait(0.5)
+                         end
+                         task.wait(1)
+                     elseif quest.Objectives and quest.Objectives[2] and not quest.Completed then
+                         -- FINISH QUEST
+                         JamesonStatus:SetDesc("Finishing Quest (Remote Fire)...")
+                         if RE_DialogueEnded then
+                             pcall(function() RE_DialogueEnded:FireServer("Scientist Jameson", 1, 1) end)
+                             task.wait(0.5)
+                             pcall(function() RE_DialogueEnded:FireServer("Scientist Jameson", 2, 2) end)
+                         end
+                         task.wait(2)
+                     elseif quest.Completed then
+                         -- COMPLETED
+                         JamesonStatus:SetDesc("Quest Completed!")
+                         Fluent:Notify({Title="Scientist Jameson", Content="Quest Selesai!", Duration=5})
+                         if JamesonToggle.SetValue then JamesonToggle:SetValue(false) end
+                         break
+                     else
+                         task.wait(1)
+                     end
+                     task.wait(1)
+                 end
+                 autoJamesonState = false
+            end)
+        else
+            if jamesonThread then task.cancel(jamesonThread) jamesonThread = nil end
+            JamesonStatus:SetDesc("Stopped")
         end
     end)
 
