@@ -3714,16 +3714,37 @@ local function EventTab()
         
         local s2, inv = pcall(function() return r:GetExpect("Inventory") end)
         
-        if s2 and inv and inv.Items then
-             -- Debug Print
-             print("Auto Mining: Scanning Inventory for Pickaxe (ID: 20220)...")
-             for _, item in ipairs(inv.Items) do
-                -- Pattern: ID + Name Fallback (Robust)
-                if (tonumber(item.Id) == 20220 or item.Name == "Pickaxe") and item.UUID then
-                    pickaxeUUID = item.UUID
-                    print("Found Pickaxe! UUID: " .. tostring(pickaxeUUID))
-                    break
+        if s2 and inv then
+            -- 1. Check "Gears" specific category (Most likely for Pickaxe)
+            if inv["Gears"] then
+                print("Auto Mining: Checking Gears...")
+                for _, item in ipairs(inv["Gears"]) do
+                    if tonumber(item.Id) == 20220 and item.UUID then
+                        pickaxeUUID = item.UUID
+                        break
+                    end
                 end
+            end
+            
+            -- 2. Fallback to "Items" if not found
+            if not pickaxeUUID and inv.Items then
+                print("Auto Mining: Checking Items (Fallback)...")
+                for _, item in ipairs(inv.Items) do
+                     if (tonumber(item.Id) == 20220 or item.Name == "Pickaxe") and item.UUID then
+                        pickaxeUUID = item.UUID
+                        break
+                     end
+                end
+            end
+            
+            if pickaxeUUID then
+                 print("Found Pickaxe! UUID: " .. tostring(pickaxeUUID))
+            else
+                 warn("Pickaxe (ID: 20220) not found in Gears or Items!")
+                 -- Debug prints for categories if failed
+                 local cats = ""
+                 for k,v in pairs(inv) do if type(v)=="table" then cats = cats .. tostring(k) .. ", " end end
+                 print("Available Categories: " .. cats)
             end
         else
             warn("Auto Mining: Failed to read Inventory!")
