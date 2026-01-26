@@ -3679,7 +3679,6 @@ local function EventTab()
     end)
 
 
-
 local sectionMining = Event:AddSection(" [ Auto Mining ] ")
 local MiningStatus = sectionMining:AddParagraph({Title="Status", Content="Idle", Icon="pickaxe"})
 local autoMiningState = false
@@ -3722,7 +3721,7 @@ local function serverHopRandom()
         if success and result and result.data then
             for _, server in ipairs(result.data) do
                 if server.playing and server.maxPlayers and server.id then
-                    if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing > 0 then
+                    if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing >= 5 then
                         table.insert(servers, server)
                     end
                 end
@@ -3743,7 +3742,7 @@ local function serverHopRandom()
         task.wait(1)
         TeleportService:TeleportToPlaceInstance(PlaceId, randomServer.id, LocalPlayer)
     else
-        Fluent:Notify({Title = "No Servers", Content = "No suitable servers found", Duration = 3})
+        Fluent:Notify({Title = "No Servers", Content = "No suitable servers found (min 5 players)", Duration = 3})
     end
 end
 
@@ -7364,7 +7363,7 @@ end
 
 
 task.spawn(function()
-    task.wait(3)
+    task.wait(0.1)
     PlayerTab2()
     AutoTab()
     ShopTab()
