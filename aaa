@@ -3685,6 +3685,13 @@ local function EventTab()
     local autoMiningThread = nil
     local MINING_START_POS = CFrame.new(5732, -905, 15407)
 
+    -- Define Remotes locally for Mining Section
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Net = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
+    local RE_UnequipItem = Net:FindFirstChild("RE/UnequipItem")
+    local RE_EquipItem = Net:FindFirstChild("RE/EquipItem")
+    local RE_EquipToolFromHotbar = Net:FindFirstChild("RE/EquipToolFromHotbar")
+
     local function EquipPickaxe()
         -- 1. Unequip All First
         local r = ClientData
