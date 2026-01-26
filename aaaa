@@ -3794,6 +3794,8 @@ local function serverHopRandom()
     local PlaceId = game.PlaceId
     local JobId = game.JobId
     
+    MiningStatus:SetDesc("Searching Servers...")
+
     while true do
         local servers = {}
         local success, req = pcall(function()
@@ -3816,24 +3818,18 @@ local function serverHopRandom()
 
         if #servers > 0 then
             local randomServer = servers[math.random(1, #servers)]
-            MiningStatus:SetDesc("Server hopping...")
-            Fluent:Notify({
-                Title = "Server Hop",
-                Content = "Switching server...",
-                Duration = 2
-            })
+            MiningStatus:SetDesc("Hoping to server...")
+            Fluent:Notify({Title="Server Hop", Content="Teleporting... Don't leave!", Duration=5})
             
-            local teleportSuccess = pcall(function()
-                TeleportService:TeleportToPlaceInstance(PlaceId, randomServer, Players.LocalPlayer)
-            end)
+            TeleportService:TeleportToPlaceInstance(PlaceId, randomServer, Players.LocalPlayer)
             
-            if teleportSuccess then
-                break
-            else
-                task.wait(1)
-            end
+            -- Wait indefinitely for teleport to happen. If code keeps running, it failed.
+            MiningStatus:SetDesc("Teleporting... (Waiting 5s)")
+            task.wait(5)
+            MiningStatus:SetDesc("Retrying Hop (Teleport Stuck)...")
         else
-            task.wait(1)
+            MiningStatus:SetDesc("No servers found. Retrying in 2s...")
+            task.wait(2)
         end
     end
 end
@@ -3893,7 +3889,7 @@ local function EquipPickaxe()
 end
 
 local miningToggle = sectionMining:AddToggle("AutoMining", {
-    Title = "Auto Mining (Crystal Depths)",
+    Title = "Auto Mining SERVERHOP",
     Description = "Teleport to Depths -> Equip Pickaxe -> Farm Crystals",
     Default = false
 })
@@ -3988,7 +3984,7 @@ local savedToggleStates = {AutoFishing=false, Blatant=false, BlatantV2=false}
 local savedPosition = nil
 
 local normalMiningToggle = sectionMining:AddToggle("AutoMiningNormal", {
-    Title = "Auto Mining Normal (No Hop)",
+    Title = "Auto Mining Normal",
     Description = "Start -> Mine -> Return Safe Spot -> Wait",
     Default = false
 })
