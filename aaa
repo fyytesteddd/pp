@@ -3709,14 +3709,21 @@ local function EventTab()
         -- 2. Find Pickaxe UUID
         local pickaxeUUID = nil
         local s2, inv = pcall(function() return r:GetExpect("Inventory") end)
+        
         if s2 and inv and inv.Items then
             for _, item in ipairs(inv.Items) do
-                -- Check by ID (20220) or Name as fallback
-                if tonumber(item.Id) == 20220 or item.Name == "Pickaxe" then
+                -- Debug: Print items found
+                -- print("Checking Item:", item.Name, item.Id) 
+                
+                -- Check by Name "Pickaxe" OR ID 20220 (String/Number safe check)
+                if item.Name == "Pickaxe" or tostring(item.Id) == "20220" then
                     pickaxeUUID = item.UUID
+                    -- print("FOUND PICKAXE!", pickaxeUUID)
                     break
                 end
             end
+        else
+            -- print("Failed to read inventory or empty")
         end
 
         -- 3. Equip
