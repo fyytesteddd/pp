@@ -3693,11 +3693,13 @@ local function EventTab()
     local RE_EquipToolFromHotbar = Net:FindFirstChild("RE/EquipToolFromHotbar")
 
     local function EquipPickaxe()
+        local r = GetClientData()
+        
         -- 1. Unequip All First
-        local r = ClientData
         if r then
-            local s, equipped = pcall(function() return r:GetExpect("EquippedItems") end)
-            if s and equipped then
+            -- Use :Get({"EquippedItems"}) instad of GetExpect
+            local equipped = r:Get({"EquippedItems"}) 
+            if equipped then
                 for _, u in ipairs(equipped) do
                     pcall(function() if RE_UnequipItem then RE_UnequipItem:FireServer(u) end end)
                     task.wait(0.05)
@@ -3709,12 +3711,19 @@ local function EventTab()
         task.wait(0.5)
 
         -- 2. Find Pickaxe UUID
-        local pickaxeUUID = nil
+        -- Check manually first
+        if not r then
+             -- Try getting it again if nil
+             r = GetClientData() 
+        end
         if not r then return false end
         
-        local s2, inv = pcall(function() return r:GetExpect("Inventory") end)
+        -- Use :Get({"Inventory"}) instead of GetExpect
+        local inv = r:Get({"Inventory"})
+        local pickaxeUUID = nil
         
-        if s2 and inv then
+        if inv then
+            -- 1. Check "Gears" specific category (Most likely for Pickaxe)
             -- 1. Check "Gears" specific category (Most likely for Pickaxe)
             if inv["Gears"] then
                 print("Auto Mining: Checking Gears...")
