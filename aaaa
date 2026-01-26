@@ -3678,176 +3678,151 @@ local function EventTab()
         end
     end)
 
-    -- // AUTO MINING (CRYSTAL DEPTHS) //
-    local sectionMining = Event:AddSection(" [ Auto Mining ] ")
-    local MiningStatus = sectionMining:AddParagraph({Title="Status", Content="Idle", Icon="pickaxe"})
-    local autoMiningState = false
-    local autoMiningThread = nil
-    local MINING_START_POS = CFrame.new(5732, -905, 15407)
+ local sectionMining = Event:AddSection(" [ Auto Mining ] ")
+local MiningStatus = sectionMining:AddParagraph({Title="Status", Content="Idle", Icon="pickaxe"})
+local autoMiningState = false
+local autoMiningThread = nil
+local MINING_START_POS = CFrame.new(5732, -905, 15407)
 
-    -- Define Remotes locally for Mining Section
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local Net = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
-    local RE_UnequipItem = Net:FindFirstChild("RE/UnequipItem")
-    local RE_EquipItem = Net:FindFirstChild("RE/EquipItem")
-    local RE_EquipToolFromHotbar = Net:FindFirstChild("RE/EquipToolFromHotbar")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Net = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
+local RE_UnequipItem = Net:FindFirstChild("RE/UnequipItem")
+local RE_EquipItem = Net:FindFirstChild("RE/EquipItem")
+local RE_EquipToolFromHotbar = Net:FindFirstChild("RE/EquipToolFromHotbar")
 
-    local function EquipPickaxe()
-        local r = GetClientData()
+local function GetClientData()
+    local Replion = require(ReplicatedStorage.Packages.Replion)
+    local success, data = pcall(function()
+        return Replion.Client:WaitReplion("Data")
+    end)
+    return success and data or nil
+end
+
+local function EquipPickaxe()
+    local r = GetClientData()
+    
+    if r then
+        local equipped = r:Get({"EquippedItems"}) 
+        if equipped then
+            for _, u in ipairs(equipped) do
+                pcall(function() if RE_UnequipItem then RE_UnequipItem:FireServer(u) end end)
+                task.wait(0.05)
+            end
+        end
+    end
+    
+    task.wait(0.5)
+
+    if not r then
+        r = GetClientData() 
+    end
+    
+    if not r then return false end
         
-        -- 1. Unequip All First
-        if r then
-            -- Use :Get({"EquippedItems"}) instad of GetExpect
-            local equipped = r:Get({"EquippedItems"}) 
-            if equipped then
-                for _, u in ipairs(equipped) do
-                    pcall(function() if RE_UnequipItem then RE_UnequipItem:FireServer(u) end end)
-                    task.wait(0.05)
+    local inv = r:Get({"Inventory"})
+    local pickaxeUUID = nil
+        
+    if inv then
+        if inv["Gears"] then
+            for _, item in ipairs(inv["Gears"]) do
+                if tonumber(item.Id) == 20220 and item.UUID then
+                    pickaxeUUID = item.UUID
+                    break
                 end
             end
-        else
-            warn("!!! Auto Mining: ClientData NOT FOUND !!!")
         end
-        task.wait(0.5)
-
-        -- 2. Find Pickaxe UUID
-        -- Check manually first
-        if not r then
-             -- Try getting it again if nil
-             r = GetClientData() 
-        end
-        if not r then return false end
-        
-        -- Use :Get({"Inventory"}) instead of GetExpect
-        local inv = r:Get({"Inventory"})
-        local pickaxeUUID = nil
-        
-        if inv then
-            -- 1. Check "Gears" specific category (Most likely for Pickaxe)
-            -- 1. Check "Gears" specific category (Most likely for Pickaxe)
-            if inv["Gears"] then
-                print("Auto Mining: Checking Gears...")
-                for _, item in ipairs(inv["Gears"]) do
-                    if tonumber(item.Id) == 20220 and item.UUID then
-                        pickaxeUUID = item.UUID
-                        break
-                    end
-                end
-            end
             
-            -- 2. Fallback to "Items" if not found
-            if not pickaxeUUID and inv.Items then
-                print("Auto Mining: Checking Items (Fallback)...")
-                for _, item in ipairs(inv.Items) do
-                     if (tonumber(item.Id) == 20220 or item.Name == "Pickaxe") and item.UUID then
-                        pickaxeUUID = item.UUID
-                        break
-                     end
+        if not pickaxeUUID and inv.Items then
+            for _, item in ipairs(inv.Items) do
+                if (tonumber(item.Id) == 20220 or item.Name == "Pickaxe") and item.UUID then
+                    pickaxeUUID = item.UUID
+                    break
                 end
             end
-            
-            if pickaxeUUID then
-                 print("Found Pickaxe! UUID: " .. tostring(pickaxeUUID))
-            else
-                 warn("Pickaxe (ID: 20220) not found in Gears or Items!")
-                 -- Debug prints for categories if failed
-                 local cats = ""
-                 for k,v in pairs(inv) do if type(v)=="table" then cats = cats .. tostring(k) .. ", " end end
-                 print("Available Categories: " .. cats)
-            end
-        else
-            warn("Auto Mining: Failed to read Inventory!")
-        end
-
-        -- 3. Equip
-        if pickaxeUUID then
-            pcall(function() if RE_EquipItem then RE_EquipItem:FireServer(pickaxeUUID, "Gears") end end)
-            task.wait(0.5)
-            pcall(function() if RE_EquipToolFromHotbar then RE_EquipToolFromHotbar:FireServer(2) end end)
-            return true
-        else
-            return false
         end
     end
 
-    local miningToggle = sectionMining:AddToggle("AutoMining", {
-        Title = "Auto Mining (Crystal Depths)",
-        Description = "Teleport to Depths -> Equip Pickaxe -> Farm Crystals",
-        Default = false
-    })
+    if pickaxeUUID then
+        pcall(function() if RE_EquipItem then RE_EquipItem:FireServer(pickaxeUUID, "Gears") end end)
+        task.wait(0.5)
+        pcall(function() if RE_EquipToolFromHotbar then RE_EquipToolFromHotbar:FireServer(2) end end)
+        return true
+    else
+        return false
+    end
+end
 
-    miningToggle:OnChanged(function(state)
-        autoMiningState = state
-        if state then
-            MiningStatus:SetDesc("Starting Auto Mining...")
-            
-            -- Teleport to Start
-            local char = game.Players.LocalPlayer.Character
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                char.HumanoidRootPart.CFrame = MINING_START_POS
-            end
-            task.wait(1)
+local miningToggle = sectionMining:AddToggle("AutoMining", {
+    Title = "Auto Mining (Crystal Depths)",
+    Description = "Teleport to Depths -> Equip Pickaxe -> Farm Crystals",
+    Default = false
+})
 
-            -- Equip Pickaxe (Best Effort)
-            MiningStatus:SetDesc("Preparing Pickaxe...")
-            if not EquipPickaxe() then
-                MiningStatus:SetDesc("Warning: Pickaxe check failed!")
-                Fluent:Notify({Title="Warning", Content="Pickaxe auto-equip failed! Pastikan kamu sudah equip Pickaxe manual.", Duration=5})
-                -- DO NOT RETURN, CONTINUE ANYWAY
-            else
-                MiningStatus:SetDesc("Pickaxe Equipped!")
-            end
-            
-            task.wait(0.5)
-            MiningStatus:SetDesc("Starting Mining Loop...")
-
-            autoMiningThread = task.spawn(function()
-                while autoMiningState do
-                    -- Bypass: Instant Prompts
-                    for _, v in ipairs(workspace.Islands["Crystal Depths"]:GetDescendants()) do
-                        if v:IsA("ProximityPrompt") then
-                            v.HoldDuration = 0
-                        end
-                    end
-
-                    local crystalsFolder = workspace.Islands["Crystal Depths"].Crystals
-                    local foundTarget = false
-
-                    for _, crystal in ipairs(crystalsFolder:GetChildren()) do
-                        if not autoMiningState then break end
-                        
-                        -- Check for ProximityPrompt (Mineable)
-                        local prompt = crystal:FindFirstChildWhichIsA("ProximityPrompt", true)
-                        if prompt and prompt.Enabled then
-                            foundTarget = true
-                            MiningStatus:SetDesc("Mining Crystal...")
-                            
-                            -- Teleport to Crystal
-                            local char = game.Players.LocalPlayer.Character
-                            if char and char:FindFirstChild("HumanoidRootPart") then
-                                char.HumanoidRootPart.CFrame = crystal:GetPivot()
-                                task.wait(0.5)
-                                
-                                -- Mine
-                                fireproximityprompt(prompt)
-                                task.wait(2.5) 
-                            end
-                        end
-                    end
-
-                    if not foundTarget then
-                        MiningStatus:SetDesc("No crystals found. Waiting respawn...")
-                        task.wait(2)
-                    end
-                    task.wait(0.1)
-                end
-            end)
-        else
-            if autoMiningThread then task.cancel(autoMiningThread) autoMiningThread = nil end
-            MiningStatus:SetDesc("Stopped")
-            Fluent:Notify({Title="Auto Mining OFF", Content="Stopped mining.", Duration=2})
+miningToggle:OnChanged(function(state)
+    autoMiningState = state
+    if state then
+        MiningStatus:SetDesc("Starting Auto Mining...")
+        
+        local char = game.Players.LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = MINING_START_POS
         end
-    end)
+        task.wait(1)
+
+        MiningStatus:SetDesc("Preparing Pickaxe...")
+        if not EquipPickaxe() then
+            MiningStatus:SetDesc("Warning: Pickaxe check failed!")
+            Fluent:Notify({Title="Warning", Content="Pickaxe auto-equip failed! Pastikan kamu sudah equip Pickaxe manual.", Duration=5})
+        else
+            MiningStatus:SetDesc("Pickaxe Equipped!")
+        end
+            
+        task.wait(0.5)
+        MiningStatus:SetDesc("Starting Mining Loop...")
+
+        autoMiningThread = task.spawn(function()
+            while autoMiningState do
+                for _, v in ipairs(workspace.Islands["Crystal Depths"]:GetDescendants()) do
+                    if v:IsA("ProximityPrompt") then
+                        v.HoldDuration = 0
+                    end
+                end
+
+                local crystalsFolder = workspace.Islands["Crystal Depths"].Crystals
+                local foundTarget = false
+
+                for _, crystal in ipairs(crystalsFolder:GetChildren()) do
+                    if not autoMiningState then break end
+                        
+                    local prompt = crystal:FindFirstChildWhichIsA("ProximityPrompt", true)
+                    if prompt and prompt.Enabled then
+                        foundTarget = true
+                        MiningStatus:SetDesc("Mining Crystal...")
+                            
+                        local char = game.Players.LocalPlayer.Character
+                        if char and char:FindFirstChild("HumanoidRootPart") then
+                            char.HumanoidRootPart.CFrame = crystal:GetPivot()
+                            task.wait(0.5)
+                                
+                            fireproximityprompt(prompt)
+                            task.wait(2.5) 
+                        end
+                    end
+                end
+
+                if not foundTarget then
+                    MiningStatus:SetDesc("No crystals found. Waiting respawn...")
+                    task.wait(2)
+                end
+                task.wait(0.1)
+            end
+        end)
+    else
+        if autoMiningThread then task.cancel(autoMiningThread) autoMiningThread = nil end
+        MiningStatus:SetDesc("Stopped")
+        Fluent:Notify({Title="Auto Mining OFF", Content="Stopped mining.", Duration=2})
+    end
+end)
 end
 
 local function TradeTab()
