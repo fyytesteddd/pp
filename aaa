@@ -3701,7 +3701,6 @@ end
 local function serverHopRandom()
     local maxRetries = 10
     local retryCount = 0
-    local useFallback = false
     
     while retryCount < maxRetries do
         local HttpService = game:GetService("HttpService")
@@ -3712,11 +3711,7 @@ local function serverHopRandom()
         local servers = {}
         local cursor = ""
         
-        if useFallback then
-            MiningStatus:SetDesc("Using fallback: Any server... (Attempt "..(retryCount+1).."/"..maxRetries..")")
-        else
-            MiningStatus:SetDesc("Searching servers (min 6 players)... (Attempt "..(retryCount+1).."/"..maxRetries..")")
-        end
+        MiningStatus:SetDesc("Searching servers... (Attempt "..(retryCount+1).."/"..maxRetries..")")
 
         repeat
             local success, result = pcall(function()
@@ -3732,15 +3727,7 @@ local function serverHopRandom()
                 for _, server in ipairs(result.data) do
                     if server.playing and server.maxPlayers and server.id then
                         if server.playing < server.maxPlayers and server.id ~= game.JobId then
-                            if useFallback then
-                                -- Fallback: Accept any server
-                                table.insert(servers, server)
-                            else
-                                -- Main: Min 6 players
-                                if server.playing > 5 then
-                                    table.insert(servers, server)
-                                end
-                            end
+                            table.insert(servers, server)
                         end
                     end
                 end
@@ -3752,23 +3739,12 @@ local function serverHopRandom()
 
         if #servers > 0 then
             local randomServer = servers[math.random(1, #servers)]
-            
-            if useFallback then
-                MiningStatus:SetDesc("Joining any server ("..randomServer.playing.." players)...")
-                Fluent:Notify({
-                    Title = "Joining Fallback...",
-                    Content = "No good servers. Joining with "..randomServer.playing.." players",
-                    Duration = 2
-                })
-            else
-                MiningStatus:SetDesc("Joining server with "..randomServer.playing.." players...")
-                Fluent:Notify({
-                    Title = "Joining...",
-                    Content = "Joining server with "..randomServer.playing.."/"..randomServer.maxPlayers.." players",
-                    Duration = 2
-                })
-            end
-            
+            MiningStatus:SetDesc("Joining server with "..randomServer.playing.." players...")
+            Fluent:Notify({
+                Title = "Joining...",
+                Content = "Joining server with "..randomServer.playing.."/"..randomServer.maxPlayers.." players",
+                Duration = 2
+            })
             task.wait(1)
             
             local teleportSuccess = pcall(function()
@@ -3782,27 +3758,13 @@ local function serverHopRandom()
                 task.wait(2)
             end
         else
-            if not useFallback and retryCount >= 5 then
-                -- Switch to fallback after 5 failed attempts
-                useFallback = true
-                MiningStatus:SetDesc("Switching to fallback mode...")
-                Fluent:Notify({
-                    Title = "Fallback Mode",
-                    Content = "No servers with min 6 players. Trying any server...",
-                    Duration = 3
-                })
-                task.wait(2)
-                retryCount = 0 -- Reset counter for fallback
-            else
-                MiningStatus:SetDesc("No servers found. Retrying...")
-                task.wait(2)
-            end
+            MiningStatus:SetDesc("No servers found. Retrying...")
+            task.wait(2)
         end
         
         retryCount = retryCount + 1
     end
     
-    MiningStatus:SetDesc("Failed to find server")
     Fluent:Notify({Title = "Failed", Content = "Failed to find server after "..maxRetries.." attempts", Duration = 5})
     return false
 end
