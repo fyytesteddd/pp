@@ -3789,7 +3789,7 @@ local function EventTab()
                                 
                                 -- Mine
                                 fireproximityprompt(prompt)
-                                task.wait(2.5) -- Wait for mining animation/process
+                                task.wait(2.5) 
                             end
                         end
                     end
@@ -3807,7 +3807,7 @@ local function EventTab()
             Fluent:Notify({Title="Auto Mining OFF", Content="Stopped mining.", Duration=2})
         end
     end)
-
+end
 
 local function TradeTab()
     if not Trade then return end
