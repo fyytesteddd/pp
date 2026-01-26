@@ -3708,16 +3708,41 @@ local function EventTab()
 
         -- 2. Find Pickaxe UUID
         local pickaxeUUID = nil
+        if not r then
+             print("!!! ClientData is NIL in EquipPickaxe !!!") 
+             return false 
+        end
+        
         local s2, inv = pcall(function() return r:GetExpect("Inventory") end)
         
         if s2 and inv and inv.Items then
+            print("--- DEBUG: SCANNING FOR PICKAXE ---")
+            print("Total Items: " .. tostring(#inv.Items))
+            
             for _, item in ipairs(inv.Items) do
-                -- Pattern: ID + Name Fallback (Robust)
-                if (tonumber(item.Id) == 20220 or item.Name == "Pickaxe") and item.UUID then
-                    pickaxeUUID = item.UUID
-                    break
+                local iName = tostring(item.Name)
+                local iId = item.Id
+                local iUUID = item.UUID
+                
+                -- Debug potential match
+                if iName == "Pickaxe" or tostring(iId) == "20220" then
+                    print("Potential Match Found:")
+                    print("  Name: " .. iName)
+                    print("  ID: " .. tostring(iId) .. " (Type: " .. type(iId) .. ")")
+                    print("  UUID: " .. tostring(iUUID))
+                    
+                    if iUUID then
+                        pickaxeUUID = iUUID
+                        print(">>> SELECTED UUID: " .. tostring(pickaxeUUID))
+                        break
+                    else
+                        print("!!! MATCH FOUND BUT NO UUID !!!")
+                    end
                 end
             end
+            print("--- END SCAN ---")
+        else
+            print("!!! Failed to get Inventory: ", s2)
         end
 
         -- 3. Equip
