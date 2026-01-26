@@ -3779,17 +3779,18 @@ local function EventTab()
             end
             task.wait(1)
 
-            -- Equip Pickaxe with Strict Validation
-            MiningStatus:SetDesc("Checking Pickaxe...")
+            -- Equip Pickaxe (Best Effort)
+            MiningStatus:SetDesc("Preparing Pickaxe...")
             if not EquipPickaxe() then
-                MiningStatus:SetDesc("Error: Pickaxe Required!")
-                Fluent:Notify({Title="Error", Content="Kamu butuh Pickaxe (ID 20220) untuk fitur ini!", Duration=5})
-                autoMiningState = false
-                miningToggle:SetValue(false)
-                return -- Stop immediately
+                MiningStatus:SetDesc("Warning: Pickaxe check failed!")
+                Fluent:Notify({Title="Warning", Content="Pickaxe auto-equip failed! Pastikan kamu sudah equip Pickaxe manual.", Duration=5})
+                -- DO NOT RETURN, CONTINUE ANYWAY
+            else
+                MiningStatus:SetDesc("Pickaxe Equipped!")
             end
             
-            MiningStatus:SetDesc("Pickaxe Equipped! Starting Loop...")
+            task.wait(0.5)
+            MiningStatus:SetDesc("Starting Mining Loop...")
 
             autoMiningThread = task.spawn(function()
                 while autoMiningState do
