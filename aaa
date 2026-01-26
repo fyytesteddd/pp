@@ -3678,7 +3678,9 @@ local function EventTab()
         end
     end)
 
- local sectionMining = Event:AddSection(" [ Auto Mining ] ")
+
+
+local sectionMining = Event:AddSection(" [ Auto Mining ] ")
 local MiningStatus = sectionMining:AddParagraph({Title="Status", Content="Idle", Icon="pickaxe"})
 local autoMiningState = false
 local autoMiningThread = nil
@@ -3696,6 +3698,53 @@ local function GetClientData()
         return Replion.Client:WaitReplion("Data")
     end)
     return success and data or nil
+end
+
+local function serverHopRandom()
+    local HttpService = game:GetService("HttpService")
+    local TeleportService = game:GetService("TeleportService")
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+    local PlaceId = game.PlaceId
+    local servers = {}
+    local cursor = ""
+
+    repeat
+        local success, result = pcall(function()
+            local url = "https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100"
+            if cursor ~= "" then
+                url = url .. "&cursor=" .. cursor
+            end
+            local response = game:HttpGet(url)
+            return HttpService:JSONDecode(response)
+        end)
+
+        if success and result and result.data then
+            for _, server in ipairs(result.data) do
+                if server.playing and server.maxPlayers and server.id then
+                    if server.playing < server.maxPlayers and server.id ~= game.JobId and server.playing > 0 then
+                        table.insert(servers, server)
+                    end
+                end
+            end
+            cursor = result.nextPageCursor or ""
+        else
+            cursor = ""
+        end
+    until cursor == "" or #servers >= 50
+
+    if #servers > 0 then
+        local randomServer = servers[math.random(1, #servers)]
+        Fluent:Notify({
+            Title = "Joining...",
+            Content = "Joining server with "..randomServer.playing.."/"..randomServer.maxPlayers.." players",
+            Duration = 2
+        })
+        task.wait(1)
+        TeleportService:TeleportToPlaceInstance(PlaceId, randomServer.id, LocalPlayer)
+    else
+        Fluent:Notify({Title = "No Servers", Content = "No suitable servers found", Duration = 3})
+    end
 end
 
 local function EquipPickaxe()
@@ -3811,14 +3860,34 @@ miningToggle:OnChanged(function(state)
                 end
 
                 if not foundTarget then
-                    MiningStatus:SetDesc("No crystals found. Waiting respawn...")
-                    task.wait(2)
+                    MiningStatus:SetDesc("No crystals found. Server hop in 8s...")
+                    
+                    for i = 8, 1, -1 do
+                        if not autoMiningState then break end
+                        MiningStatus:SetDesc("No crystals found. Server hop in "..i.."s...")
+                        task.wait(1)
+                    end
+                    
+                    if autoMiningState then
+                        MiningStatus:SetDesc("Server hopping...")
+                        Fluent:Notify({
+                            Title = "Server Hop",
+                            Content = "No crystals found. Switching server...",
+                            Duration = 2
+                        })
+                        task.wait(1)
+                        serverHopRandom()
+                        break
+                    end
                 end
                 task.wait(0.1)
             end
         end)
     else
-        if autoMiningThread then task.cancel(autoMiningThread) autoMiningThread = nil end
+        if autoMiningThread then 
+            task.cancel(autoMiningThread) 
+            autoMiningThread = nil 
+        end
         MiningStatus:SetDesc("Stopped")
         Fluent:Notify({Title="Auto Mining OFF", Content="Stopped mining.", Duration=2})
     end
