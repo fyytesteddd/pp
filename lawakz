@@ -758,6 +758,10 @@ local function V3CatchLoop()
         -- Spam "Complete" blindly
         task.spawn(function()
              safe2(function() REF2:FireServer() end)
+             safe2(function() REF2:FireServer() end)
+             safe2(function() REF2:FireServer() end)
+             safe2(function() REF2:FireServer() end)
+             safe2(function() REF2:FireServer() end)
         end)
         
         -- Speed controlled by catchDelay
