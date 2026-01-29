@@ -672,6 +672,7 @@ blatantV3Toggle:OnChanged(function(s)
 end)
 
 
+
 -- [ Blatant V3 ]
 local blatantSection3 = Auto:AddSection(" [ Blatant V3 ] ")
 
@@ -688,32 +689,23 @@ local v3FishingThread = nil
 local REM3 = REM2 -- Reusing FishingMinigameChanged
 local ReplicateTextEffect = RS:WaitForChild("ReplicateTextEffect", 5)
 
-local v3Casting = false
-local v3IsCatching = false -- Semaphore to pause reset during catch
-
--- Detection Logic (The "Catcher")
+-- Detection Logic (The "Exploit Catcher")
+-- We want to handle MULTIPLE signals at once if the server sends them.
 local function setupV3ExclaimDetection()
     local function performCatch()
-        if V3Config.enabled and v3Casting and not v3IsCatching then
-            v3IsCatching = true -- Lock the main loop
-            
+        if V3Config.enabled then
+            -- Spawn a NEW thread for every single signal
+            -- This allows catching "2 fish in 1 second" if the server sends 2 signals.
             task.spawn(function()
-                -- Reaction Delay
                 if V3Config.reactionDelay > 0 then
                     task.wait(V3Config.reactionDelay)
                 end
                 
-                -- Fire Catch
-                if V3Config.enabled then
-                    safe2(function() REF2:FireServer() end)
-                end
+                safe2(function() REF2:FireServer() end)
                 
-                -- Cancel Delay (Wait before allowing reset)
-                if V3Config.cancelDelay > 0 then
-                    task.wait(V3Config.cancelDelay)
-                end
-                
-                v3IsCatching = false -- Unlock main loop to reset
+                -- Note: We do NOT pause the loop or wait for cancel delay here.
+                -- The loop handles the Spam Casting.
+                -- This function handles the Spam Catching.
             end)
         end
     end
@@ -741,42 +733,29 @@ end
 
 setupV3ExclaimDetection()
 
--- Fishing Loop (The "Caster")
+-- Fishing Loop (The "Spam Caster")
+-- This loop just spams requests to create the "Stuck Signals".
 local function fishingLoop3()
     while V3Config.enabled do
-        -- 1. Charge & Request
         v3Casting = true
         
+        -- Charge & Request (Spam this part)
         local t = tick()
         safe2(function() RFC2:InvokeServer({[1] = t}) end)
         task.wait(0.002) 
         safe2(function() RFS2:InvokeServer(1, 0, tick()) end)
         
-        -- 2. Wait Loop (Spam logic)
-        -- We wait until EITHER:
-        -- A. We are processing a catch (v3IsCatching becomes True) -> Wait until it becomes False.
-        -- B. Time passes without catch (Timeout) -> Just Reset.
+        -- Wait just enough to not crash, or wait for Cancel Delay if you want rhythm
+        -- User said "Charge Request Cancel Charge Request..." very fast.
+        -- So we don't wait for "!" here. We just spam cycle.
         
-        local waitStart = tick()
-        repeat
-            task.wait()
-            -- If we are catching, we keep waiting here until catch finishes (isCatching becomes false)
-        until (not v3IsCatching and (tick() - waitStart > 2.5)) or not V3Config.enabled
+        if V3Config.cancelDelay > 0 then
+            task.wait(V3Config.cancelDelay)
+        end
         
-        -- Note: The logic above implies we wait 2.5s IF no catch happens.
-        -- BUT user wants "Spam". V2 waits FD2 (0.7s).
-        -- If we want Spam, we should timeout FASTER if no catch happens?
-        -- No, we must wait for "!" which takes time. 
-        -- If we reset too early we cancel the cast.
-        -- So we MUST wait for "!" or Timeout.
-        -- Actually, if "!" appears, v3IsCatching becomes true -> Loop waits -> Catch finishes -> v3IsCatching false -> Loop breaks.
-        -- PERFECT.
-        
-        v3Casting = false
-        
-        -- 3. Reset
+        -- Reset immediately to spam again
         safe2(function() RFK2:InvokeServer() end)
-        task.wait(0.002) -- Tiny safety
+        task.wait(0.002)
     end
     
     -- Cleanup
