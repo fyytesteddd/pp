@@ -723,15 +723,21 @@ setupV3ExclaimDetection()
 -- Fishing Loop
 local function fishingLoop3()
     while V3Config.enabled do
-        -- 1. Charge & Cast
+        -- 1. Charge 
+        local t = tick()
+        safe2(function() RFC2:InvokeServer({[1] = t}) end)
+        
+        -- 2. Charge Delay (CD2 equivalent)
+        task.wait(0.002) 
+        
+        -- 3. Request Cast
+        local r = tick()
+        safe2(function() RFS2:InvokeServer(1, 0, r) end)
+        
+        -- 4. WAIT FOR EXCLAMATION (Replaces FD2)
         v3Casting = true
         v3ExclaimDetected = false
         
-        safe2(function() RFC2:InvokeServer({[1] = tick()}) end) -- Charge
-        task.wait(0.002) 
-        safe2(function() RFS2:InvokeServer(1, 0, tick()) end) -- Request Cast
-        
-        -- 2. Wait for Exclamation ("!")
         local waitStart = tick()
         repeat 
             task.wait() 
@@ -739,17 +745,19 @@ local function fishingLoop3()
         
         v3Casting = false
         
-        -- 3. Complete (Catch) or Cancel
-        if v3ExclaimDetected and V3Config.enabled then
-            safe2(function() REF2:FireServer() end) -- Complete
+        if V3Config.reactionDelay > 0 then
+            task.wait(V3Config.reactionDelay)
         end
         
-        if not V3Config.enabled then break end
+        -- 5. Complete Catch
+        safe2(function() REF2:FireServer() end) -- Complete
         
-        -- 4. Cancel / Reset (using Cancel Delay)
+        -- 6. Cancel Delay (KD2 equivalent)
         if V3Config.cancelDelay > 0 then
             task.wait(V3Config.cancelDelay)
         end
+        
+        -- 7. Reset/Cancel
         safe2(function() RFK2:InvokeServer() end)
     end
     
