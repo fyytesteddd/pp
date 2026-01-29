@@ -671,7 +671,6 @@ blatantV3Toggle:OnChanged(function(s)
     end 
 end)
 
-
 -- [ Blatant V3 ]
 local blatantSection3 = Auto:AddSection(" [ Blatant V3 ] ")
 
@@ -688,11 +687,61 @@ local v3FishingThread = nil
 local REM3 = REM2 -- Reusing FishingMinigameChanged
 local ReplicateTextEffect = RS:WaitForChild("ReplicateTextEffect", 5)
 
-local v3Casting = false
-local v3ExclaimDetected = false
+-- // V3 CONFIG
+local V3Config = {
+    enabled = false,
+    throwDelay = 0.4,     -- Delay before throw (Cancel Delay equivalent)
+    baitDelay = 0.4,      -- Delay after throw (Loop Speed)
+    reelDelay = 0.05,     -- Delay before complete
+    maxRetry = 4,
+    retryDelay = 0.03,
+    spamComplete = 1,
+    spamSpeed = 0.85      -- Timeout for Exclaim
+}
 
--- Detection Logic
+local v3MainThread = nil
+local v3EquipThread = nil
+local v3ExclaimDetected = false
+local v3Bait = 0
+local v3Casting = false
+
+-- // V3 ANIMATION SYSTEM (Optimized)
+local v3AnimCache = {}
+local V3_ANIM_COOLDOWN = 0.05
+
+local function PlayV3AnimationOptimized(animType)
+    local now = tick()
+    if v3AnimCache[animType] and (now - v3AnimCache[animType]) < V3_ANIM_COOLDOWN then
+        return
+    end
+    v3AnimCache[animType] = now
+    task.spawn(function()
+        pcall(function() 
+            -- Assuming _G.PlayFishingAnimation exists or using ReplicatedStorage animations
+            -- For now, just placeholder or use existing animation logic if any
+            -- The user's script uses _G.PlayFishingAnimation, we'll try to support it or ignore if nil
+            if _G.PlayFishingAnimation then _G.PlayFishingAnimation(animType) end
+        end)
+    end)
+end
+
+-- // V3 EXCLAIM DETECTION
 local function setupV3ExclaimDetection()
+    if ReplicateTextEffect then
+        ReplicateTextEffect.OnClientEvent:Connect(function(data)
+            local char = LocalPlayer.Character
+            if not char or not data.TextData or not data.TextData.AttachTo then return end
+
+            if data.TextData.AttachTo:IsDescendantOf(char)
+                and data.TextData.Text == "!" 
+                and V3Config.enabled
+                and v3Casting then
+                v3ExclaimDetected = true
+            end
+        end)
+    end
+    
+    -- REM3 backup
     if REM3 then
         REM3.OnClientEvent:Connect(function()
             if V3Config.enabled and v3Casting then
@@ -700,152 +749,135 @@ local function setupV3ExclaimDetection()
             end
         end)
     end
-    
-    if ReplicateTextEffect then
-        ReplicateTextEffect.OnClientEvent:Connect(function(data)
-            if not v3Casting then return end
-            if not data.TextData or not data.TextData.AttachTo then return end
-            
-            local char = LocalPlayer.Character
-            if char and data.TextData.AttachTo:IsDescendantOf(char) and data.TextData.Text == "!" and V3Config.enabled then
-                 v3ExclaimDetected = true
-            end
-        end)
-    end
 end
-
 setupV3ExclaimDetection()
 
--- Fire-and-Forget Cast Logic
+-- // V3 START CAST
 local function V3StartCast()
     v3ExclaimDetected = false
+    v3Bait = 0
     v3Casting = true
     
-    -- Thread 1: Casting Action
+    -- Cast thread
     task.spawn(function()
-        local t = tick()
-        safe2(function() RFC2:InvokeServer({[1] = t}) end) -- Charge
-        task.wait(0.002)
-        safe2(function() RFS2:InvokeServer(1, 0, tick()) end) -- Request
+        pcall(function()
+            PlayV3AnimationOptimized("idle")
+            task.wait(V3Config.throwDelay)
+            
+            PlayV3AnimationOptimized("throw")
+            local t = tick()
+            safe2(function() RFC2:InvokeServer({[1] = t}) end)
+            safe2(function() RFS2:InvokeServer(1, 0.05, tick()) end)
+            
+            task.wait(V3Config.baitDelay)
+            PlayV3AnimationOptimized("reel")
+        end)
     end)
-    
-    -- Thread 2: Wait & Catch Logic
+
+    -- Complete thread
     task.spawn(function()
-        local timeout = V3Config.spamSpeed or 1.0
+        local timeout = V3Config.spamSpeed -- 0.85 default in ref
         local timer = 0
-        local caught = false
-        
-        -- Wait for Exclaim or Timeout
+        local exclaimDetected = false
+
         while V3Config.enabled and v3Casting and timer < timeout do
             if v3ExclaimDetected then
-                caught = true
+                exclaimDetected = true
                 break
             end
             timer = timer + 0.01
             task.wait(0.01)
         end
-        
-        -- If caught, complete the catch
-        if caught and V3Config.enabled then
-            if V3Config.reactionDelay > 0 then
-                task.wait(V3Config.reactionDelay)
+
+        if not V3Config.enabled or not exclaimDetected then
+            v3Casting = false
+            return
+        end
+
+        task.wait(V3Config.reelDelay)
+
+        if V3Config.enabled then
+            for i = 1, V3Config.spamComplete do
+                task.spawn(function()
+                    pcall(function() safe2(function() REF2:FireServer() end) end)
+                end)
             end
             
-            safe2(function() REF2:FireServer() end)
+            task.wait(0.01)
+            PlayV3AnimationOptimized("finish")
         end
         
-        -- Note: We don't reset here. The Main Loop resets blindly (Spamming).
-        -- Or should we?
-        -- In the reference: v3Casting = false is set here.
         v3Casting = false
     end)
 end
 
--- Main Loop (The Spammer)
-local function fishingLoop3()
+-- // V3 MAIN LOOP
+local function V3MainLoop()
     while V3Config.enabled do
         V3StartCast()
         
-        -- Delay between casts (Controller of Spam Rate)
-        if V3Config.cancelDelay > 0 then
-            task.wait(V3Config.cancelDelay)
-        else
-            task.wait(0.002)
-        end
+        -- Cast delay = delay antar lemparan bait
+        task.wait(V3Config.baitDelay)
         
         if not V3Config.enabled then break end
         
-        -- Cancel/Reset (Parallel, Non-blocking)
+        -- Cancel di thread terpisah (parallel, non-blocking)
         task.spawn(function()
-            safe2(function() RFK2:InvokeServer() end)
+            pcall(function() safe2(function() RFK2:InvokeServer() end) end)
         end)
         
-        task.wait(0.002)
+        task.wait(0.001)  -- Loop speed
     end
-    
-    -- Cleanup
-    safe2(function() RFU2:InvokeServer(false) end)
-    safe2(function() Unequip2:FireServer() end)
-    task.wait(0.2)
-    safe2(function() RFK2:InvokeServer() end)
 end
 
--- UI Controls
+-- UI Controls (WindUI Adaptation)
 local v3Toggle = blatantSection3:AddToggle("blatantV3_toggle", {Title = "Enable Blatant V3", Default = false})
 v3Toggle:OnChanged(function(v)
     V3Config.enabled = v
     if v then
         v3Casting = false
-        v3ExclaimDetected = false
-        
         pcall(function() LocalPlayer:SetAttribute("InCutscene", true) end)
         safe2(function() RFU2:InvokeServer(true) end)
         
-        if v3FishingThread then task.cancel(v3FishingThread) end
-        v3FishingThread = task.spawn(fishingLoop3)
-        
-        if equipThread2 then task.cancel(equipThread2) end 
-        equipThread2 = task.spawn(equipLoop2) 
+         if v3MainThread then task.cancel(v3MainThread) end
+         v3MainThread = task.spawn(V3MainLoop)
+         
+         if equipThread2 then task.cancel(equipThread2) end 
+         equipThread2 = task.spawn(equipLoop2) 
     else
-        if v3FishingThread then 
-            task.cancel(v3FishingThread)
-            v3FishingThread = nil
-        end
-        if equipThread2 then 
-            task.cancel(equipThread2)
-            equipThread2 = nil 
-        end
-        
-        pcall(function() LocalPlayer:SetAttribute("InCutscene", false) end)
-        safe2(function() RFU2:InvokeServer(false) end)
-        safe2(function() Unequip2:FireServer() end)
-        task.wait(0.2)
-        safe2(function() RFK2:InvokeServer() end)
+         if v3MainThread then task.cancel(v3MainThread) end
+         v3MainThread = nil
+         
+         if equipThread2 then task.cancel(equipThread2) end 
+         equipThread2 = nil 
+         
+         v3Casting = false
+         pcall(function() LocalPlayer:SetAttribute("InCutscene", false) end)
+         safe2(function() RFU2:InvokeServer(false) end)
+         safe2(function() Unequip2:FireServer() end)
+         task.wait(0.2)
+         safe2(function() RFK2:InvokeServer() end)
     end
 end)
 
-local v3DelayInput = blatantSection3:AddInput("blatantV3_delay", {Title = "Reaction Delay", Default = "0.15", Placeholder = "0.15"})
-v3DelayInput:OnChanged(function(v)
+blatantSection3:AddInput("blatantV3_baitDelay", {Title = "V3 Cast Delay", Default = "0.4", Placeholder = "0.4"}):OnChanged(function(v)
     local n = tonumber(v)
-    if n and n >= 0 then
-        V3Config.reactionDelay = n
-    end
+    if n and n >= 0 then V3Config.baitDelay = n end
 end)
 
-local v3CancelDelayInput = blatantSection3:AddInput("blatantV3_cancelDelay", {Title = "Cancel Delay / Spam Rate", Default = "0.3", Placeholder = "0.3"})
-v3CancelDelayInput:OnChanged(function(v)
+blatantSection3:AddInput("blatantV3_reelDelay", {Title = "V3 Complete Delay", Default = "0.05", Placeholder = "0.05"}):OnChanged(function(v)
     local n = tonumber(v)
-    if n and n >= 0 then
-        V3Config.cancelDelay = n
-    end
+    if n and n >= 0 then V3Config.reelDelay = n end
 end)
 
-local v3SpamSpeedInput = blatantSection3:AddInput("blatantV3_spamSpeed", {Title = "Wait Timeout", Default = "1.0", Placeholder = "1.0"})
-v3SpamSpeedInput:OnChanged(function(v)
+blatantSection3:AddInput("blatantV3_throwDelay", {Title = "V3 Cancel Delay", Default = "0.4", Placeholder = "0.4"}):OnChanged(function(v)
     local n = tonumber(v)
-    if n and n > 0 then
-        V3Config.spamSpeed = n
-    end
+    if n and n >= 0 then V3Config.throwDelay = n end
+end)
+
+blatantSection3:AddInput("blatantV3_spamSpeed", {Title = "Wait Timeout", Default = "0.85", Placeholder = "0.85"}):OnChanged(function(v)
+    local n = tonumber(v)
+    if n and n > 0 then V3Config.spamSpeed = n end
 end)
 
 
