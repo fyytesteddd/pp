@@ -672,7 +672,6 @@ blatantV3Toggle:OnChanged(function(s)
 end)
 
 
-
 -- [ Blatant V3 ]
 local blatantSection3 = Auto:AddSection(" [ Blatant V3 ] ")
 
@@ -689,31 +688,15 @@ local v3FishingThread = nil
 local REM3 = REM2 -- Reusing FishingMinigameChanged
 local ReplicateTextEffect = RS:WaitForChild("ReplicateTextEffect", 5)
 
--- Detection Logic (The "Exploit Catcher")
--- We want to handle MULTIPLE signals at once if the server sends them.
-local function setupV3ExclaimDetection()
-    local function performCatch()
-        if V3Config.enabled then
-            -- Spawn a NEW thread for every single signal
-            -- This allows catching "2 fish in 1 second" if the server sends 2 signals.
-            task.spawn(function()
-                if V3Config.reactionDelay > 0 then
-                    task.wait(V3Config.reactionDelay)
-                end
-                
-                safe2(function() REF2:FireServer() end)
-                
-                -- Note: We do NOT pause the loop or wait for cancel delay here.
-                -- The loop handles the Spam Casting.
-                -- This function handles the Spam Catching.
-            end)
-        end
-    end
+local v3Casting = false
+local v3ExclaimDetected = false
 
+-- Detection Logic (Sets Flag Only)
+local function setupV3ExclaimDetection()
     if REM3 then
         REM3.OnClientEvent:Connect(function()
             if V3Config.enabled and v3Casting then
-                 performCatch()
+                v3ExclaimDetected = true
             end
         end)
     end
@@ -725,7 +708,7 @@ local function setupV3ExclaimDetection()
             
             local char = LocalPlayer.Character
             if char and data.TextData.AttachTo:IsDescendantOf(char) and data.TextData.Text == "!" and V3Config.enabled then
-                 performCatch()
+                 v3ExclaimDetected = true
             end
         end)
     end
@@ -733,27 +716,47 @@ end
 
 setupV3ExclaimDetection()
 
--- Fishing Loop (The "Spam Caster")
--- This loop just spams requests to create the "Stuck Signals".
+-- Fishing Loop (Integrated Logic with Configurable Timeout)
 local function fishingLoop3()
     while V3Config.enabled do
         v3Casting = true
+        v3ExclaimDetected = false
         
-        -- Charge & Request (Spam this part)
+        -- 1. Charge & Request
         local t = tick()
         safe2(function() RFC2:InvokeServer({[1] = t}) end)
         task.wait(0.002) 
         safe2(function() RFS2:InvokeServer(1, 0, tick()) end)
         
-        -- Wait just enough to not crash, or wait for Cancel Delay if you want rhythm
-        -- User said "Charge Request Cancel Charge Request..." very fast.
-        -- So we don't wait for "!" here. We just spam cycle.
+        -- 2. Wait for Exclamation OR Timeout (Spam Speed)
+        -- Configurable timeout allows user to control "Spam Aggressiveness"
+        local waitStart = tick()
+        local timeout = V3Config.spamSpeed or 1.0
         
-        if V3Config.cancelDelay > 0 then
-            task.wait(V3Config.cancelDelay)
+        repeat 
+            task.wait() 
+        until v3ExclaimDetected or (tick() - waitStart > timeout) or not V3Config.enabled
+        
+        v3Casting = false
+        
+        -- 3. Handle Result
+        if v3ExclaimDetected then
+            -- Caught Signal
+            if V3Config.reactionDelay > 0 then
+                task.wait(V3Config.reactionDelay)
+            end
+            
+            safe2(function() REF2:FireServer() end)
+            
+            if V3Config.cancelDelay > 0 then
+                task.wait(V3Config.cancelDelay)
+            end
+        else
+            -- Timeout (Spam Reset)
+            -- Just loop around to reset
         end
         
-        -- Reset immediately to spam again
+        -- 4. Reset
         safe2(function() RFK2:InvokeServer() end)
         task.wait(0.002)
     end
@@ -815,6 +818,14 @@ v3CancelDelayInput:OnChanged(function(v)
     local n = tonumber(v)
     if n and n >= 0 then
         V3Config.cancelDelay = n
+    end
+end)
+
+local v3SpamSpeedInput = blatantSection3:AddInput("blatantV3_spamSpeed", {Title = "Spam Speed (Timeout)", Default = "1.0", Placeholder = "1.0"})
+v3SpamSpeedInput:OnChanged(function(v)
+    local n = tonumber(v)
+    if n and n > 0 then
+        V3Config.spamSpeed = n
     end
 end)
 
