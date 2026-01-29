@@ -692,11 +692,9 @@ local ReplicateTextEffect = RS:WaitForChild("ReplicateTextEffect", 5)
 -- Detection Logic
 local function setupV3ExclaimDetection()
     if REM3 then
-        REM3.OnClientEvent:Connect(function(data)
-            if V3Config.enabled and v3Casting and data and data == "!" then
-                if V3Config.reactionDelay > 0 then
-                    task.wait(V3Config.reactionDelay)
-                end
+        REM3.OnClientEvent:Connect(function()
+            if V3Config.enabled and v3Casting then
+                -- Trigger on any minigame change (like V2)
                 v3ExclaimDetected = true
             end
         end)
@@ -709,9 +707,6 @@ local function setupV3ExclaimDetection()
             
             local char = LocalPlayer.Character
             if char and data.TextData.AttachTo:IsDescendantOf(char) and data.TextData.Text == "!" and V3Config.enabled then
-                if V3Config.reactionDelay > 0 then
-                    task.wait(V3Config.reactionDelay)
-                end
                 v3ExclaimDetected = true
             end
         end)
