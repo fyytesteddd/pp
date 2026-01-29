@@ -690,12 +690,14 @@ local ReplicateTextEffect = RS:WaitForChild("ReplicateTextEffect", 5)
 -- // V3 CONFIG
 local V3Config = {
     enabled = false,
-    baitDelay = 0.15,     -- Time to wait before Catching (Blind)
-    reelDelay = 0.1,      -- Time to wait before Resetting
-    spamComplete = 1      -- How many times to fire complete
+    throwDelay = 0.4,     -- Delay before throw (Cancel Delay)
+    baitDelay = 0.4,      -- Delay after throw (Cast Speed)
+    spamComplete = 1,
+    catchDelay = 0.1      -- Spam speed for Catching
 }
 
-local v3MainThread = nil
+local v3CastThread = nil
+local v3CatchThread = nil
 local v3EquipThread = nil
 
 -- // V3 ANIMATION SYSTEM
@@ -715,58 +717,79 @@ local function PlayV3AnimationOptimized(animType)
     end)
 end
 
--- // V3 MAIN LOOP (Turbo V2 - Sequential Blind Spam)
-local function V3MainLoop()
+-- // LOOP 1: SPAM START CAST (Pelempar)
+local function V3CastLoop()
     while V3Config.enabled do
         -- 1. Cast
-        pcall(function()
-            PlayV3AnimationOptimized("throw")
-            local t = tick()
-            safe2(function() RFC2:InvokeServer({[1] = t}) end) -- Charge
-            safe2(function() RFS2:InvokeServer(1, 0.05, tick()) end) -- Request
+        task.spawn(function()
+            pcall(function()
+                PlayV3AnimationOptimized("idle")
+                task.wait(V3Config.throwDelay) -- Cancel Delay
+                
+                PlayV3AnimationOptimized("throw")
+                
+                local t = tick()
+                safe2(function() RFC2:InvokeServer({[1] = t}) end)
+                safe2(function() RFS2:InvokeServer(1, 0.05, tick()) end)
+                
+                task.wait(V3Config.baitDelay) -- Cast Delay
+                PlayV3AnimationOptimized("reel")
+            end)
         end)
         
-        -- 2. Blind Wait (Spam Speed)
-        task.wait(V3Config.baitDelay)
+        -- Loop speed logic to prevent crash but maintain high spam
+        local delay = V3Config.baitDelay
+        if delay < 0.05 then delay = 0.05 end -- Safety floor for Cast Loop
+        task.wait(delay)
         
         if not V3Config.enabled then break end
         
-        -- 3. Catch (Blind)
-        pcall(function()
-            PlayV3AnimationOptimized("reel")
-            for i = 1, V3Config.spamComplete do
-                safe2(function() REF2:FireServer() end)
-            end
+        -- 2. Cancel (Parallel)
+        task.spawn(function()
+            pcall(function() safe2(function() RFK2:InvokeServer() end) end)
         end)
         
-        -- 4. Reset Delay
-        if V3Config.reelDelay > 0 then
-            task.wait(V3Config.reelDelay)
-        end
+        task.wait(0.001)
+    end
+end
+
+-- // LOOP 2: SPAM COMPLETE (Penangkap - Buta)
+local function V3CatchLoop()
+    while V3Config.enabled do
+        -- Spam "Complete" blindly
+        task.spawn(function()
+             safe2(function() REF2:FireServer() end)
+        end)
         
-        -- 5. Reset
-        pcall(function() safe2(function() RFK2:InvokeServer() end) end)
-        
-        task.wait(0.002) -- Loop stability
+        -- Speed controlled by catchDelay
+        local delay = V3Config.catchDelay
+        if delay == 0 then delay = 0.001 end -- Allow extreme spam for Catch
+        task.wait(delay)
     end
 end
 
 -- UI Controls
-local v3Toggle = blatantSection3:AddToggle("blatantV3_toggle", {Title = "Enable Blatant V3 (Turbo V2)", Default = false})
+local v3Toggle = blatantSection3:AddToggle("blatantV3_toggle", {Title = "Enable Blatant V3 (Dual Spam)", Default = false})
 v3Toggle:OnChanged(function(v)
     V3Config.enabled = v
     if v then
         pcall(function() LocalPlayer:SetAttribute("InCutscene", true) end)
         safe2(function() RFU2:InvokeServer(true) end)
         
-         if v3MainThread then task.cancel(v3MainThread) end
-         v3MainThread = task.spawn(V3MainLoop)
+         if v3CastThread then task.cancel(v3CastThread) end
+         v3CastThread = task.spawn(V3CastLoop)
+         
+         if v3CatchThread then task.cancel(v3CatchThread) end
+         v3CatchThread = task.spawn(V3CatchLoop)
          
          if equipThread2 then task.cancel(equipThread2) end 
          equipThread2 = task.spawn(equipLoop2) 
     else
-         if v3MainThread then task.cancel(v3MainThread) end
-         v3MainThread = nil
+         if v3CastThread then task.cancel(v3CastThread) end
+         v3CastThread = nil
+         
+         if v3CatchThread then task.cancel(v3CatchThread) end
+         v3CatchThread = nil
          
          if equipThread2 then task.cancel(equipThread2) end 
          equipThread2 = nil 
@@ -779,14 +802,19 @@ v3Toggle:OnChanged(function(v)
     end
 end)
 
-blatantSection3:AddInput("blatantV3_baitDelay", {Title = "Spam/Cast Delay", Default = "0.15", Placeholder = "0.15"}):OnChanged(function(v)
+blatantSection3:AddInput("blatantV3_baitDelay", {Title = "Cast Delay", Default = "0.4", Placeholder = "0.4"}):OnChanged(function(v)
     local n = tonumber(v)
     if n and n >= 0 then V3Config.baitDelay = n end
 end)
 
-blatantSection3:AddInput("blatantV3_reelDelay", {Title = "Reset Delay", Default = "0.1", Placeholder = "0.1"}):OnChanged(function(v)
+blatantSection3:AddInput("blatantV3_throwDelay", {Title = "Cancel Delay", Default = "0.4", Placeholder = "0.4"}):OnChanged(function(v)
     local n = tonumber(v)
-    if n and n >= 0 then V3Config.reelDelay = n end
+    if n and n >= 0 then V3Config.throwDelay = n end
+end)
+
+blatantSection3:AddInput("blatantV3_catchDelay", {Title = "Catch Spam Delay", Default = "0.1", Placeholder = "0.1"}):OnChanged(function(v)
+    local n = tonumber(v)
+    if n and n >= 0 then V3Config.catchDelay = n end
 end)
 
 
